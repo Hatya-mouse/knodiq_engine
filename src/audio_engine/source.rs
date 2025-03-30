@@ -8,21 +8,20 @@ use symphonia::core::meta::MetadataOptions;
 
 pub type Sample = f32;
 
-/// A simple class representing an audio buffer.
-pub struct SAudioBuffer {
+/// A simple class representing an source.
+pub struct AudioSource {
     /// Sample rate of the audio buffer.
     pub sample_rate: u32,
+    /// Number of channels in the audio buffer.
+    pub channels: usize,
     /// Buffer data.
-    /// Outer vector represents channels, inner vector represents samples.
-    /// ```
-    /// Vec<Vec<                                 Sample>>
-    ///     ^^^^ This represents each channel... ^^^^^^ ...and this represents each sample.
-    /// ```
-    pub data: Vec<Vec<Sample>>,
+    pub data: Vec<Sample>,
+    /// Current iteration index.
+    index: usize,
 }
 
-impl SAudioBuffer {
-    /// Get the audio buffer from the audio file, in specified path.
+impl AudioSource {
+    /// Create a new audio source instance from the audio file in the specified path.
     /// Uses symphonia crate to decode the audio file.
     pub fn new(path: &str, track_number: usize) -> Result<Self, &'static str> {
         // Open the audio file
@@ -61,28 +60,35 @@ impl SAudioBuffer {
 
         // Get the tracks from the probe result
         let tracks = probe_result.format.tracks();
+        // And get the track at the specified index
+        let track = &tracks[track_number];
 
         // Get the sample rate from the track's codec parameters
-        let sample_rate = match tracks[track_number].codec_params.sample_rate {
+        let sample_rate = match track.codec_params.sample_rate {
             Some(sample_rate) => sample_rate,
             None => return Err("Codec parameters invalid. 🎛️"),
         };
 
+        let channels = match track.codec_params.channels {
+            Some(channels) => channels,
+            None => return Err("Codec parameters invalid. 🎛️"),
+        }
+        .count();
+
         // Make a decoder from the codec registry and the track's codec parameters
-        let mut decoder =
-            match codec_registry.make(&tracks[track_number].codec_params, &decoder_options) {
-                Ok(decoder) => decoder,
-                Err(_) => return Err("The decoder could not be initialized. 😹"),
-            };
+        let mut decoder = match codec_registry.make(&track.codec_params, &decoder_options) {
+            Ok(decoder) => decoder,
+            Err(_) => return Err("The decoder could not be initialized. 😹"),
+        };
 
-        // Capacity of the AudioBuffer
-        let mut output_buffer: Vec<Vec<Sample>> = vec![];
+        // Create a vector to store the decoded samples
+        let mut output_buffer: Vec<Sample> = vec![];
 
-        // Create a packet from the probe result
+        // Decode packets until there are no more packets
         while let Ok(packet) = probe_result.format.next_packet() {
             // Decode the packet using the decoder
             match decoder.decode(&packet) {
-                Ok(decoded) => merge_buffer(&mut output_buffer, decoded),
+                Ok(decoded) => merge_buffer(&mut output_buffer, decoded, channels),
                 Err(_) => return Err("Decode error. 😿"),
             }
         }
@@ -91,7 +97,9 @@ impl SAudioBuffer {
 
         Ok(Self {
             sample_rate,
+            channels,
             data: output_buffer,
+            index: 0,
         })
     }
 
@@ -100,23 +108,26 @@ impl SAudioBuffer {
         let max_sample = self
             .data
             .iter()
-            .flatten()
-            .fold(0.0, |max: Sample, &sample: &Sample| max.max(sample.abs()));
+            .fold(0.0, |max: f32, &sample| max.max(sample.abs()));
         if max_sample > 0.0 {
-            self.data.iter_mut().for_each(|channel| {
-                channel.iter_mut().for_each(|sample| *sample /= max_sample);
-            });
+            self.data
+                .iter_mut()
+                .for_each(|sample| *sample /= max_sample);
         }
-    }
-
-    /// Get the number of channels in the audio buffer.
-    pub fn channels(&self) -> usize {
-        self.data.len()
     }
 
     /// Returns the number of samples in the audio buffer.
     pub fn samples(&self) -> usize {
-        self.data[0].len()
+        self.data.len() / self.channels
+    }
+
+    pub(crate) fn clone(&self) -> Self {
+        Self {
+            sample_rate: self.sample_rate.clone(),
+            channels: self.channels.clone(),
+            data: self.data.clone(),
+            index: 0,
+        }
     }
 }
 
@@ -124,14 +135,13 @@ impl SAudioBuffer {
 /// ```
 /// | ** Output Buffer ** | <-Merge-- | ** Decoded AudioBufferRef ** |
 /// ```
-fn merge_buffer(output_buffer: &mut Vec<Vec<Sample>>, decoded: AudioBufferRef) {
-    let channel_count = decoded.spec().channels.count();
-    while output_buffer.len() < channel_count {
-        output_buffer.push(vec![]);
-    }
-
-    let mut add_sample = |channel_index: usize, sample: Sample| {
-        output_buffer[channel_index].push(sample as Sample);
+fn merge_buffer(output_buffer: &mut Vec<Sample>, decoded: AudioBufferRef, channel_count: usize) {
+    let mut add_sample = |channel_index: usize, index: usize, sample: Sample| {
+        let position = index * channel_count + channel_index;
+        if position >= output_buffer.len() {
+            output_buffer.resize(position + 1, 0.0);
+        }
+        output_buffer[position] = sample as Sample;
     };
 
     match decoded {
@@ -139,8 +149,12 @@ fn merge_buffer(output_buffer: &mut Vec<Vec<Sample>>, decoded: AudioBufferRef) {
             for channel in 0..channel_count {
                 // Vector of samples in the specified channel
                 let channel_samples = buf.chan(channel);
-                for sample in channel_samples {
-                    add_sample(channel, *sample as Sample);
+                for sample_index in 0..channel_samples.len() {
+                    add_sample(
+                        channel,
+                        sample_index,
+                        channel_samples[sample_index] as Sample,
+                    );
                 }
             }
         }
@@ -148,8 +162,12 @@ fn merge_buffer(output_buffer: &mut Vec<Vec<Sample>>, decoded: AudioBufferRef) {
             for channel in 0..channel_count {
                 // Vector of samples in the specified channel
                 let channel_samples = buf.chan(channel);
-                for sample in channel_samples {
-                    add_sample(channel, *sample as Sample);
+                for sample_index in 0..channel_samples.len() {
+                    add_sample(
+                        channel,
+                        sample_index,
+                        channel_samples[sample_index] as Sample,
+                    );
                 }
             }
         }
@@ -157,8 +175,12 @@ fn merge_buffer(output_buffer: &mut Vec<Vec<Sample>>, decoded: AudioBufferRef) {
             for channel in 0..channel_count {
                 // Vector of samples in the specified channel
                 let channel_samples = buf.chan(channel);
-                for sample in channel_samples {
-                    add_sample(channel, *sample as Sample);
+                for sample_index in 0..channel_samples.len() {
+                    add_sample(
+                        channel,
+                        sample_index,
+                        channel_samples[sample_index] as Sample,
+                    );
                 }
             }
         }
@@ -166,8 +188,12 @@ fn merge_buffer(output_buffer: &mut Vec<Vec<Sample>>, decoded: AudioBufferRef) {
             for channel in 0..channel_count {
                 // Vector of samples in the specified channel
                 let channel_samples = buf.chan(channel);
-                for sample in channel_samples {
-                    add_sample(channel, *sample as Sample);
+                for sample_index in 0..channel_samples.len() {
+                    add_sample(
+                        channel,
+                        sample_index,
+                        channel_samples[sample_index] as Sample,
+                    );
                 }
             }
         }
@@ -175,8 +201,12 @@ fn merge_buffer(output_buffer: &mut Vec<Vec<Sample>>, decoded: AudioBufferRef) {
             for channel in 0..channel_count {
                 // Vector of samples in the specified channel
                 let channel_samples = buf.chan(channel);
-                for sample in channel_samples {
-                    add_sample(channel, *sample as Sample);
+                for sample_index in 0..channel_samples.len() {
+                    add_sample(
+                        channel,
+                        sample_index,
+                        channel_samples[sample_index] as Sample,
+                    );
                 }
             }
         }
@@ -184,8 +214,12 @@ fn merge_buffer(output_buffer: &mut Vec<Vec<Sample>>, decoded: AudioBufferRef) {
             for channel in 0..channel_count {
                 // Vector of samples in the specified channel
                 let channel_samples = buf.chan(channel);
-                for sample in channel_samples {
-                    add_sample(channel, *sample as Sample);
+                for sample_index in 0..channel_samples.len() {
+                    add_sample(
+                        channel,
+                        sample_index,
+                        channel_samples[sample_index] as Sample,
+                    );
                 }
             }
         }
@@ -193,11 +227,50 @@ fn merge_buffer(output_buffer: &mut Vec<Vec<Sample>>, decoded: AudioBufferRef) {
             for channel in 0..channel_count {
                 // Vector of samples in the specified channel
                 let channel_samples = buf.chan(channel);
-                for sample in channel_samples {
-                    add_sample(channel, *sample as Sample);
+                for sample_index in 0..channel_samples.len() {
+                    add_sample(
+                        channel,
+                        sample_index,
+                        channel_samples[sample_index] as Sample,
+                    );
                 }
             }
         }
         _ => {}
+    }
+}
+
+impl rodio::Source for AudioSource {
+    fn current_frame_len(&self) -> Option<usize> {
+        Some(self.data.len())
+    }
+
+    fn channels(&self) -> u16 {
+        self.channels as u16
+    }
+
+    fn sample_rate(&self) -> u32 {
+        self.sample_rate
+    }
+
+    fn total_duration(&self) -> Option<std::time::Duration> {
+        Some(std::time::Duration::from_millis(
+            (self.data.len() as f64 / self.sample_rate as f64 * 1000.0) as u64,
+        ))
+    }
+}
+
+impl Iterator for AudioSource {
+    type Item = Sample;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // self.data.iter().next().copied()
+        let sample = self.data[self.index];
+        if self.index >= self.data.len() {
+            self.index = 0;
+            return None;
+        }
+        self.index += 1;
+        Some(sample)
     }
 }
