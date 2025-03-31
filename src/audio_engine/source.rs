@@ -1,3 +1,7 @@
+// source.rs
+// Audio source for holding audio data.
+// © 2025 Shuntaro Kasatani
+
 use std::f32;
 use std::fs::File;
 use symphonia::core::audio::{AudioBufferRef, Signal};
@@ -11,13 +15,11 @@ pub type Sample = f32;
 /// A simple class representing an source.
 pub struct AudioSource {
     /// Sample rate of the audio buffer.
-    pub sample_rate: u32,
+    pub sample_rate: usize,
     /// Number of channels in the audio buffer.
     pub channels: usize,
     /// Buffer data.
-    pub data: Vec<Sample>,
-    /// Current iteration index.
-    index: usize,
+    pub data: Vec<Vec<Sample>>,
 }
 
 impl AudioSource {
@@ -29,8 +31,6 @@ impl AudioSource {
             Ok(file) => file,
             Err(_) => return Err("Failed to open the audio file. 😿 File seems to not exist."),
         };
-
-        println!("Initializing audio buffer from file: {}", path);
 
         // Instantiate the decoding options
         let format_options = FormatOptions::default();
@@ -65,7 +65,7 @@ impl AudioSource {
 
         // Get the sample rate from the track's codec parameters
         let sample_rate = match track.codec_params.sample_rate {
-            Some(sample_rate) => sample_rate,
+            Some(sample_rate) => sample_rate as usize,
             None => return Err("Codec parameters invalid. 🎛️"),
         };
 
@@ -82,7 +82,7 @@ impl AudioSource {
         };
 
         // Create a vector to store the decoded samples
-        let mut output_buffer: Vec<Sample> = vec![];
+        let mut output_buffer: Vec<Vec<Sample>> = vec![];
 
         // Decode packets until there are no more packets
         while let Ok(packet) = probe_result.format.next_packet() {
@@ -93,41 +93,36 @@ impl AudioSource {
             }
         }
 
-        println!("{} decoding finished.", path);
-
         Ok(Self {
             sample_rate,
             channels,
             data: output_buffer,
-            index: 0,
         })
     }
 
     /// Normalize the audio buffer to maximize sample value.
     pub fn normalize(&mut self) {
-        let max_sample = self
-            .data
-            .iter()
-            .fold(0.0, |max: f32, &sample| max.max(sample.abs()));
+        // Find the maximum absolute value across all channels
+        let mut max_sample: f32 = 0.0;
+        for channel in &self.data {
+            for &sample in channel {
+                max_sample = max_sample.max(sample.abs());
+            }
+        }
+
+        // Normalize all samples if max is greater than 0
         if max_sample > 0.0 {
-            self.data
-                .iter_mut()
-                .for_each(|sample| *sample /= max_sample);
+            for channel in &mut self.data {
+                for sample in channel {
+                    *sample /= max_sample;
+                }
+            }
         }
     }
 
     /// Returns the number of samples in the audio buffer.
     pub fn samples(&self) -> usize {
-        self.data.len() / self.channels
-    }
-
-    pub(crate) fn clone(&self) -> Self {
-        Self {
-            sample_rate: self.sample_rate.clone(),
-            channels: self.channels.clone(),
-            data: self.data.clone(),
-            index: 0,
-        }
+        self.data[0].len()
     }
 }
 
@@ -135,142 +130,75 @@ impl AudioSource {
 /// ```
 /// | ** Output Buffer ** | <-Merge-- | ** Decoded AudioBufferRef ** |
 /// ```
-fn merge_buffer(output_buffer: &mut Vec<Sample>, decoded: AudioBufferRef, channel_count: usize) {
-    let mut add_sample = |channel_index: usize, index: usize, sample: Sample| {
-        let position = index * channel_count + channel_index;
-        if position >= output_buffer.len() {
-            output_buffer.resize(position + 1, 0.0);
+fn merge_buffer(
+    output_buffer: &mut Vec<Vec<Sample>>,
+    decoded: AudioBufferRef,
+    channel_count: usize,
+) {
+    // Initialize output_buffer with channels if it's empty
+    if output_buffer.is_empty() {
+        for _ in 0..channel_count {
+            output_buffer.push(Vec::new());
         }
-        output_buffer[position] = sample as Sample;
-    };
+    }
 
     match decoded {
         AudioBufferRef::U8(buf) => {
-            for channel in 0..channel_count {
-                // Vector of samples in the specified channel
-                let channel_samples = buf.chan(channel);
-                for sample_index in 0..channel_samples.len() {
-                    add_sample(
-                        channel,
-                        sample_index,
-                        channel_samples[sample_index] as Sample,
-                    );
+            let frames = buf.frames();
+            for frame in 0..frames {
+                for channel in 0..channel_count {
+                    output_buffer[channel].push(buf.chan(channel)[frame] as Sample / 128.0 - 1.0);
                 }
             }
         }
         AudioBufferRef::U16(buf) => {
-            for channel in 0..channel_count {
-                // Vector of samples in the specified channel
-                let channel_samples = buf.chan(channel);
-                for sample_index in 0..channel_samples.len() {
-                    add_sample(
-                        channel,
-                        sample_index,
-                        channel_samples[sample_index] as Sample,
-                    );
+            let frames = buf.frames();
+            for frame in 0..frames {
+                for channel in 0..channel_count {
+                    output_buffer[channel].push(buf.chan(channel)[frame] as Sample / 32768.0 - 1.0);
                 }
             }
         }
         AudioBufferRef::S8(buf) => {
-            for channel in 0..channel_count {
-                // Vector of samples in the specified channel
-                let channel_samples = buf.chan(channel);
-                for sample_index in 0..channel_samples.len() {
-                    add_sample(
-                        channel,
-                        sample_index,
-                        channel_samples[sample_index] as Sample,
-                    );
+            let frames = buf.frames();
+            for frame in 0..frames {
+                for channel in 0..channel_count {
+                    output_buffer[channel].push(buf.chan(channel)[frame] as Sample / 128.0);
                 }
             }
         }
         AudioBufferRef::S16(buf) => {
-            for channel in 0..channel_count {
-                // Vector of samples in the specified channel
-                let channel_samples = buf.chan(channel);
-                for sample_index in 0..channel_samples.len() {
-                    add_sample(
-                        channel,
-                        sample_index,
-                        channel_samples[sample_index] as Sample,
-                    );
+            let frames = buf.frames();
+            for frame in 0..frames {
+                for channel in 0..channel_count {
+                    output_buffer[channel].push(buf.chan(channel)[frame] as Sample / 32768.0);
                 }
             }
         }
         AudioBufferRef::S32(buf) => {
-            for channel in 0..channel_count {
-                // Vector of samples in the specified channel
-                let channel_samples = buf.chan(channel);
-                for sample_index in 0..channel_samples.len() {
-                    add_sample(
-                        channel,
-                        sample_index,
-                        channel_samples[sample_index] as Sample,
-                    );
+            let frames = buf.frames();
+            for frame in 0..frames {
+                for channel in 0..channel_count {
+                    output_buffer[channel].push(buf.chan(channel)[frame] as Sample / 2147483648.0);
                 }
             }
         }
         AudioBufferRef::F32(buf) => {
-            for channel in 0..channel_count {
-                // Vector of samples in the specified channel
-                let channel_samples = buf.chan(channel);
-                for sample_index in 0..channel_samples.len() {
-                    add_sample(
-                        channel,
-                        sample_index,
-                        channel_samples[sample_index] as Sample,
-                    );
+            let frames = buf.frames();
+            for frame in 0..frames {
+                for channel in 0..channel_count {
+                    output_buffer[channel].push(buf.chan(channel)[frame]);
                 }
             }
         }
         AudioBufferRef::F64(buf) => {
-            for channel in 0..channel_count {
-                // Vector of samples in the specified channel
-                let channel_samples = buf.chan(channel);
-                for sample_index in 0..channel_samples.len() {
-                    add_sample(
-                        channel,
-                        sample_index,
-                        channel_samples[sample_index] as Sample,
-                    );
+            let frames = buf.frames();
+            for frame in 0..frames {
+                for channel in 0..channel_count {
+                    output_buffer[channel].push(buf.chan(channel)[frame] as Sample);
                 }
             }
         }
         _ => {}
-    }
-}
-
-impl rodio::Source for AudioSource {
-    fn current_frame_len(&self) -> Option<usize> {
-        Some(self.data.len())
-    }
-
-    fn channels(&self) -> u16 {
-        self.channels as u16
-    }
-
-    fn sample_rate(&self) -> u32 {
-        self.sample_rate
-    }
-
-    fn total_duration(&self) -> Option<std::time::Duration> {
-        Some(std::time::Duration::from_millis(
-            (self.data.len() as f64 / self.sample_rate as f64 * 1000.0) as u64,
-        ))
-    }
-}
-
-impl Iterator for AudioSource {
-    type Item = Sample;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        // self.data.iter().next().copied()
-        let sample = self.data[self.index];
-        if self.index >= self.data.len() {
-            self.index = 0;
-            return None;
-        }
-        self.index += 1;
-        Some(sample)
     }
 }
