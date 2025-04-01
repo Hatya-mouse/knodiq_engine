@@ -10,7 +10,7 @@ fn main() {
     let mut player = audio_engine::audio_player::AudioPlayer::new();
     // Load the source from a file path
     let mut source = audio_engine::source::AudioSource::new(
-        "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/1-02 Sky of Trees.mp3",
+        "C:/Users/shunt/Documents/programs/games/godot/air-international-inc/Assets/Audio/Music/Airborne.wav",
         0,
     ).unwrap();
     // Normalize the audio source
