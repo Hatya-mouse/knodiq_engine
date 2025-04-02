@@ -10,7 +10,7 @@ pub fn chunk_buffer(buffer: &Vec<Vec<f32>>, chunk_size: usize) -> Vec<Vec<Vec<f3
     let mut chunks: Vec<Vec<Vec<f32>>> = Vec::new();
     let mut current_index = 0;
 
-    while current_index < buffer[0].len() {
+    while current_index < buffer[0].len() - 1 {
         // Get chunk from the buffer
         let mut chunk = Vec::new();
         let end_index = cmp::min(current_index + chunk_size, buffer[0].len() - 1);

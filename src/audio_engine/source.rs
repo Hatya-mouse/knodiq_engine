@@ -134,18 +134,19 @@ impl AudioSource {
         self.data[0].len()
     }
 
-    /// Returns the copy of the source.
-    pub fn duplicated(&self) -> Self {
+    /// Returns the copy of the buffer.
+    pub fn clone_buffer(&self) -> Vec<Vec<Sample>> {
+        self.data.clone()
+    }
+}
+
+impl Clone for AudioSource {
+    fn clone(&self) -> Self {
         Self {
             data: self.data.clone(),
             channels: self.channels,
             sample_rate: self.sample_rate,
         }
-    }
-
-    /// Returns the copy of the buffer.
-    pub fn clone_buffer(&self) -> Vec<Vec<Sample>> {
-        self.data.clone()
     }
 }
 

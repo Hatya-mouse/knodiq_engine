@@ -1,10 +1,11 @@
-use crate::audio_engine::node::built_in::{input_node::InputNode, output_node::OutputNode};
+use crate::audio_engine::node::built_in::empty_node::EmptyNode;
+use crate::audio_engine::node::connector::Connector;
 use crate::audio_engine::node::traits::node::Node;
 use crate::audio_engine::source::AudioSource;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
-type NodeId = Uuid;
+pub type NodeId = Uuid;
 
 /// Represents a graph of audio nodes.
 /// Processes the input audio by applying a series of audio nodes.
@@ -17,12 +18,12 @@ pub struct Graph {
     /// Vector of node instances in the graph.
     nodes: HashMap<NodeId, Box<dyn Node>>,
     /// Represents the connections between nodes in the graph.
-    connections: HashMap<NodeId, Vec<NodeId>>,
+    connections: Vec<Connector>,
 
     /// UUID of the input node.
-    input_node: NodeId,
+    pub input_nodes: Vec<NodeId>,
     /// UUID of the output node.
-    output_node: NodeId,
+    pub output_node: NodeId,
 }
 
 impl Graph {
@@ -34,82 +35,170 @@ impl Graph {
 
         // Create input and output nodes
         let mut nodes = HashMap::new();
-        nodes.insert(input_id, Box::new(InputNode::new()) as Box<dyn Node>);
-        nodes.insert(output_id, Box::new(OutputNode::new()) as Box<dyn Node>);
+        nodes.insert(input_id, Box::new(EmptyNode::new()) as Box<dyn Node>);
+        nodes.insert(output_id, Box::new(EmptyNode::new()) as Box<dyn Node>);
 
         Graph {
             nodes,
-            connections: HashMap::new(),
-            input_node: input_id,
+            connections: Vec::new(),
+            input_nodes: vec![input_id],
             output_node: output_id,
         }
     }
 
     /// Adds a new node to the graph and return the id.
-    fn add_node(&mut self, node: Box<dyn Node>) -> NodeId {
+    pub fn add_node(&mut self, node: Box<dyn Node>) -> NodeId {
         let id = Uuid::new_v4();
         self.nodes.insert(id, node);
         id
     }
 
     /// Removes a node from the graph.
-    fn remove_node(&mut self, id: NodeId) {
+    pub fn remove_node(&mut self, id: NodeId) {
         // Remove the node from the HashMap
         self.nodes.remove(&id);
-        // Remove all connections from the node
-        self.connections.remove(&id);
-        // Remove all connections to the node
-        for connected_nods in self.connections.values_mut() {
-            connected_nods.retain(|&node_id| node_id != id);
-        }
+        // Remove all connections from or to the node
+        self.connections
+            .retain(|connector| connector.from != id && connector.to != id);
     }
 
     /// Connect the node to one another.
-    fn connect(&mut self, from: NodeId, to: NodeId) {
-        self.connections.entry(from).or_insert(Vec::new()).push(to);
+    /// Doesn't add a connection to the node if it already exists.
+    pub fn connect(&mut self, from: NodeId, from_param: String, to: NodeId, to_param: String) {
+        if self.connections.iter().any(|c| c.to == to) {
+            return;
+        }
+        self.connections.push(Connector {
+            from,
+            from_param,
+            to,
+            to_param,
+        });
     }
 
     /// Disconnect the node from one another.
-    fn disconnect(&mut self, from: NodeId, to: NodeId) {
-        if let Some(connected_nodes) = self.connections.get_mut(&from) {
-            connected_nodes.retain(|&node_id| node_id != to);
-        }
+    pub fn disconnect(&mut self, from: NodeId, from_param: String, to: NodeId, to_param: String) {
+        self.connections.retain(|connector| {
+            connector.from != from
+                || connector.from_param != from_param
+                || connector.to != to
+                || connector.to_param != to_param
+        });
     }
 
-    /// Processes the input audio source and returns the output.
-    pub fn process(&mut self, input: AudioSource) -> AudioSource {
-        let mut buffer_map: HashMap<NodeId, AudioSource> = HashMap::new();
+    /// Sort the node using tolopogical sort
+    pub fn topological_sort(&self) -> Result<Vec<NodeId>, &'static str> {
+        let mut in_degree = HashMap::new();
+        let mut adj_list = HashMap::new();
 
-        // First process the input data
-        buffer_map.insert(Uuid::nil(), input.duplicated());
+        // Initialize all the nodes with 0 degree
+        for &node_id in self.nodes.keys() {
+            in_degree.insert(node_id, 0);
+            adj_list.insert(node_id, vec![]);
+        }
 
-        // A hash set to save visited nodes
-        let mut visited = HashSet::new();
-        // [0]: Graph's input node
-        let mut stack = vec![Uuid::nil()];
+        // Register connections
+        for connection in &self.connections {
+            *in_degree.entry(connection.to).or_insert(0) += 1;
+            adj_list
+                .entry(connection.from)
+                .or_insert(vec![])
+                .push(connection.to);
+        }
 
-        while let Some(id) = stack.pop() {
-            if visited.contains(&id) {
-                continue;
+        // Add the node with 0 degree to the queue
+        let mut queue = VecDeque::new();
+        for (&node, &deg) in &in_degree {
+            if deg == 0 {
+                queue.push_back(node);
             }
-            visited.insert(id);
+        }
 
-            // Process the node
-            let node = self.nodes.get_mut(&id).unwrap();
-            let input_buffer = buffer_map.get(&id).unwrap_or(&input).duplicated();
-            let output_buffer = node.process(input_buffer);
-            buffer_map.insert(id, output_buffer.duplicated());
+        let mut sorted = vec![];
 
-            // Pass the output buffer to the next node
-            if let Some(outputs) = self.connections.get(&id) {
-                for &next_id in outputs {
-                    stack.push(next_id);
-                    buffer_map.insert(next_id, output_buffer.duplicated());
+        while let Some(node) = queue.pop_front() {
+            sorted.push(node);
+
+            // Reduce the degree of neighbors and add to the queue when it reaches 0
+            if let Some(neighbors) = adj_list.get(&node) {
+                for &neighbor in neighbors {
+                    if let Some(deg) = in_degree.get_mut(&neighbor) {
+                        *deg -= 1;
+                        if *deg == 0 {
+                            queue.push_back(neighbor);
+                        }
+                    }
                 }
             }
         }
 
-        let last_node_id = self.nodes.keys().last().unwrap();
-        buffer_map.get(last_node_id).unwrap_or(&input).duplicated()
+        // Return the error when the cycle is detected
+        if sorted.len() != self.nodes.len() {
+            return Err("Cycle detected");
+        }
+
+        Ok(sorted)
+    }
+
+    /// Processes the input audio source and returns the output.
+    pub fn process(
+        &mut self,
+        input_audio: AudioSource,
+    ) -> Result<AudioSource, Box<dyn std::error::Error>> {
+        // 1. Decide the process order using topological sort
+        let sorted_nodes = self.topological_sort()?;
+
+        // 2. Create a buffer map
+        let mut sources: HashMap<NodeId, AudioSource> = HashMap::new();
+
+        // 3. Set the input data to the input nodes
+        for node_id in &self.input_nodes {
+            self.nodes.get_mut(&node_id).map(|ref mut node| {
+                node.set_property("input", Box::new(input_audio.clone()));
+            });
+        }
+
+        // 4. Process nodes in order calculated
+        for node_id in sorted_nodes {
+            if let Some(node) = self.nodes.get_mut(&node_id) {
+                // If the node's output is not connected to other nodes, skip it
+                if !self.connections.iter().any(|conn| conn.from == node_id) {
+                    continue;
+                }
+
+                // Get the output of the node and pass the source to connected nodes
+                // Filter the connections to the current node, and then get the source from the connected node
+                // Create a vector to store the inputs we need to process
+                let inputs: Vec<_> = self
+                    .connections
+                    .iter()
+                    .filter(|connector| connector.to == node_id)
+                    .map(|connection| (connection.to_param.clone(), connection.from))
+                    .collect();
+
+                // Pass each input
+                for (to_param, from_node_id) in inputs {
+                    if let Some(source) = sources.get(&from_node_id) {
+                        // Clone the audio source and set the property
+                        let source = source.clone();
+                        node.set_property(&to_param, Box::new(source));
+                    }
+                }
+
+                // Process the audio and get the output
+                let output_source = match node.process() {
+                    Ok(source) => source,
+                    Err(err) => return Err(err),
+                };
+
+                // Save the source
+                sources.insert(node_id, output_source);
+            }
+        }
+
+        // 5. Get the output of the output node and return it
+        Ok(sources
+            .remove(&self.output_node)
+            .unwrap_or_else(|| AudioSource::new(44100, 2)))
     }
 }

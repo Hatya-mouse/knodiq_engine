@@ -1,6 +1,4 @@
-use crate::audio_engine::node::{
-    built_in::resample::AudioResampler, graph::Graph, traits::node::Node,
-};
+use crate::audio_engine::node::graph::Graph;
 use crate::audio_engine::{chunk, source::AudioSource};
 use crate::mixer::region::buffer_region::BufferRegion;
 use crate::mixer::traits::{region::Region, track::Track};
@@ -12,8 +10,6 @@ pub struct BufferTrack {
     pub name: String,
     /// Volume of the track.
     pub volume: f32,
-    /// Pan of the track (-1.0 to 1.0).
-    pub pan: f32,
     /// Audio node graph.
     pub graph: Graph,
     /// Sample rate of the track.
@@ -32,7 +28,6 @@ impl BufferTrack {
             id,
             name: name.to_string(),
             volume: 1.0,
-            pan: 0.0,
             graph: Graph::new(),
             sample_rate,
             channels,
@@ -84,17 +79,37 @@ impl Track for BufferTrack {
             let owned_data = region.audio_source().data.clone();
             // Split the data to multiple chunks
             let chunks = chunk::chunk_buffer(&owned_data, self.sample_rate);
+
+            let mut progress_counter = 0;
+            let total_chunks = chunks.len();
             // Loop through each chunk
             for chunk in chunks {
                 // Process the chunk
-                todo!();
+                let processed_chunk = match self.graph.process(AudioSource {
+                    data: chunk,
+                    sample_rate: self.sample_rate,
+                    channels: self.channels,
+                }) {
+                    Ok(chunk) => chunk,
+                    Err(err) => {
+                        eprintln!("Error processing chunk: {}", err);
+                        continue;
+                    }
+                };
 
                 // Add the chunk to the audio source
-                // for (i, channel) in output_audio_source.data.iter_mut().enumerate() {
-                //     if i < processed_chunk.len() {
-                //         channel.extend(processed_chunk[i].to_owned());
-                //     }
-                // }
+                for (i, channel) in output_audio_source.data.iter_mut().enumerate() {
+                    if i < processed_chunk.channels {
+                        channel.extend(processed_chunk.data[i].to_owned());
+                    }
+                }
+
+                progress_counter += 1;
+
+                println!(
+                    "Processing chunk... {}%",
+                    progress_counter as f32 / total_chunks as f32 * 100.0
+                );
             }
         }
 

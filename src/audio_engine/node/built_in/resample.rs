@@ -2,24 +2,37 @@
 // Resample the audio source to the desired sample rate.
 // © 2025 Shuntaro Kasatani
 
+use std::any::Any;
+
 use crate::audio_engine::{node::traits::node::Node, source::AudioSource};
 use rubato::{FftFixedIn, Resampler};
 
 /// AudioResampler is a struct that resamples audio sources to a desired sample rate.
 pub struct AudioResampler {
     output_sample_rate: usize,
+    // Input to the resampler.
+    pub input: Option<AudioSource>,
 }
 
 impl AudioResampler {
+    /// Create a new AudioResampler with the given output sample rate.
     pub fn new(output_sample_rate: usize) -> Self {
-        AudioResampler { output_sample_rate }
+        AudioResampler {
+            output_sample_rate,
+            input: None,
+        }
     }
 }
 
 impl Node for AudioResampler {
-    fn process(&mut self, input: AudioSource) -> AudioSource {
+    fn process(&self) -> Result<AudioSource, Box<dyn std::error::Error>> {
         // Chunk size of the resampler
         let chunk_size = 1024;
+
+        let input = match self.input {
+            Some(ref input) => input,
+            None => return Err("No input provided".into()),
+        };
 
         // Get the data from the audio source
         let source_channels = input.channels;
@@ -28,7 +41,7 @@ impl Node for AudioResampler {
 
         // If the source sample rate is the same as the output sample rate, return the source as is
         if input_sample_rate == self.output_sample_rate {
-            return input;
+            return Ok(input.clone());
         }
 
         println!(
@@ -45,10 +58,7 @@ impl Node for AudioResampler {
             source_channels,
         ) {
             Ok(resampler) => resampler,
-            Err(err) => {
-                println!("Error creating a new resampler: {}", err);
-                return AudioSource::new(self.output_sample_rate, source_channels);
-            }
+            Err(err) => return Err(Box::new(err)),
         };
 
         // Create a temporary buffer to hold the resampled data
@@ -83,10 +93,7 @@ impl Node for AudioResampler {
                 None,
             ) {
                 Ok(buffer) => buffer,
-                Err(err) => {
-                    println!("Resampling error: {}", err);
-                    return AudioSource::new(self.output_sample_rate, source_channels);
-                }
+                Err(err) => return Err(Box::new(err)),
             };
 
             // Append the data to the temporary buffer
@@ -103,10 +110,7 @@ impl Node for AudioResampler {
             None,
         ) {
             Ok(buffer) => buffer,
-            Err(err) => {
-                println!("Resampling error: {}", err);
-                return AudioSource::new(self.output_sample_rate, source_channels);
-            }
+            Err(err) => return Err(Box::new(err)),
         };
 
         // Append the data to the temporary buffer
@@ -115,27 +119,37 @@ impl Node for AudioResampler {
         }
 
         // Return the resampled data
-        AudioSource {
+        Ok(AudioSource {
             data: temp_buffer,
             channels: source_channels,
             sample_rate: self.output_sample_rate,
-        }
+        })
     }
 
     fn get_property_list(&self) -> Vec<String> {
-        vec!["output_sample_rate".to_string()]
+        vec!["output_sample_rate".to_string(), "input".to_string()]
     }
 
-    fn get_property(&self, property: String) -> f64 {
-        match property.as_str() {
-            "output_sample_rate" => self.output_sample_rate as f64,
+    fn get_property(&self, property: &str) -> Box<dyn Any> {
+        match property {
+            "output_sample_rate" => Box::new(self.output_sample_rate),
+            "input" => Box::new(self.input.clone()),
             _ => panic!("Unknown property"),
         }
     }
 
-    fn set_property(&mut self, property: String, value: f64) {
-        match property.as_str() {
-            "output_sample_rate" => self.output_sample_rate = value as usize,
+    fn set_property(&mut self, property: &str, value: Box<dyn Any>) {
+        match property {
+            "output_sample_rate" => {
+                if let Some(val) = value.downcast_ref::<usize>() {
+                    self.output_sample_rate = *val;
+                }
+            }
+            "input" => {
+                if let Some(val) = value.downcast_ref::<AudioSource>() {
+                    self.input = Some(val.clone());
+                }
+            }
             _ => panic!("Unknown property"),
         }
     }
