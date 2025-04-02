@@ -2,42 +2,53 @@
 // Resample the audio source to the desired sample rate.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::source::AudioSource;
+use crate::audio_engine::{node::traits::node::Node, source::AudioSource};
 use rubato::{FftFixedIn, Resampler};
 
 /// AudioResampler is a struct that resamples audio sources to a desired sample rate.
-pub struct AudioResampler {}
+pub struct AudioResampler {
+    output_sample_rate: usize,
+}
 
 impl AudioResampler {
-    /// Create a new AudioResampler instance.
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(output_sample_rate: usize) -> Self {
+        AudioResampler { output_sample_rate }
     }
+}
 
-    /// Resample the audio source to the desired sample rate, and return the resampled audio source.
-    pub fn resample(
-        &self,
-        source: &AudioSource,
-        output_sample_rate: usize,
-    ) -> Result<AudioSource, Box<dyn std::error::Error>> {
+impl Node for AudioResampler {
+    fn process(&mut self, input: AudioSource) -> AudioSource {
         // Chunk size of the resampler
         let chunk_size = 1024;
 
         // Get the data from the audio source
-        let input_sample_rate = source.sample_rate as usize;
-        let source_channels = source.channels;
-        let original_length = source.samples();
+        let source_channels = input.channels;
+        let original_length = input.samples();
+        let input_sample_rate = input.sample_rate;
+
+        // If the source sample rate is the same as the output sample rate, return the source as is
+        if input_sample_rate == self.output_sample_rate {
+            return input;
+        }
+
+        println!(
+            "Resampling the source. Input: {}, Output: {}",
+            input_sample_rate, self.output_sample_rate
+        );
 
         // Create a resampler from the data
         let mut resampler = match FftFixedIn::<f32>::new(
             input_sample_rate,
-            output_sample_rate,
+            self.output_sample_rate,
             chunk_size,
             chunk_size,
             source_channels,
         ) {
             Ok(resampler) => resampler,
-            Err(err) => return Err(Box::new(err)),
+            Err(err) => {
+                println!("Error creating a new resampler: {}", err);
+                return AudioSource::new(self.output_sample_rate, source_channels);
+            }
         };
 
         // Create a temporary buffer to hold the resampled data
@@ -51,7 +62,7 @@ impl AudioResampler {
             // Calculate how many frames of delay the resampler gives
             let _delay = <FftFixedIn<f32> as Resampler<f32>>::output_delay(&resampler);
             // Calculate the new length of the clip
-            let _new_length = original_length * output_sample_rate / input_sample_rate;
+            let _new_length = original_length * self.output_sample_rate / input_sample_rate;
             // Calculate how many frames resampler needs
             let needed_frames = <FftFixedIn<f32> as Resampler<f32>>::input_frames_next(&resampler);
 
@@ -62,7 +73,7 @@ impl AudioResampler {
 
             // Get the next chunk of data from the iterator
             let (input_buffer, next_index) =
-                read_frames(source.data.clone(), frame_index, chunk_size);
+                read_frames(input.clone_buffer(), frame_index, chunk_size);
             frame_index = next_index;
 
             // Resample the data
@@ -72,7 +83,10 @@ impl AudioResampler {
                 None,
             ) {
                 Ok(buffer) => buffer,
-                Err(err) => return Err(Box::new(err)),
+                Err(err) => {
+                    println!("Resampling error: {}", err);
+                    return AudioSource::new(self.output_sample_rate, source_channels);
+                }
             };
 
             // Append the data to the temporary buffer
@@ -82,14 +96,17 @@ impl AudioResampler {
         }
 
         // Resample the left samples
-        let (input_buffer, _) = read_frames(source.data.clone(), frame_index, chunk_size);
+        let (input_buffer, _) = read_frames(input.clone_buffer(), frame_index, chunk_size);
         let output_buffer = match <FftFixedIn<f32> as Resampler<f32>>::process_partial(
             &mut resampler,
             Some(&input_buffer),
             None,
         ) {
             Ok(buffer) => buffer,
-            Err(err) => return Err(Box::new(err)),
+            Err(err) => {
+                println!("Resampling error: {}", err);
+                return AudioSource::new(self.output_sample_rate, source_channels);
+            }
         };
 
         // Append the data to the temporary buffer
@@ -97,12 +114,30 @@ impl AudioResampler {
             temp_buffer[i].extend(channel);
         }
 
-        // Create a new AudioSource with the resampled data
-        Ok(AudioSource {
+        // Return the resampled data
+        AudioSource {
             data: temp_buffer,
-            sample_rate: output_sample_rate,
             channels: source_channels,
-        })
+            sample_rate: self.output_sample_rate,
+        }
+    }
+
+    fn get_property_list(&self) -> Vec<String> {
+        vec!["output_sample_rate".to_string()]
+    }
+
+    fn get_property(&self, property: String) -> f64 {
+        match property.as_str() {
+            "output_sample_rate" => self.output_sample_rate as f64,
+            _ => panic!("Unknown property"),
+        }
+    }
+
+    fn set_property(&mut self, property: String, value: f64) {
+        match property.as_str() {
+            "output_sample_rate" => self.output_sample_rate = value as usize,
+            _ => panic!("Unknown property"),
+        }
     }
 }
 

@@ -2,6 +2,9 @@
 // Audio source for holding audio data.
 // © 2025 Shuntaro Kasatani
 
+use crate::audio_engine::audio_buffer::AudioBuffer;
+use crate::audio_engine::sample::Sample;
+
 use std::f32;
 use std::fs::File;
 use symphonia::core::audio::{AudioBufferRef, Signal};
@@ -10,8 +13,6 @@ use symphonia::core::formats::FormatOptions;
 use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
 use symphonia::core::meta::MetadataOptions;
 
-pub type Sample = f32;
-
 /// A simple class representing an source.
 pub struct AudioSource {
     /// Sample rate of the audio buffer.
@@ -19,13 +20,21 @@ pub struct AudioSource {
     /// Number of channels in the audio buffer.
     pub channels: usize,
     /// Buffer data.
-    pub data: Vec<Vec<Sample>>,
+    pub data: AudioBuffer,
 }
 
 impl AudioSource {
     /// Create a new audio source instance from the audio file in the specified path.
     /// Uses symphonia crate to decode the audio file.
-    pub fn new(path: &str, track_number: usize) -> Result<Self, &'static str> {
+    pub fn new(sample_rate: usize, channels: usize) -> Self {
+        Self {
+            sample_rate,
+            channels,
+            data: vec![vec![]; channels],
+        }
+    }
+
+    pub fn from_path(path: &str, track_number: usize) -> Result<Self, &'static str> {
         // Open the audio file
         let file = match File::open(path) {
             Ok(file) => file,
@@ -47,16 +56,16 @@ impl AudioSource {
 
         // Initialize the probe result
         let mut probe_result = match probe.format(
-            &symphonia::core::probe::Hint::new(),
-            source_stream,
-            &format_options,
-            &metadata_options,
-        ) {
-            Ok(probe_result) => probe_result,
-            Err(_) => return Err(
-                "Failed to probe the audio format. 🔈 Maybe the file is corrupted or not supported? 😿",
-            ),
-        };
+                    &symphonia::core::probe::Hint::new(),
+                    source_stream,
+                    &format_options,
+                    &metadata_options,
+                ) {
+                    Ok(probe_result) => probe_result,
+                    Err(_) => return Err(
+                        "Failed to probe the audio format. 🔈 Maybe the file is corrupted or not supported? 😿",
+                    ),
+                };
 
         // Get the tracks from the probe result
         let tracks = probe_result.format.tracks();
@@ -123,6 +132,20 @@ impl AudioSource {
     /// Returns the number of samples in the audio buffer.
     pub fn samples(&self) -> usize {
         self.data[0].len()
+    }
+
+    /// Returns the copy of the source.
+    pub fn duplicated(&self) -> Self {
+        Self {
+            data: self.data.clone(),
+            channels: self.channels,
+            sample_rate: self.sample_rate,
+        }
+    }
+
+    /// Returns the copy of the buffer.
+    pub fn clone_buffer(&self) -> Vec<Vec<Sample>> {
+        self.data.clone()
     }
 }
 

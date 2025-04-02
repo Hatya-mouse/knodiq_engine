@@ -4,17 +4,21 @@
 
 use crate::audio_engine::source::AudioSource;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{mpsc, mpsc::TryRecvError, Arc, Mutex};
 
 pub struct AudioPlayer {
-    /// Audio source loaded into the player.
-    source: Option<AudioSource>,
-    /// Audio stream used to play the audio source.
-    stream: Option<cpal::Stream>,
+    /// Currently playing audio source.
+    playing_source: Option<Arc<Mutex<AudioSource>>>,
+    /// Currently playing stream.
+    current_stream: Option<cpal::Stream>,
     /// A mspc receiver to know when the audio stream has finished playback.
     receiver: Option<mpsc::Receiver<()>>,
-    /// Playback completion handler.
-    playback_completion: Option<Box<dyn FnOnce() + Send + 'static>>,
+    /// Sample rate of the audio player.
+    pub sample_rate: usize,
+    /// Channels of the audio player.
+    pub channels: usize,
+    /// Playback completion handler
+    pub completion_handler: Option<Box<dyn FnOnce()>>,
     /// Current playback duration.
     pub frame_index: Arc<Mutex<usize>>,
     /// Volume of the playback.
@@ -24,32 +28,59 @@ pub struct AudioPlayer {
 impl AudioPlayer {
     pub fn new() -> Self {
         Self {
-            source: None,
-            stream: None,
+            playing_source: None,
+            current_stream: None,
             receiver: None,
-            playback_completion: None,
+            sample_rate: 44100,
+            channels: 2,
+            completion_handler: None,
             frame_index: Arc::new(Mutex::new(0)),
             volume: 1.0,
         }
     }
 
-    pub fn load_source(&mut self, source: AudioSource) -> Result<(), Box<dyn std::error::Error>> {
-        let (stream, receiver) = match self.create_stream(&source) {
-            Ok(res) => res,
-            Err(err) => return Err(err),
-        };
-        // Set the stream
-        self.stream = Some(stream);
-        // Set the receiver
-        self.receiver = Some(receiver);
-        // Set the audio source
-        self.source = Some(source);
+    /// Add an audio buffer data to the end of the currently playing source.
+    pub fn add_queue(&mut self, buffer: Vec<Vec<f32>>) -> Result<(), Box<dyn std::error::Error>> {
+        // set the source
+        match self.playing_source {
+            Some(ref mut playing_source) => {
+                for channel in 0..self.channels {
+                    let extend_data = &buffer[channel];
+                    // unwrap the playing source
+                    let playing_source = Arc::clone(playing_source);
+                    let mut locked_source = playing_source.lock().unwrap();
+                    locked_source.data[channel].extend(extend_data);
+                }
+            }
+            None => {
+                self.playing_source = Some(Arc::new(Mutex::new(AudioSource {
+                    data: vec![Vec::new(); self.channels],
+                    sample_rate: self.sample_rate,
+                    channels: self.channels,
+                })));
+            }
+        }
+
+        if self.current_stream.is_none() {
+            let (stream, receiver) = self.create_stream()?;
+            self.receiver = Some(receiver);
+            // Play the stream
+            stream.play()?;
+            // Set the current stream
+            self.current_stream = Some(stream);
+        }
+        Ok(())
+    }
+
+    pub fn pause(&self) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(ref current_stream) = self.current_stream {
+            current_stream.pause()?;
+        }
         Ok(())
     }
 
     fn create_stream(
         &mut self,
-        source: &AudioSource,
     ) -> Result<(cpal::Stream, mpsc::Receiver<()>), Box<dyn std::error::Error>> {
         // Create a playback stream from the audio source
         // First get the default host and device
@@ -58,18 +89,18 @@ impl AudioPlayer {
 
         // Get the config and set the sample rate
         let config = device.default_output_config()?;
-        let mut stream_config = config.config();
-        stream_config.sample_rate = cpal::SampleRate(source.sample_rate as u32);
+        let stream_config = config.config();
 
         // Create a sync channel to know when the stream has finished playback
         let (sender, receiver) = mpsc::channel();
 
-        // Copy the audio data
-        let owned_data = source.data.to_owned();
-        // Number of channels in the audio source
-        let channels = source.channels;
-        // Number of samples in the audio source
-        let total_samples = source.samples();
+        // If the playing source is None, return an error
+        if self.playing_source.is_none() {
+            return Err("No audio source to play".into());
+        }
+
+        // Copy the audio source
+        let playing_source = Arc::clone(self.playing_source.as_ref().unwrap());
         // Clone the current frame index
         let frame_index = Arc::clone(&self.frame_index);
         // Volume reference
@@ -81,14 +112,16 @@ impl AudioPlayer {
             move |data: &mut [f32], _| {
                 // Lock the frame index
                 let mut frame_index = frame_index.lock().unwrap();
+                // Lock the audio source
+                let locked_source = playing_source.lock().unwrap();
                 for sample in data.iter_mut() {
                     // Calculate the frame index
-                    let frame = *frame_index / channels;
-                    if frame < total_samples {
+                    let frame = *frame_index / locked_source.channels;
+                    if frame < locked_source.samples() {
                         // Calculate the channel index
-                        let channel = *frame_index % channels;
+                        let channel = *frame_index % locked_source.channels;
                         // Get the sample from the source
-                        let owned_sample = owned_data[channel][frame];
+                        let owned_sample = locked_source.data[channel][frame];
                         // Apply the volume and pass the sample value
                         *sample = owned_sample * volume;
                         // Increment the frame index
@@ -109,24 +142,21 @@ impl AudioPlayer {
         }
     }
 
-    pub fn play(
-        &mut self,
-        completion: Option<Box<dyn FnOnce() + Send + 'static>>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        match &self.stream {
-            Some(s) => s.play()?,
-            None => return Err("No stream available".into()),
-        }
-        self.playback_completion = completion;
-        Ok(())
-    }
-
-    pub fn wait_for_finish(&mut self) {
-        if let Some(receiver) = &mut self.receiver {
-            receiver.recv().unwrap();
-            // Run the completion handler
-            if let Some(completion) = self.playback_completion.take() {
-                completion();
+    pub fn update(&mut self) {
+        if let Some(receiver) = &self.receiver {
+            // Try to receive without blocking the main thread
+            match receiver.try_recv() {
+                Ok(()) => {
+                    // Run the completion handler
+                    if let Some(handler) = self.completion_handler.take() {
+                        handler();
+                    }
+                    // Drop the source and the stream
+                    drop(self.playing_source.take());
+                    drop(self.current_stream.take());
+                }
+                Err(TryRecvError::Empty) => {}
+                Err(TryRecvError::Disconnected) => {}
             }
         }
     }
