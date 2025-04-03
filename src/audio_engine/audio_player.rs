@@ -54,7 +54,7 @@ impl AudioPlayer {
             }
             None => {
                 self.playing_source = Some(Arc::new(Mutex::new(AudioSource {
-                    data: vec![Vec::new(); self.channels],
+                    data: buffer,
                     sample_rate: self.sample_rate,
                     channels: self.channels,
                 })));
@@ -129,6 +129,7 @@ impl AudioPlayer {
                     } else {
                         // Notify that the playback has finished
                         let _ = sender.send(());
+                        *frame_index = 0;
                     }
                 }
             },

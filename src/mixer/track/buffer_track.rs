@@ -77,14 +77,15 @@ impl Track for BufferTrack {
         for region in &self.regions {
             // Get the data from the audio source
             let owned_data = region.audio_source().data.clone();
+            let chunk_size = 1024;
             // Split the data to multiple chunks
-            let chunks = chunk::chunk_buffer(&owned_data, self.sample_rate);
+            let chunks = chunk::chunk_buffer(&owned_data, chunk_size);
 
             let mut progress_counter = 0;
             let total_chunks = chunks.len();
             // Loop through each chunk
             for chunk in chunks {
-                // Process the chunk
+                // process the chunk
                 let processed_chunk = match self.graph.process(AudioSource {
                     data: chunk,
                     sample_rate: self.sample_rate,
@@ -92,12 +93,12 @@ impl Track for BufferTrack {
                 }) {
                     Ok(chunk) => chunk,
                     Err(err) => {
-                        eprintln!("Error processing chunk: {}", err);
+                        eprintln!("error processing chunk: {}", err);
                         continue;
                     }
                 };
 
-                // Add the chunk to the audio source
+                // add the chunk to the audio source
                 for (i, channel) in output_audio_source.data.iter_mut().enumerate() {
                     if i < processed_chunk.channels {
                         channel.extend(processed_chunk.data[i].to_owned());
@@ -107,8 +108,10 @@ impl Track for BufferTrack {
                 progress_counter += 1;
 
                 println!(
-                    "Processing chunk... {}%",
-                    progress_counter as f32 / total_chunks as f32 * 100.0
+                    "processing chunk... {}% ({} out of {})",
+                    progress_counter as f32 / total_chunks as f32 * 100.0,
+                    progress_counter * chunk_size,
+                    total_chunks * chunk_size
                 );
             }
         }
@@ -119,10 +122,7 @@ impl Track for BufferTrack {
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>> {
         match self.rendered_data {
             Some(ref data) => Ok(data),
-            None => Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "No rendered data available",
-            ))),
+            None => Err("No rendered data available".into()),
         }
     }
 }

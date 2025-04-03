@@ -3,6 +3,8 @@
 
 use std::process::exit;
 
+use audio_engine::node::traits::node::Node;
+
 use crate::audio_engine::node::built_in::resample::AudioResampler;
 use crate::mixer::traits::track::Track;
 
@@ -13,8 +15,6 @@ fn main() {
     let sample_rate = 48000;
     let path = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/1-05 Let Them Eat Cake.mp3";
 
-    // Create a new audio player
-    let mut player = audio_engine::audio_player::AudioPlayer::new();
     // Load the source from a file path
     let mut source = audio_engine::source::AudioSource::from_path(path, 0).unwrap();
     // Normalize the audio source
@@ -27,7 +27,8 @@ fn main() {
     // Add a region to the track
     track.add_region(region);
     // Add a resampler to the track
-    let resampler_node = AudioResampler::new(sample_rate);
+    let mut resampler_node = AudioResampler::new(sample_rate);
+    resampler_node.set_property("output_sample_rate", Box::new(48000));
     let resampler_node_id = track.graph.add_node(Box::new(resampler_node));
     track.graph.connect(
         track.graph.input_nodes[0],
@@ -47,13 +48,22 @@ fn main() {
     // Render the track
     track.render();
 
+    let rendered_data = track.rendered_data().unwrap();
+    println!(
+        "Rendered data channels: {}, samples: {}",
+        rendered_data.channels,
+        rendered_data.samples()
+    );
+
+    // Create a new audio player
+    let mut player = audio_engine::audio_player::AudioPlayer::new();
+
     // Set the sample rate and channels
     player.channels = 2;
     player.sample_rate = sample_rate;
-
     player
-        .add_queue(track.rendered_data().unwrap().data.clone())
-        .expect("Die.");
+        .add_queue(rendered_data.data.clone())
+        .expect("Playback error");
 
     player.completion_handler = Some(Box::new(|| {
         exit(0);

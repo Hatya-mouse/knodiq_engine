@@ -162,9 +162,9 @@ impl Graph {
         for node_id in sorted_nodes {
             if let Some(node) = self.nodes.get_mut(&node_id) {
                 // If the node's output is not connected to other nodes, skip it
-                if !self.connections.iter().any(|conn| conn.from == node_id) {
-                    continue;
-                }
+                // if !self.connections.iter().any(|conn| conn.from == node_id) {
+                //     continue;
+                // }
 
                 // Get the output of the node and pass the source to connected nodes
                 // Filter the connections to the current node, and then get the source from the connected node
@@ -197,8 +197,9 @@ impl Graph {
         }
 
         // 5. Get the output of the output node and return it
-        Ok(sources
-            .remove(&self.output_node)
-            .unwrap_or_else(|| AudioSource::new(44100, 2)))
+        match sources.remove(&self.output_node) {
+            Some(source) => Ok(source),
+            None => Err("Output node not found".into()),
+        }
     }
 }

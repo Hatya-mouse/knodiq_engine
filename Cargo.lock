@@ -623,7 +623,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "shirabe"
+name = "segment"
 version = "0.1.0"
 dependencies = [
  "cpal",
