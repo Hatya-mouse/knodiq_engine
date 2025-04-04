@@ -20,14 +20,11 @@ pub trait Track {
     /// Sets the volume of the track.
     fn set_volume(&mut self, volume: f32);
 
-    /// Returns the sample rate of the track.
-    fn sample_rate(&self) -> usize;
-
-    /// Sets the sample rate of the track.
-    fn set_sample_rate(&mut self, sample_rate: usize);
-
-    /// Renders the audio source of the track.
-    fn render(&mut self);
+    /// Renders the track with the given sample rate.
+    ///
+    /// # Arguments
+    /// * `sample_rate` - The sample rate of the audio track.
+    fn render(&mut self, sample_rate: usize);
 
     /// Returns the rendered audio source.
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;

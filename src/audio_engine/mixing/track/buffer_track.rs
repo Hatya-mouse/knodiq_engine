@@ -16,8 +16,6 @@ pub struct BufferTrack {
     pub volume: f32,
     /// Audio node graph.
     pub graph: Graph,
-    /// Sample rate of the track.
-    pub sample_rate: usize,
     /// Number of channels in the track.
     pub channels: usize,
     /// Vector of regions in the track.
@@ -27,13 +25,12 @@ pub struct BufferTrack {
 }
 
 impl BufferTrack {
-    pub fn new(id: u32, name: &str, sample_rate: usize, channels: usize) -> Self {
+    pub fn new(id: u32, name: &str, channels: usize) -> Self {
         Self {
             id,
             name: name.to_string(),
             volume: 1.0,
             graph: Graph::new(),
-            sample_rate,
             channels,
             regions: Vec::new(),
             rendered_data: None,
@@ -66,20 +63,12 @@ impl Track for BufferTrack {
         self.volume = volume;
     }
 
-    fn sample_rate(&self) -> usize {
-        self.sample_rate
-    }
-
-    fn set_sample_rate(&mut self, sample_rate: usize) {
-        self.sample_rate = sample_rate;
-    }
-
-    fn render(&mut self) {
+    fn render(&mut self, sample_rate: usize) {
         // Define the chunk size for processing
         let chunk_size = 1024;
 
         // Create a new audio source with the same sample rate and channels
-        let mut output_audio_source = AudioSource::new(self.sample_rate, self.channels);
+        let mut output_audio_source = AudioSource::new(sample_rate, self.channels);
 
         // Print that the track is being processed
         println!(
@@ -87,7 +76,7 @@ impl Track for BufferTrack {
             ansi::BOLD,
             ansi::GREEN,
             ansi::WHITE,
-            self.name,
+            self.name(),
             ansi::RESET,
         );
 
@@ -133,15 +122,14 @@ impl Track for BufferTrack {
                 };
 
                 // Resample the processed region
-                let resampled_audio_source =
-                    match resampler.process(processed_chunk, self.sample_rate) {
-                        Ok(resampled) => resampled,
-                        Err(err) => {
-                            // Is the resample has failed, print the error message and return None
-                            eprintln!("Error resampling audio: {}", err);
-                            AudioSource::new(0, 0)
-                        }
-                    };
+                let resampled_audio_source = match resampler.process(processed_chunk, sample_rate) {
+                    Ok(resampled) => resampled,
+                    Err(err) => {
+                        // Is the resample has failed, print the error message and return None
+                        eprintln!("Error resampling audio: {}", err);
+                        AudioSource::new(0, 0)
+                    }
+                };
 
                 // add the chunk to the audio source
                 for (i, channel) in output_audio_source.data.iter_mut().enumerate() {

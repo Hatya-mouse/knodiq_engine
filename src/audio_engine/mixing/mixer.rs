@@ -37,7 +37,7 @@ impl Mixer {
 
         for track in &mut self.tracks {
             // Render the track and get the rendered audio source from the track
-            track.render();
+            track.render(self.sample_rate);
             let rendered_track = match track.rendered_data() {
                 Ok(data) => data,
                 Err(err) => {

@@ -2,27 +2,38 @@
 // Audio player for playing audio sources.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::AudioSource;
+use crate::audio_engine::{AudioSource, Mixer};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use crossbeam::queue::SegQueue;
 use std::sync::{mpsc, mpsc::TryRecvError, Arc, Mutex};
 
 pub struct AudioPlayer {
     /// Currently playing audio source.
     playing_source: Option<Arc<Mutex<AudioSource>>>,
+
     /// Currently playing stream.
     current_stream: Option<cpal::Stream>,
+
     /// A mspc receiver to know when the audio stream has finished playback.
     receiver: Option<mpsc::Receiver<()>>,
+
     /// Sample rate of the audio player.
     pub sample_rate: usize,
+
     /// Channels of the audio player.
     pub channels: usize,
+
     /// Playback completion handler
     pub completion_handler: Option<Box<dyn FnOnce()>>,
+
     /// Current playback duration.
     pub frame_index: Arc<Mutex<usize>>,
+
     /// Volume of the playback.
     pub volume: f32,
+
+    /// Playback queue.
+    pub audio_queue: SegQueue<f32>,
 }
 
 impl AudioPlayer {
@@ -36,10 +47,12 @@ impl AudioPlayer {
             completion_handler: None,
             frame_index: Arc::new(Mutex::new(0)),
             volume: 1.0,
+            audio_queue: SegQueue::new(),
         }
     }
 
     /// Add an audio buffer data to the end of the currently playing source.
+    /// The first audio source's sample rate and channels will be used to create a audio stream.
     pub fn add_queue(&mut self, source: &AudioSource) -> Result<(), Box<dyn std::error::Error>> {
         // Get the buffer data
         let buffer = &source.data.clone();
@@ -73,6 +86,7 @@ impl AudioPlayer {
         Ok(())
     }
 
+    /// Create a playback stream from the audio source.
     fn create_stream(
         &mut self,
     ) -> Result<(cpal::Stream, mpsc::Receiver<()>), Box<dyn std::error::Error>> {
@@ -83,7 +97,8 @@ impl AudioPlayer {
 
         // Get the config and set the sample rate
         let config = device.default_output_config()?;
-        let stream_config = config.config();
+        let mut stream_config = config.config();
+        stream_config.sample_rate.0 = self.sample_rate as u32;
 
         // Create a sync channel to know when the stream has finished playback
         let (sender, receiver) = mpsc::channel();
@@ -157,5 +172,9 @@ impl AudioPlayer {
                 Err(TryRecvError::Disconnected) => {}
             }
         }
+    }
+
+    pub fn enqueue_audio(&mut self, audio_data: f32) {
+        self.audio_queue.push(audio_data);
     }
 }

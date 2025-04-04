@@ -10,8 +10,8 @@ use audio_engine::{AudioPlayer, AudioSource, Mixer};
 
 fn main() {
     let sample_rate = 48000;
-    let path1 = "";
-    let path2 = "";
+    let path1 = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/3-02 Superior Judgement.mp3";
+    let path2 = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/3-03 Dungeon Drama.mp3";
 
     // Load the source 1 from a file path
     let mut source1 = AudioSource::from_path(path1, 0).unwrap();
@@ -26,7 +26,7 @@ fn main() {
     // Create a region
     let region1 = BufferRegion::new(source1);
     // Create a track
-    let mut track1 = BufferTrack::new(0, "Track 1", sample_rate, 2);
+    let mut track1 = BufferTrack::new(0, "Track 1", 2);
     // Add a region to the track
     track1.add_region(region1);
     track1.graph.connect(
@@ -39,7 +39,7 @@ fn main() {
     // Create a region
     let region2 = BufferRegion::new(source2);
     // Create a track
-    let mut track2 = BufferTrack::new(0, "Track 2", sample_rate, 2);
+    let mut track2 = BufferTrack::new(0, "Track 2", 2);
     // Add a region to the track
     track2.add_region(region2);
     track2.graph.connect(
@@ -55,7 +55,7 @@ fn main() {
     mixer.add_track(Box::new(track2));
 
     let rendered_data = mixer.mix();
-    println!("Rendered data sample count: {}", rendered_data.samples());
+    println!("Rendered data sample rate: {}", rendered_data.sample_rate);
 
     // Create a new audio player
     let mut player = AudioPlayer::new();
