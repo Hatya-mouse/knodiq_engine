@@ -2,64 +2,52 @@
 // Resample the audio source to the desired sample rate.
 // © 2025 Shuntaro Kasatani
 
-use std::any::Any;
-
-use crate::audio_engine::{node::traits::node::Node, source::AudioSource};
+use crate::audio_engine::AudioSource;
 use rubato::{FftFixedIn, Resampler};
 
 /// AudioResampler is a struct that resamples audio sources to a desired sample rate.
 pub struct AudioResampler {
-    output_sample_rate: usize,
-    // Input to the resampler.
-    pub input: Option<AudioSource>,
+    // Resampler to resample the audio region
+    resampler: Option<FftFixedIn<f32>>,
+    // Processing chunk size.
+    chunk_size: usize,
 }
 
 impl AudioResampler {
     /// Create a new AudioResampler with the given output sample rate.
-    pub fn new(output_sample_rate: usize) -> Self {
+    pub fn new(chunk_size: usize) -> Self {
         AudioResampler {
-            output_sample_rate,
-            input: None,
+            resampler: None,
+            chunk_size,
         }
     }
-}
 
-impl Node for AudioResampler {
-    fn process(&self) -> Result<AudioSource, Box<dyn std::error::Error>> {
-        // Chunk size of the resampler
-        let chunk_size = 1024;
-
-        let input = match self.input {
-            Some(ref input) => input,
-            None => return Err("No input provided".into()),
-        };
-
+    pub fn process(
+        &mut self,
+        input: AudioSource,
+        output_sample_rate: usize,
+    ) -> Result<AudioSource, Box<dyn std::error::Error>> {
         // Get the data from the audio source
         let source_channels = input.channels;
         let original_length = input.samples();
         let input_sample_rate = input.sample_rate;
 
         // If the source sample rate is the same as the output sample rate, return the source as is
-        if input_sample_rate == self.output_sample_rate {
+        if input_sample_rate == output_sample_rate {
             return Ok(input.clone());
         }
 
-        println!(
-            "Resampling the source. Input: {}, Output: {}",
-            input_sample_rate, self.output_sample_rate
-        );
-
         // Create a resampler from the data
-        let mut resampler = match FftFixedIn::<f32>::new(
-            input_sample_rate,
-            self.output_sample_rate,
-            chunk_size,
-            chunk_size,
-            source_channels,
-        ) {
-            Ok(resampler) => resampler,
-            Err(err) => return Err(Box::new(err)),
-        };
+        let mut resampler = self.resampler.get_or_insert_with(|| {
+            FftFixedIn::<f32>::new(
+                input_sample_rate,
+                output_sample_rate,
+                self.chunk_size,
+                self.chunk_size,
+                source_channels,
+            )
+            .unwrap()
+        });
 
         // Create a temporary buffer to hold the resampled data
         let mut temp_buffer: Vec<Vec<f32>> = vec![Vec::new(); source_channels];
@@ -72,7 +60,7 @@ impl Node for AudioResampler {
             // Calculate how many frames of delay the resampler gives
             let _delay = <FftFixedIn<f32> as Resampler<f32>>::output_delay(&resampler);
             // Calculate the new length of the clip
-            let _new_length = original_length * self.output_sample_rate / input_sample_rate;
+            let _new_length = original_length * output_sample_rate / input_sample_rate;
             // Calculate how many frames resampler needs
             let needed_frames = <FftFixedIn<f32> as Resampler<f32>>::input_frames_next(&resampler);
 
@@ -83,7 +71,7 @@ impl Node for AudioResampler {
 
             // Get the next chunk of data from the iterator
             let (input_buffer, next_index) =
-                read_frames(input.clone_buffer(), frame_index, chunk_size);
+                read_frames(input.clone_buffer(), frame_index, self.chunk_size);
             frame_index = next_index;
 
             // Resample the data
@@ -102,56 +90,31 @@ impl Node for AudioResampler {
             }
         }
 
-        // Resample the left samples
-        let (input_buffer, _) = read_frames(input.clone_buffer(), frame_index, chunk_size);
-        let output_buffer = match <FftFixedIn<f32> as Resampler<f32>>::process_partial(
-            &mut resampler,
-            Some(&input_buffer),
-            None,
-        ) {
-            Ok(buffer) => buffer,
-            Err(err) => return Err(Box::new(err)),
-        };
+        // Check if any samples are left to resample
+        if frame_index < original_length {
+            // Then reasample the remaining samples
+            let (input_buffer, _) = read_frames(input.clone_buffer(), frame_index, self.chunk_size);
+            let output_buffer = match <FftFixedIn<f32> as Resampler<f32>>::process_partial(
+                &mut resampler,
+                Some(&input_buffer),
+                None,
+            ) {
+                Ok(buffer) => buffer,
+                Err(err) => return Err(Box::new(err)),
+            };
 
-        // Append the data to the temporary buffer
-        for (i, channel) in output_buffer.iter().enumerate() {
-            temp_buffer[i].extend(channel);
+            // Append the data to the temporary buffer
+            for (i, channel) in output_buffer.iter().enumerate() {
+                temp_buffer[i].extend(channel);
+            }
         }
 
         // Return the resampled data
         Ok(AudioSource {
             data: temp_buffer,
             channels: source_channels,
-            sample_rate: self.output_sample_rate,
+            sample_rate: output_sample_rate,
         })
-    }
-
-    fn get_property_list(&self) -> Vec<String> {
-        vec!["output_sample_rate".to_string(), "input".to_string()]
-    }
-
-    fn get_property(&self, property: &str) -> Box<dyn Any> {
-        match property {
-            "output_sample_rate" => Box::new(self.output_sample_rate),
-            "input" => Box::new(self.input.clone()),
-            _ => panic!("Unknown property"),
-        }
-    }
-
-    fn set_property(&mut self, property: &str, value: Box<dyn Any>) {
-        match property {
-            "output_sample_rate" => {
-                if let Some(val) = value.downcast_ref::<usize>() {
-                    self.output_sample_rate = *val;
-                }
-            }
-            "input" => {
-                if let Some(val) = value.downcast_ref::<AudioSource>() {
-                    self.input = Some(val.clone());
-                }
-            }
-            _ => panic!("Unknown property"),
-        }
     }
 }
 

@@ -1,3 +1,7 @@
+// chunk.rs
+// Separates audio buffer into smaller chunks of a given size.
+// © 2025 Shuntaro Kasatani
+
 use std::cmp;
 
 /// Chunk buffer into smaller chunks of a given size.

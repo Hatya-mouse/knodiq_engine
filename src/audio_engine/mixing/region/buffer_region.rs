@@ -1,5 +1,9 @@
-use crate::audio_engine::source::AudioSource;
-use crate::mixer::traits::region::Region;
+// buffer_region.rs
+// Type of region that stores buffer data as a data.
+// © 2025 Shuntaro Kasatani
+
+use crate::audio_engine::AudioSource;
+use crate::audio_engine::Region;
 use std::time::Duration;
 
 pub struct BufferRegion {

@@ -2,7 +2,7 @@
 // Audio player for playing audio sources.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::source::AudioSource;
+use crate::audio_engine::AudioSource;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::sync::{mpsc, mpsc::TryRecvError, Arc, Mutex};
 
@@ -40,7 +40,10 @@ impl AudioPlayer {
     }
 
     /// Add an audio buffer data to the end of the currently playing source.
-    pub fn add_queue(&mut self, buffer: Vec<Vec<f32>>) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn add_queue(&mut self, source: &AudioSource) -> Result<(), Box<dyn std::error::Error>> {
+        // Get the buffer data
+        let buffer = &source.data.clone();
+
         // set the source
         match self.playing_source {
             Some(ref mut playing_source) => {
@@ -53,11 +56,9 @@ impl AudioPlayer {
                 }
             }
             None => {
-                self.playing_source = Some(Arc::new(Mutex::new(AudioSource {
-                    data: buffer,
-                    sample_rate: self.sample_rate,
-                    channels: self.channels,
-                })));
+                self.channels = source.channels;
+                self.sample_rate = source.sample_rate;
+                self.playing_source = Some(Arc::new(Mutex::new(source.clone())));
             }
         }
 
@@ -68,13 +69,6 @@ impl AudioPlayer {
             stream.play()?;
             // Set the current stream
             self.current_stream = Some(stream);
-        }
-        Ok(())
-    }
-
-    pub fn pause(&self) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(ref current_stream) = self.current_stream {
-            current_stream.pause()?;
         }
         Ok(())
     }
@@ -120,12 +114,15 @@ impl AudioPlayer {
                     if frame < locked_source.samples() {
                         // Calculate the channel index
                         let channel = *frame_index % locked_source.channels;
-                        // Get the sample from the source
-                        let owned_sample = locked_source.data[channel][frame];
-                        // Apply the volume and pass the sample value
-                        *sample = owned_sample * volume;
-                        // Increment the frame index
-                        *frame_index += 1;
+                        // Check if the channel exists
+                        if channel < locked_source.channels {
+                            // Get the sample from the source
+                            let owned_sample = locked_source.data[channel][frame];
+                            // Apply the volume and pass the sample value
+                            *sample = owned_sample * volume;
+                            // Increment the frame index
+                            *frame_index += 1;
+                        }
                     } else {
                         // Notify that the playback has finished
                         let _ = sender.send(());

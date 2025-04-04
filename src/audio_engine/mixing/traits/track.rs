@@ -1,4 +1,8 @@
-use crate::audio_engine::source::AudioSource;
+// track.rs
+// Trait that represents a track.
+// © 2025 Shuntaro Kasatani
+
+use crate::audio_engine::AudioSource;
 
 pub trait Track {
     /// Returns the unique identifier of the track.

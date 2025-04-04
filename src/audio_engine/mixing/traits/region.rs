@@ -1,4 +1,8 @@
-use crate::audio_engine::source::AudioSource;
+// region.rs
+// A trait that represents a region in the track.
+// © 2025 Shuntaro Kasatani
+
+use crate::audio_engine::AudioSource;
 use std::time::Duration;
 
 pub trait Region: Send + Sync {

@@ -1,7 +1,8 @@
-use crate::audio_engine::node::built_in::empty_node::EmptyNode;
-use crate::audio_engine::node::connector::Connector;
-use crate::audio_engine::node::traits::node::Node;
-use crate::audio_engine::source::AudioSource;
+// graph.rs
+// Represents a graph of audio nodes that includes nodes, and connections between them.
+// © 2025 Shuntaro Kasatani
+
+use crate::audio_engine::{graph::built_in::EmptyNode, AudioSource, Connector, Node};
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
@@ -138,6 +139,14 @@ impl Graph {
         }
 
         Ok(sorted)
+    }
+
+    pub fn prepare(&mut self, chunk_size: usize) {
+        // Prepare the graph for processing
+        // Call prepare() on each node
+        for (_uuid, node) in self.nodes.iter_mut() {
+            node.prepare(chunk_size);
+        }
     }
 
     /// Processes the input audio source and returns the output.

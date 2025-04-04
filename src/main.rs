@@ -1,69 +1,67 @@
 // main.rs
 // © 2025 Shuntaro Kasatani
 
+mod audio_engine;
+
 use std::process::exit;
 
-use audio_engine::node::traits::node::Node;
-
-use crate::audio_engine::node::built_in::resample::AudioResampler;
-use crate::mixer::traits::track::Track;
-
-mod audio_engine;
-mod mixer;
+use audio_engine::mixing::{region::BufferRegion, track::BufferTrack};
+use audio_engine::{AudioPlayer, AudioSource, Mixer};
 
 fn main() {
     let sample_rate = 48000;
-    let path = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/1-05 Let Them Eat Cake.mp3";
+    let path1 = "";
+    let path2 = "";
 
-    // Load the source from a file path
-    let mut source = audio_engine::source::AudioSource::from_path(path, 0).unwrap();
-    // Normalize the audio source
-    source.normalize();
+    // Load the source 1 from a file path
+    let mut source1 = AudioSource::from_path(path1, 0).unwrap();
+    // Normalize the audio source 1
+    source1.normalize();
+
+    // Load the source 2 from a file path
+    let mut source2 = AudioSource::from_path(path2, 0).unwrap();
+    // Normalize the audio source 2
+    source2.normalize();
 
     // Create a region
-    let region = mixer::region::buffer_region::BufferRegion::new(source);
+    let region1 = BufferRegion::new(source1);
     // Create a track
-    let mut track = mixer::track::buffer_track::BufferTrack::new(0, "Track 0", sample_rate, 2);
+    let mut track1 = BufferTrack::new(0, "Track 1", sample_rate, 2);
     // Add a region to the track
-    track.add_region(region);
-    // Add a resampler to the track
-    let mut resampler_node = AudioResampler::new(sample_rate);
-    resampler_node.set_property("output_sample_rate", Box::new(48000));
-    let resampler_node_id = track.graph.add_node(Box::new(resampler_node));
-    track.graph.connect(
-        track.graph.input_nodes[0],
+    track1.add_region(region1);
+    track1.graph.connect(
+        track1.graph.input_nodes[0],
         "output".to_string(),
-        resampler_node_id,
-        "input".to_string(),
-    );
-    track.graph.connect(
-        resampler_node_id,
-        "output".to_string(),
-        track.graph.output_node,
+        track1.graph.output_node,
         "input".to_string(),
     );
 
-    track.sample_rate = sample_rate;
-
-    // Render the track
-    track.render();
-
-    let rendered_data = track.rendered_data().unwrap();
-    println!(
-        "Rendered data channels: {}, samples: {}",
-        rendered_data.channels,
-        rendered_data.samples()
+    // Create a region
+    let region2 = BufferRegion::new(source2);
+    // Create a track
+    let mut track2 = BufferTrack::new(0, "Track 2", sample_rate, 2);
+    // Add a region to the track
+    track2.add_region(region2);
+    track2.graph.connect(
+        track2.graph.input_nodes[0],
+        "output".to_string(),
+        track2.graph.output_node,
+        "input".to_string(),
     );
+
+    // Create a mixer
+    let mut mixer = Mixer::new(sample_rate, 2);
+    mixer.add_track(Box::new(track1));
+    mixer.add_track(Box::new(track2));
+
+    let rendered_data = mixer.mix();
+    println!("Rendered data sample count: {}", rendered_data.samples());
 
     // Create a new audio player
-    let mut player = audio_engine::audio_player::AudioPlayer::new();
+    let mut player = AudioPlayer::new();
 
     // Set the sample rate and channels
-    player.channels = 2;
-    player.sample_rate = sample_rate;
-    player
-        .add_queue(rendered_data.data.clone())
-        .expect("Playback error");
+    player.add_queue(&rendered_data).expect("Playback error");
 
     player.completion_handler = Some(Box::new(|| {
         exit(0);

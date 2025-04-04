@@ -1,3 +1,7 @@
+// hosting.rs
+// Provides functionality for loading and interacting with LV2 plugins.
+// © 2025 Shuntaro Kasatani
+
 use libloading::{Library, Symbol};
 use std::ffi::c_void;
 

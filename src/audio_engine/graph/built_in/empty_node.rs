@@ -1,5 +1,9 @@
-use crate::audio_engine::node::traits::node::Node;
-use crate::audio_engine::source::AudioSource;
+// empty_node.rs
+// A graph node that just pass the audio source.
+// © 2025 Shuntaro Kasatani
+
+use crate::audio_engine::graph::Node;
+use crate::audio_engine::AudioSource;
 use std::any::Any;
 use std::panic::panic_any;
 
@@ -16,9 +20,11 @@ impl EmptyNode {
 }
 
 impl Node for EmptyNode {
-    fn process(&self) -> Result<AudioSource, Box<dyn std::error::Error>> {
-        Ok(self.input.as_ref().ok_or("Input not set")?.clone())
+    fn process(&mut self) -> Result<AudioSource, Box<dyn std::error::Error>> {
+        Ok(self.input.as_ref().ok_or("Input not provided")?.clone())
     }
+
+    fn prepare(&mut self, _: usize) {}
 
     fn get_property_list(&self) -> Vec<String> {
         Vec::new()

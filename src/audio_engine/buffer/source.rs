@@ -2,8 +2,7 @@
 // Audio source for holding audio data.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::audio_buffer::AudioBuffer;
-use crate::audio_engine::sample::Sample;
+use crate::audio_engine::{AudioBuffer, Sample};
 
 use std::f32;
 use std::fs::File;
@@ -107,6 +106,27 @@ impl AudioSource {
             channels,
             data: output_buffer,
         })
+    }
+
+    /// Mix the audio buffer with another buffer
+    pub fn mix(&mut self, other: &AudioSource) {
+        for (channel_index, other_channel) in other.data.iter().enumerate() {
+            // If the another source has more channels than this one, add a new channel
+            if channel_index >= self.channels {
+                self.data.push(Vec::new());
+                self.channels += 1;
+            }
+
+            // Then mix the channels
+            for (sample_index, other_sample) in other_channel.iter().enumerate() {
+                // If another source has more samples than this one, add a new sample
+                if sample_index >= self.data[channel_index].len() {
+                    self.data[channel_index].push(*other_sample);
+                } else {
+                    self.data[channel_index][sample_index] += other_sample;
+                }
+            }
+        }
     }
 
     /// Normalize the audio buffer to maximize sample value.

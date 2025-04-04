@@ -1,6 +1,10 @@
-use crate::audio_engine::node::graph::NodeId;
+// connector.rs
+// Represents the connection between nodes.
+// © 2025 Shuntaro Kasatani
 
-/// Represents the connection between nodes
+use crate::audio_engine::NodeId;
+
+/// Represents the connection between nodes in the graph.
 pub struct Connector {
     /// The ID of the node that provides the input signal.
     pub from: NodeId,
