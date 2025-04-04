@@ -2,3 +2,4 @@
 /.vscode
 flamegraph.svg
 test-flamegraph
+.DS_Store
