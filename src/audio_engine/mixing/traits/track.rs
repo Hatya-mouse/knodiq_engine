@@ -23,8 +23,9 @@ pub trait Track {
     /// Renders the track with the given sample rate.
     ///
     /// # Arguments
-    /// * `sample_rate` - The sample rate of the audio track.
-    fn render(&mut self, sample_rate: usize);
+    /// - `sample_rate` - The sample rate of the audio track.
+    /// - `callback` - A callback function that receives the rendered audio samples.
+    fn render(&mut self, sample_rate: usize, callback: &mut Box<dyn FnMut(f32)>);
 
     /// Returns the rendered audio source.
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;

@@ -1,2 +1,2 @@
-# Segment
-Segment is a simple, lightweight, beginner-friendly DAW, built with Rust.
+# Segno
+Segno is a simple, lightweight, beginner-friendly DAW, built with Rust.
