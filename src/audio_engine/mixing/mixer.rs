@@ -31,13 +31,13 @@ impl Mixer {
     }
 
     /// Mixes all the tracks into a single audio source.
-    pub fn mix(&mut self) -> AudioSource {
+    pub fn mix(&mut self, mut callback: Box<dyn FnMut(f32)>) -> AudioSource {
         // Create a new AudioSource instance to return
         let mut output = AudioSource::new(self.sample_rate, self.channels);
 
         for track in &mut self.tracks {
             // Render the track and get the rendered audio source from the track
-            track.render(self.sample_rate);
+            track.render(self.sample_rate, &mut callback);
             let rendered_track = match track.rendered_data() {
                 Ok(data) => data,
                 Err(err) => {

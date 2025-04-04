@@ -2,6 +2,8 @@
 // A type of buffer that stores buffer as audio data.
 // © 2025 Shuntaro Kasatani
 
+use std::ops::DerefMut;
+
 use crate::audio_engine::{
     mixing::region::BufferRegion, utils::ansi, utils::chunk, AudioResampler, AudioSource, Graph,
     Region, Track,
@@ -63,7 +65,7 @@ impl Track for BufferTrack {
         self.volume = volume;
     }
 
-    fn render(&mut self, sample_rate: usize) {
+    fn render(&mut self, sample_rate: usize, callback: &mut Box<dyn FnMut(f32)>) {
         // Define the chunk size for processing
         let chunk_size = 1024;
 
@@ -130,6 +132,19 @@ impl Track for BufferTrack {
                         AudioSource::new(0, 0)
                     }
                 };
+
+                // Call the callback function with the resampled audio data
+                println!(
+                    "Channel count is {}",
+                    resampled_audio_source.samples() == resampled_audio_source.data[1].len()
+                );
+                for sample_index in 0..resampled_audio_source.samples() {
+                    for channel_index in 0..resampled_audio_source.channels {
+                        let sample = resampled_audio_source.data[channel_index][sample_index];
+                        // Call the callback function with the sample
+                        callback.as_mut()(sample);
+                    }
+                }
 
                 // add the chunk to the audio source
                 for (i, channel) in output_audio_source.data.iter_mut().enumerate() {

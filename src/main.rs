@@ -49,19 +49,27 @@ fn main() {
         "input".to_string(),
     );
 
+    // Create a new audio player
+    let mut player = AudioPlayer::new();
+
+    // Set the sample rate and channels
+    let sample_sender = player
+        .initialize_player(sample_rate, 2)
+        .expect("Playback error");
+
     // Create a mixer
     let mut mixer = Mixer::new(sample_rate, 2);
     mixer.add_track(Box::new(track1));
     mixer.add_track(Box::new(track2));
 
-    let rendered_data = mixer.mix();
+    // Move sample_sender into the closure to fix lifetime issues
+    let rendered_data = {
+        let sender = sample_sender;
+        mixer.mix(Box::new(move |sample| {
+            let _ = sender.send(sample);
+        }))
+    };
     println!("Rendered data sample rate: {}", rendered_data.sample_rate);
-
-    // Create a new audio player
-    let mut player = AudioPlayer::new();
-
-    // Set the sample rate and channels
-    player.add_queue(&rendered_data).expect("Playback error");
 
     player.completion_handler = Some(Box::new(|| {
         exit(0);
