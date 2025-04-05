@@ -6,7 +6,6 @@ use crate::audio_engine::{
     audio_utils, mixing::region::BufferRegion, AudioResampler, AudioSource, Duration, Graph,
     Region, Track,
 };
-use crate::utils::ansi;
 
 pub struct BufferTrack {
     /// Unique identifier for the track.
