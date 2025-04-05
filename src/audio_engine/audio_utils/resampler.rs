@@ -27,7 +27,7 @@ impl AudioResampler {
         input_channels: usize,
         input_sample_rate: usize,
         output_sample_rate: usize,
-    ) {
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.resampler = match FftFixedIn::<f32>::new(
             input_sample_rate,
             output_sample_rate,
@@ -36,8 +36,9 @@ impl AudioResampler {
             input_channels,
         ) {
             Ok(resampler) => Some(resampler),
-            Err(_) => None,
-        }
+            Err(err) => return Err(Box::new(err)),
+        };
+        Ok(())
     }
 
     pub fn process(
@@ -57,7 +58,7 @@ impl AudioResampler {
 
         // Create a resampler from the data
         if self.resampler.is_none() {
-            self.prepare(source_channels, input_sample_rate, output_sample_rate);
+            self.prepare(source_channels, input_sample_rate, output_sample_rate)?;
         }
         let mut resampler = match self.resampler {
             Some(ref mut resampler) => resampler,
