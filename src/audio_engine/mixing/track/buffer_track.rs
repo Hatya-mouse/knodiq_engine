@@ -3,7 +3,8 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::audio_engine::{
-    mixing::region::BufferRegion, utils, AudioResampler, AudioSource, Graph, Region, Track,
+    audio_utils, mixing::region::BufferRegion, AudioResampler, AudioSource, Duration, Graph,
+    Region, Track,
 };
 
 pub struct BufferTrack {
@@ -23,7 +24,6 @@ pub struct BufferTrack {
     pub rendered_data: Option<AudioSource>,
     /// Resamplers for each regions.
     resamplers: Vec<AudioResampler>,
-    resampler: Option<AudioResampler>,
 }
 
 impl BufferTrack {
@@ -37,7 +37,6 @@ impl BufferTrack {
             regions: Vec::new(),
             rendered_data: None,
             resamplers: Vec::new(),
-            resampler: None,
         }
     }
 
@@ -78,41 +77,52 @@ impl Track for BufferTrack {
             .resize_with(self.regions.len(), || AudioResampler::new(chunk_size));
     }
 
-    fn render_chunk_at(&mut self, playhead: usize, chunk_size: usize, sample_rate: usize) -> bool {
+    fn render_chunk_at(
+        &mut self,
+        playhead: Duration,
+        chunk_size: Duration,
+        sample_rate: usize,
+    ) -> bool {
         // Clear the rendered data
         self.rendered_data = Some(AudioSource::new(sample_rate, self.channels));
 
         // Whether the rendering has finished
         let mut completed = true;
 
-        let playhead_duration = utils::as_duration(sample_rate, playhead);
-
         for (region_index, region) in self
             .regions
             .iter_mut()
-            .filter(|r| r.is_active_at(playhead_duration, chunk_size, sample_rate))
+            .filter(|r| r.is_active_at(playhead, playhead + chunk_size))
             .enumerate()
         {
-            if playhead_duration < region.end_time() {
+            if playhead < region.end_time() {
                 completed = false;
             }
 
-            let source = region.audio_source();
+            let region_source = region.audio_source();
 
-            // Start sample index of the region
-            let region_start = utils::as_samples(sample_rate, region.start_time());
+            // Calculate the area to be sliced
+            // ———————————————————————————————
+            // Start sample index of the region (in Region sample rate) (in global position)
+            let region_start =
+                audio_utils::as_samples(region_source.sample_rate, region.start_time());
+            // Playhead position (in Region sample rate)
+            let region_playhead = audio_utils::as_samples(region_source.sample_rate, playhead);
+            // Chunk size (in Region sample rate)
+            let region_chunk_size = audio_utils::as_samples(region_source.sample_rate, chunk_size);
 
-            // Calculate the end sample index of the chunk
-            let chunk_end = (playhead + chunk_size) - region_start;
+            // Calculate the range to slice (in Region sample rate) (in Region-based position)
+            let start_sample = region_playhead.saturating_sub(region_start);
+            //  |    |    | [ R>E G |I O |N ] |    |    |    |    |    |    |
+            // region_start ^  ^    ^ region_playhead + region_chunk_size
+            //
+            // >: Playhead, |: Chunk separation
+            let end_sample = (start_sample + region_chunk_size).clamp(0, region_source.samples());
 
-            // Range to slice
-            let start_sample = (playhead - region_start).clamp(0, source.samples());
-            let end_sample = (start_sample + chunk_size).clamp(0, source.samples().min(chunk_end));
-
-            // Get the chunk
-            let mut chunk = AudioSource::new(source.sample_rate, self.channels);
+            // Slice the region to get the chunk
+            let mut chunk = AudioSource::new(region_source.sample_rate, self.channels);
             for ch in 0..self.channels {
-                chunk.data[ch].extend_from_slice(&source.data[ch][start_sample..end_sample]);
+                chunk.data[ch].extend_from_slice(&region_source.data[ch][start_sample..end_sample]);
             }
 
             // Resample the chunk with the resampler dedicated to the region
@@ -128,8 +138,10 @@ impl Track for BufferTrack {
             };
 
             if let Some(ref mut data) = self.rendered_data {
+                // Calculate the chunk start position (in chunk-based position)
+                let region_start_in_chunk = region.start_time().saturating_sub(playhead);
                 // Add the processed chunk to the rendered data at the chunk start position
-                data.mix_at(&processed, region_start.saturating_sub(playhead));
+                data.mix_at(&processed, region_start_in_chunk);
             }
         }
 

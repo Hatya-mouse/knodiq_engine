@@ -624,7 +624,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "segment"
+name = "segno"
 version = "0.1.0"
 dependencies = [
  "cpal",

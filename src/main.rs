@@ -7,7 +7,7 @@ mod utils;
 use std::process::exit;
 
 use audio_engine::mixing::{region::BufferRegion, track::BufferTrack};
-use audio_engine::{AudioPlayer, AudioSource, Mixer};
+use audio_engine::{audio_utils, AudioPlayer, AudioSource, Duration, Mixer, Region};
 use utils::ansi;
 
 fn main() {
@@ -19,7 +19,7 @@ fn main() {
     );
 
     let sample_rate = 48000;
-    let path1 = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/3-02 Superior Judgement.mp3";
+    let path1 = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/3-04 Necron Doom.mp3";
     let path2 = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/3-03 Dungeon Drama.mp3";
 
     // Load the source 1 from a file path
@@ -46,9 +46,10 @@ fn main() {
     );
 
     // Create a region
-    let region2 = BufferRegion::new(source2);
+    let mut region2 = BufferRegion::new(source2);
+    region2.set_start_time(Duration::from_secs_f32(5.0));
     // Create a track
-    let mut track2 = BufferTrack::new(0, "Track 2", 2);
+    let mut track2 = BufferTrack::new(1, "Track 2", 2);
     // Add a region to the track
     track2.add_region(region2);
     track2.graph.connect(

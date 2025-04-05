@@ -2,7 +2,7 @@
 // Mixer mixes multiple audio tracks into AudioSource.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{AudioSource, Track};
+use crate::audio_engine::{audio_utils, AudioSource, Duration, Track};
 use crate::utils::ansi;
 
 pub struct Mixer {
@@ -15,8 +15,8 @@ pub struct Mixer {
     /// Sample rate of the output audio source.
     sample_rate: usize,
 
-    /// Currently rendering position.
-    playhead_position: usize,
+    /// Currently rendering position in Duration.
+    playhead_duration: Duration,
 }
 
 impl Mixer {
@@ -26,7 +26,7 @@ impl Mixer {
             tracks: Vec::new(),
             channels,
             sample_rate,
-            playhead_position: 0,
+            playhead_duration: Duration::ZERO,
         }
     }
 
@@ -48,22 +48,24 @@ impl Mixer {
     /// - `callback` - Called when the chunk has rendered. Rendered sample is passed. Sample will be passed in this way:
     /// `Sample 0` from `Channel 0`, `Sample 0` from `Channel 1`, `Sample 1` from `Channel 0`, `Sample 1` from `Channel 1`...
     pub fn mix(&mut self, mut callback: Box<dyn FnMut(f32)>) -> AudioSource {
-        self.playhead_position = 0;
+        self.playhead_duration = Duration::ZERO;
 
         // Create a new AudioSource instance to return
         let mut output = AudioSource::new(self.sample_rate, self.channels);
 
-        // Define the chunk size
-        let chunk_size: usize = 1024;
+        // Define the chunk length in duration
+        let chunk_duration: Duration = Duration::from_millis(100);
+        // Chunk size in output sample rate
+        let chunk_size = audio_utils::as_samples(self.sample_rate, chunk_duration);
 
         loop {
             // Process the chunk and get whether the rendering has completed
-            if self.process_chunk(&mut output, chunk_size) {
+            if self.process_chunk(&mut output, chunk_duration) {
                 break;
             }
 
             // Call the callback function for only the newly rendered chunk
-            let start_sample = self.playhead_position;
+            let start_sample = audio_utils::as_samples(self.sample_rate, self.playhead_duration);
             let end_sample = (start_sample + chunk_size).min(output.samples());
 
             for sample in start_sample..end_sample {
@@ -73,7 +75,7 @@ impl Mixer {
             }
 
             // Increment the playhead duration
-            self.playhead_position += chunk_size;
+            self.playhead_duration += chunk_duration;
         }
 
         println!(
@@ -91,20 +93,20 @@ impl Mixer {
     ///
     /// # Arguments
     /// - `output` - The output audio source to save the rendered data. Must be an mutable reference.
-    /// - `chunk_size` - Processing chunk size.
+    /// - `chunk_duration` - Processing chunk duration.
     /// - `callback` - Called when the chunk has rendered.
     ///
     /// # Returns
     /// - `true` - The rendering has completed.
     /// - `false` - The rendering hasn't completed yet.
-    pub fn process_chunk(&mut self, output: &mut AudioSource, chunk_size: usize) -> bool {
+    pub fn process_chunk(&mut self, output: &mut AudioSource, chunk_duration: Duration) -> bool {
         // Whether the processing has finished
         let mut completed = true;
 
         // Loop through tracks
         for track in &mut self.tracks {
             // Render the track and get the rendered audio source from the track
-            if !track.render_chunk_at(self.playhead_position, chunk_size, self.sample_rate) {
+            if !track.render_chunk_at(self.playhead_duration, chunk_duration, self.sample_rate) {
                 completed = false;
             };
             let rendered_track = match track.rendered_data() {
@@ -122,7 +124,7 @@ impl Mixer {
             };
 
             // Mix the rendered track into the output audio source
-            output.mix_at(rendered_track, self.playhead_position);
+            output.mix_at(rendered_track, self.playhead_duration);
         }
 
         // Return whether the rendering has completed

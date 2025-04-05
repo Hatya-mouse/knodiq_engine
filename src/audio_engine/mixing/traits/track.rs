@@ -2,8 +2,7 @@
 // Trait that represents a track.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{AudioSource, Graph};
-use std::time::Duration;
+use crate::audio_engine::{AudioSource, Duration, Graph};
 
 pub trait Track {
     /// Returns the unique identifier of the track.
@@ -37,7 +36,12 @@ pub trait Track {
     /// # Returns
     /// - `true` The track has finished rendering.
     /// - `false` The track still has regions or the graph to render.
-    fn render_chunk_at(&mut self, playhead: usize, chunk_size: usize, sample_rate: usize) -> bool;
+    fn render_chunk_at(
+        &mut self,
+        playhead: Duration,
+        chunk_size: Duration,
+        sample_rate: usize,
+    ) -> bool;
 
     /// Returns the rendered audio source.
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;

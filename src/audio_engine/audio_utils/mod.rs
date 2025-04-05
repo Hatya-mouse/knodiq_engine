@@ -1,4 +1,4 @@
-// audio_engine/utils/mod.rs
+// audio_engine/audio_utils/mod.rs
 // © 2025 Shuntaro Kasatani
 
 pub mod audio_player;
