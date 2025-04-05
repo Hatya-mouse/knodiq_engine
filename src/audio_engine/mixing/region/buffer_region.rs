@@ -5,9 +5,9 @@
 use crate::audio_engine::{AudioSource, Duration, Region};
 
 pub struct BufferRegion {
-    /// Start time of the region in frames
+    /// Start time of the region in frames.
     start_time: Duration,
-    /// Audio source of the region
+    /// Audio source of the region.
     source: AudioSource,
 }
 
@@ -23,6 +23,11 @@ impl BufferRegion {
     /// Returns the audio source of the region.
     pub fn audio_source(&self) -> &AudioSource {
         &self.source
+    }
+
+    /// Sets the audio source of the region.
+    pub fn set_audio_source(&mut self, source: AudioSource) {
+        self.source = source;
     }
 }
 

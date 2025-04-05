@@ -22,6 +22,24 @@ impl AudioResampler {
         }
     }
 
+    pub fn prepare(
+        &mut self,
+        input_channels: usize,
+        input_sample_rate: usize,
+        output_sample_rate: usize,
+    ) {
+        self.resampler = match FftFixedIn::<f32>::new(
+            input_sample_rate,
+            output_sample_rate,
+            self.chunk_size,
+            self.chunk_size,
+            input_channels,
+        ) {
+            Ok(resampler) => Some(resampler),
+            Err(_) => None,
+        }
+    }
+
     pub fn process(
         &mut self,
         input: AudioSource,
@@ -38,16 +56,13 @@ impl AudioResampler {
         }
 
         // Create a resampler from the data
-        let mut resampler = self.resampler.get_or_insert_with(|| {
-            FftFixedIn::<f32>::new(
-                input_sample_rate,
-                output_sample_rate,
-                self.chunk_size,
-                self.chunk_size,
-                source_channels,
-            )
-            .unwrap()
-        });
+        if self.resampler.is_none() {
+            self.prepare(source_channels, input_sample_rate, output_sample_rate);
+        }
+        let mut resampler = match self.resampler {
+            Some(ref mut resampler) => resampler,
+            None => return Err("Resampler not initialized".into()),
+        };
 
         // Create a temporary buffer to hold the resampled data
         let mut temp_buffer: Vec<Vec<f32>> = vec![Vec::new(); source_channels];

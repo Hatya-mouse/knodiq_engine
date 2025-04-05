@@ -3,7 +3,7 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::audio_engine::{
-    mixing::region::BufferRegion, AudioResampler, AudioSource, Duration, Graph, Region, Track,
+    mixing::region::BufferRegion, utils, AudioResampler, AudioSource, Graph, Region, Track,
 };
 
 pub struct BufferTrack {
@@ -21,7 +21,8 @@ pub struct BufferTrack {
     pub regions: Vec<BufferRegion>,
     /// Rendered audio data.
     pub rendered_data: Option<AudioSource>,
-    /// Resampler to resample the buffer.
+    /// Resamplers for each regions.
+    resamplers: Vec<AudioResampler>,
     resampler: Option<AudioResampler>,
 }
 
@@ -35,6 +36,7 @@ impl BufferTrack {
             channels,
             regions: Vec::new(),
             rendered_data: None,
+            resamplers: Vec::new(),
             resampler: None,
         }
     }
@@ -69,72 +71,67 @@ impl Track for BufferTrack {
         self.volume = volume;
     }
 
-    fn prepare(&mut self, chunk_size: usize) {
+    fn prepare(&mut self, _sample_rate: usize) {
+        let chunk_size = 1024;
         self.graph.prepare(chunk_size);
-        self.resampler = Some(AudioResampler::new(chunk_size));
+        self.resamplers
+            .resize_with(self.regions.len(), || AudioResampler::new(chunk_size));
     }
 
-    fn render_chunk_at(
-        &mut self,
-        playhead: Duration,
-        chunk_size: usize,
-        sample_rate: usize,
-    ) -> bool {
-        // Create a new audio source with the same sample rate and channels
-        let mut output = AudioSource::new(sample_rate, self.channels);
+    fn render_chunk_at(&mut self, playhead: usize, chunk_size: usize, sample_rate: usize) -> bool {
+        // Clear the rendered data
+        self.rendered_data = Some(AudioSource::new(sample_rate, self.channels));
 
         // Whether the rendering has finished
         let mut completed = true;
 
-        for region in self
+        let playhead_duration = utils::as_duration(sample_rate, playhead);
+
+        for (region_index, region) in self
             .regions
-            .iter()
-            .filter(|r| r.is_active_at(playhead, chunk_size, sample_rate))
+            .iter_mut()
+            .filter(|r| r.is_active_at(playhead_duration, chunk_size, sample_rate))
+            .enumerate()
         {
-            if playhead < region.end_time() {
+            if playhead_duration < region.end_time() {
                 completed = false;
             }
 
-            if !region.is_active_at(playhead, chunk_size, sample_rate) {
-                continue;
-            }
-
             let source = region.audio_source();
-            let region_start = region.start_time();
-            let offset = if playhead > region_start {
-                playhead - region_start
-            } else {
-                Duration::ZERO
-            };
 
-            let start_sample = (offset.as_secs_f64() * source.sample_rate as f64) as usize;
-            let end_sample = (start_sample + chunk_size).min(source.samples());
+            // Start sample index of the region
+            let region_start = utils::as_samples(sample_rate, region.start_time());
 
-            let mut chunk = AudioSource::new(sample_rate, self.channels);
+            // Calculate the end sample index of the chunk
+            let chunk_end = (playhead + chunk_size) - region_start;
+
+            // Range to slice
+            let start_sample = (playhead - region_start).clamp(0, source.samples());
+            let end_sample = (start_sample + chunk_size).clamp(0, source.samples().min(chunk_end));
+
+            // Get the chunk
+            let mut chunk = AudioSource::new(source.sample_rate, self.channels);
             for ch in 0..self.channels {
                 chunk.data[ch].extend_from_slice(&source.data[ch][start_sample..end_sample]);
             }
 
-            // Process the chunk through the graph
-            let processed = match self.graph.process(chunk) {
+            // Resample the chunk with the resampler dedicated to the region
+            let resampled = match self.resamplers[region_index].process(chunk, sample_rate) {
                 Ok(chunk) => chunk,
                 Err(_) => continue,
             };
 
-            // Resample the processed data
-            let resampled = match self.resampler {
-                Some(ref mut resampler) => match resampler.process(processed, sample_rate) {
-                    Ok(chunk) => chunk,
-                    Err(_) => continue,
-                },
-                None => continue,
+            // Process the chunk through the graph
+            let processed = match self.graph.process(resampled) {
+                Ok(chunk) => chunk,
+                Err(_) => continue,
             };
 
-            output.mix(&resampled);
+            if let Some(ref mut data) = self.rendered_data {
+                // Add the processed chunk to the rendered data at the chunk start position
+                data.mix_at(&processed, region_start.saturating_sub(playhead));
+            }
         }
-
-        // Set the rendered data
-        self.rendered_data = Some(output);
 
         // Return whether the rendering has ended
         completed

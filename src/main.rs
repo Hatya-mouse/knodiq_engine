@@ -76,7 +76,6 @@ fn main() {
     mixer.prepare();
     mixer.mix(Box::new(move |sample| {
         let _ = sender.send(sample);
-        println!("Mixing sample");
     }));
 
     player.completion_handler = Some(Box::new(|| {

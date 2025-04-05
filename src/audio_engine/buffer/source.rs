@@ -2,7 +2,7 @@
 // Audio source for holding audio data.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{utils, AudioBuffer, Duration, Sample};
+use crate::audio_engine::{AudioBuffer, Sample};
 
 use std::f32;
 use std::fs::File;
@@ -112,39 +112,22 @@ impl AudioSource {
     ///
     /// # Arguments
     /// - `other` - The other audio source to mix with.
-    /// - `at` - The time at which to mix the audio buffers.
-    pub fn mix_at(&mut self, other: &AudioSource, at: Duration) {
-        // Calculate the offset of the mix operation
-        let offset = utils::as_samples(self.sample_rate, at);
-        // Add the offset at the start of the buffer
-        let mut clone_other = other.clone();
-        clone_other.data.iter_mut().for_each(|channel| {
-            channel.splice(0..0, vec![0.0; offset]);
-        });
-
-        self.mix(&clone_other);
-    }
-
-    /// Mix the audio buffer with another buffer.
-    ///
-    /// # Arguments
-    /// - `other` - The other audio source to mix with.
-    pub fn mix(&mut self, other: &AudioSource) {
+    /// - `at` - The index at which to mix the audio buffers.
+    pub fn mix_at(&mut self, other: &AudioSource, offset: usize) {
+        // Instead of cloning the entire audio source, we'll mix directly
         for (channel_index, other_channel) in other.data.iter().enumerate() {
-            // If the another source has more channels than this one, add a new channel
+            // If the other source has more channels than this one, add a new channel
             if channel_index >= self.channels {
-                self.data.push(Vec::new());
+                self.data.push(vec![0.0; offset + other_channel.len()]);
                 self.channels += 1;
+            } else if self.data[channel_index].len() < offset + other_channel.len() {
+                // Extend current channel if needed
+                self.data[channel_index].resize(offset + other_channel.len(), 0.0);
             }
 
-            // Then mix the channels
-            for (sample_index, other_sample) in other_channel.iter().enumerate() {
-                // If another source has more samples than this one, add a new sample
-                if sample_index >= self.data[channel_index].len() {
-                    self.data[channel_index].push(*other_sample);
-                } else {
-                    self.data[channel_index][sample_index] += other_sample;
-                }
+            // Mix the samples at the offset position
+            for (sample_index, &other_sample) in other_channel.iter().enumerate() {
+                self.data[channel_index][offset + sample_index] += other_sample;
             }
         }
     }
