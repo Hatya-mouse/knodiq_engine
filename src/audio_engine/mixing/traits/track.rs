@@ -2,7 +2,8 @@
 // Trait that represents a track.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::AudioSource;
+use crate::audio_engine::{AudioSource, Graph};
+use std::time::Duration;
 
 pub trait Track {
     /// Returns the unique identifier of the track.
@@ -14,18 +15,27 @@ pub trait Track {
     /// Sets the name of the track.
     fn set_name(&mut self, name: &str);
 
+    /// Get the graph of the track.
+    fn graph(&mut self) -> &mut Graph;
+
     /// Returns the current volume of the track.
     fn volume(&self) -> f32;
 
     /// Sets the volume of the track.
     fn set_volume(&mut self, volume: f32);
 
-    /// Renders the track with the given sample rate.
+    /// Renders the specified area of the track.
     ///
     /// # Arguments
+    /// - `playhead` - The currently rendering duration of the audio track.
     /// - `sample_rate` - The sample rate of the audio track.
-    /// - `callback` - A callback function that receives the rendered audio samples.
-    fn render(&mut self, sample_rate: usize, callback: &mut Box<dyn FnMut(f32)>);
+    /// - `callback` - The callback function to receive the rendered audio data.
+    fn render_chunk_at(
+        &mut self,
+        playhead: Duration,
+        sample_rate: usize,
+        callback: &mut Box<dyn FnMut(f32)>,
+    );
 
     /// Returns the rendered audio source.
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;

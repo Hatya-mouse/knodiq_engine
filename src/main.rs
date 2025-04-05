@@ -2,13 +2,22 @@
 // © 2025 Shuntaro Kasatani
 
 mod audio_engine;
+mod utils;
 
 use std::process::exit;
 
 use audio_engine::mixing::{region::BufferRegion, track::BufferTrack};
 use audio_engine::{AudioPlayer, AudioSource, Mixer};
+use utils::ansi;
 
 fn main() {
+    println!(
+        "{}{}— Segno —{}",
+        ansi::BOLD,
+        ansi::BG_BRIGHT_MAGENTA,
+        ansi::RESET
+    );
+
     let sample_rate = 48000;
     let path1 = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/3-02 Superior Judgement.mp3";
     let path2 = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/3-03 Dungeon Drama.mp3";
@@ -63,13 +72,10 @@ fn main() {
     mixer.add_track(Box::new(track2));
 
     // Move sample_sender into the closure to fix lifetime issues
-    let rendered_data = {
-        let sender = sample_sender;
-        mixer.mix(Box::new(move |sample| {
-            let _ = sender.send(sample);
-        }))
-    };
-    println!("Rendered data sample rate: {}", rendered_data.sample_rate);
+    let sender = sample_sender;
+    mixer.mix(Box::new(move |sample| {
+        let _ = sender.send(sample);
+    }));
 
     player.completion_handler = Some(Box::new(|| {
         exit(0);
