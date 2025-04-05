@@ -127,13 +127,6 @@ impl Mixer {
             output.mix_at(rendered_track, self.playhead_duration);
         }
 
-        println!(
-            "{}{}Rendering finished.{}",
-            ansi::BOLD,
-            ansi::BRIGHT_MAGENTA,
-            ansi::RESET
-        );
-
         // Return whether the rendering has completed
         completed
     }
