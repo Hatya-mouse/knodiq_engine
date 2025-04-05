@@ -128,9 +128,6 @@ impl AudioPlayer {
                     if let Some(handler) = self.completion_handler.take() {
                         handler();
                     }
-                    // Drop the source and the stream
-                    drop(self.playing_source.take());
-                    drop(self.current_stream.take());
                 }
                 Err(TryRecvError::Empty) => {}
                 Err(TryRecvError::Disconnected) => {}

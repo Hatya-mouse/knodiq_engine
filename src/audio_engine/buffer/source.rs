@@ -2,7 +2,7 @@
 // Audio source for holding audio data.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{AudioBuffer, Sample};
+use crate::audio_engine::{utils, AudioBuffer, Duration, Sample};
 
 use std::f32;
 use std::fs::File;
@@ -108,7 +108,27 @@ impl AudioSource {
         })
     }
 
-    /// Mix the audio buffer with another buffer
+    /// Mix the audio buffer with another buffer at a specific time.
+    ///
+    /// # Arguments
+    /// - `other` - The other audio source to mix with.
+    /// - `at` - The time at which to mix the audio buffers.
+    pub fn mix_at(&mut self, other: &AudioSource, at: Duration) {
+        // Calculate the offset of the mix operation
+        let offset = utils::as_samples(self.sample_rate, at);
+        // Add the offset at the start of the buffer
+        let mut clone_other = other.clone();
+        clone_other.data.iter_mut().for_each(|channel| {
+            channel.splice(0..0, vec![0.0; offset]);
+        });
+
+        self.mix(&clone_other);
+    }
+
+    /// Mix the audio buffer with another buffer.
+    ///
+    /// # Arguments
+    /// - `other` - The other audio source to mix with.
     pub fn mix(&mut self, other: &AudioSource) {
         for (channel_index, other_channel) in other.data.iter().enumerate() {
             // If the another source has more channels than this one, add a new channel

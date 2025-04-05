@@ -24,18 +24,25 @@ pub trait Track {
     /// Sets the volume of the track.
     fn set_volume(&mut self, volume: f32);
 
+    /// Prepare the track for rendering.
+    fn prepare(&mut self, chunk_size: usize);
+
     /// Renders the specified area of the track.
     ///
     /// # Arguments
     /// - `playhead` - The currently rendering duration of the audio track.
+    /// - `chunk_size` - The size of the chunk to render.
     /// - `sample_rate` - The sample rate of the audio track.
-    /// - `callback` - The callback function to receive the rendered audio data.
+    ///
+    /// # Returns
+    /// - `true` The track has finished rendering.
+    /// - `false` The track still has regions or the graph to render.
     fn render_chunk_at(
         &mut self,
         playhead: Duration,
+        chunk_size: usize,
         sample_rate: usize,
-        callback: &mut Box<dyn FnMut(f32)>,
-    );
+    ) -> bool;
 
     /// Returns the rendered audio source.
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;

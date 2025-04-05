@@ -2,7 +2,7 @@
 // Mixer mixes multiple audio tracks into AudioSource.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{AudioSource, Duration, Track};
+use crate::audio_engine::{utils, AudioSource, Duration, Track};
 use crate::utils::ansi;
 
 pub struct Mixer {
@@ -35,24 +35,48 @@ impl Mixer {
         self.tracks.push(track);
     }
 
+    /// Prepares the mixer for rendering.
+    pub fn prepare(&mut self) {
+        let chunk_size = 1024;
+        for track in &mut self.tracks {
+            track.prepare(chunk_size);
+        }
+    }
+
     /// Mixes all the tracks into a single audio source.
+    ///
+    /// # Arguments
+    /// - `callback` - Called when the chunk has rendered. Rendered sample is passed. Sample will be passed in this way:
+    /// `Sample 0` from `Channel 0`, `Sample 0` from `Channel 1`, `Sample 1` from `Channel 0`, `Sample 1` from `Channel 1`...
     pub fn mix(&mut self, mut callback: Box<dyn FnMut(f32)>) -> AudioSource {
+        self.playhead_duration = Duration::ZERO;
+
         // Create a new AudioSource instance to return
         let mut output = AudioSource::new(self.sample_rate, self.channels);
 
-        for track in &mut self.tracks {
-            // Render the track and get the rendered audio source from the track
-            track.render(self.sample_rate, &mut callback);
-            let rendered_track = match track.rendered_data() {
-                Ok(data) => data,
-                Err(err) => {
-                    eprintln!("Error rendering track: {}", err);
-                    continue;
-                }
-            };
+        // Define the chunk size
+        let chunk_size: usize = 1024;
+        let playhead_speed = utils::as_duration(self.sample_rate, chunk_size);
 
-            // Mix the rendered track into the output audio source
-            output.mix(rendered_track);
+        loop {
+            // Process the chunk and get whether the rendering has completed
+            if self.process_chunk(&mut output, chunk_size) {
+                break;
+            }
+
+            // Call the callback function for only the newly rendered chunk
+            let start_sample = utils::as_samples(self.sample_rate, self.playhead_duration);
+            let end_sample = start_sample + chunk_size;
+            let end_sample = end_sample.min(output.samples());
+
+            for sample in start_sample..end_sample {
+                for channel in 0..self.channels {
+                    callback(output.data[channel][sample]);
+                }
+            }
+
+            // Increment the playhead duration
+            self.playhead_duration += playhead_speed;
         }
 
         println!(
@@ -64,5 +88,41 @@ impl Mixer {
 
         // Return the mixed output.
         output
+    }
+
+    /// Processes the chunk of each track.
+    ///
+    /// # Arguments
+    /// - `output` - The output audio source to save the rendered data. Must be an mutable reference.
+    /// - `chunk_size` - Processing chunk size.
+    /// - `callback` - Called when the chunk has rendered.
+    ///
+    /// # Returns
+    /// - `true` - The rendering has completed.
+    /// - `false` - The rendering hasn't completed yet.
+    pub fn process_chunk(&mut self, output: &mut AudioSource, chunk_size: usize) -> bool {
+        // Whether the processing has finished
+        let mut completed = true;
+
+        // Loop through tracks
+        for track in &mut self.tracks {
+            // Render the track and get the rendered audio source from the track
+            if !track.render_chunk_at(self.playhead_duration, chunk_size, self.sample_rate) {
+                completed = false;
+            };
+            let rendered_track = match track.rendered_data() {
+                Ok(data) => data,
+                Err(err) => {
+                    eprintln!("Error rendering track: {}", err);
+                    continue;
+                }
+            };
+
+            // Mix the rendered track into the output audio source
+            output.mix_at(rendered_track, self.playhead_duration);
+        }
+
+        // Return whether the rendering has completed
+        completed
     }
 }

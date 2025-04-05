@@ -3,9 +3,8 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::audio_engine::{
-    mixing::region::BufferRegion, utils::chunk, AudioResampler, AudioSource, Duration, Graph, Track,
+    mixing::region::BufferRegion, AudioResampler, AudioSource, Duration, Graph, Region, Track,
 };
-use crate::utils::ansi;
 
 pub struct BufferTrack {
     /// Unique identifier for the track.
@@ -22,6 +21,8 @@ pub struct BufferTrack {
     pub regions: Vec<BufferRegion>,
     /// Rendered audio data.
     pub rendered_data: Option<AudioSource>,
+    /// Resampler to resample the buffer.
+    resampler: Option<AudioResampler>,
 }
 
 impl BufferTrack {
@@ -34,6 +35,7 @@ impl BufferTrack {
             channels,
             regions: Vec::new(),
             rendered_data: None,
+            resampler: None,
         }
     }
 
@@ -67,128 +69,75 @@ impl Track for BufferTrack {
         self.volume = volume;
     }
 
+    fn prepare(&mut self, chunk_size: usize) {
+        self.graph.prepare(chunk_size);
+        self.resampler = Some(AudioResampler::new(chunk_size));
+    }
+
     fn render_chunk_at(
         &mut self,
         playhead: Duration,
+        chunk_size: usize,
         sample_rate: usize,
-        callback: &mut Box<dyn FnMut(f32)>,
-    ) {
-        // Define the chunk size for processing
-        let chunk_size = 1024;
-
+    ) -> bool {
         // Create a new audio source with the same sample rate and channels
-        let mut output_audio_source = AudioSource::new(sample_rate, self.channels);
+        let mut output = AudioSource::new(sample_rate, self.channels);
 
-        // Print that the track is being processed
-        println!(
-            "{}{}Processing the track{} \"{}\"",
-            ansi::BOLD,
-            ansi::GREEN,
-            ansi::RESET,
-            self.name(),
-        );
+        // Whether the rendering has finished
+        let mut completed = true;
 
-        for (region_index, region) in self.regions.iter().enumerate() {
-            // Get the audio source from the region
-            let owned_data = region.audio_source().clone();
-            // Split the data into chunks
-            let chunks = chunk::chunk_buffer(&owned_data.data, chunk_size);
-
-            // Create a new audio resampler to resample the audio region
-            let mut resampler = AudioResampler::new(chunk_size);
-
-            // Prepare the graph for processing
-            self.graph.prepare(chunk_size);
-
-            // Get the chunk number to calculate the progress
-            let total_chunks = chunks.len();
-            // Width of the progress bar
-            let bar_width = 40;
-
-            println!(
-                "{}{}Processing region{} #{}",
-                ansi::BOLD,
-                ansi::CYAN,
-                ansi::RESET,
-                region_index,
-            );
-
-            // Loop through each chunk
-            for (chunk_index, chunk) in chunks.iter().enumerate() {
-                // Process the chunk
-                let processed_chunk = match self.graph.process(AudioSource {
-                    data: chunk.clone(),
-                    sample_rate: owned_data.sample_rate,
-                    channels: owned_data.channels,
-                }) {
-                    Ok(chunk) => chunk,
-                    Err(err) => {
-                        eprintln!(
-                            "{}{}Error processing chunk:{} {}",
-                            ansi::BOLD,
-                            ansi::BG_RED,
-                            ansi::RESET,
-                            err
-                        );
-                        continue;
-                    }
-                };
-
-                // Resample the processed region
-                let resampled_audio_source = match resampler.process(processed_chunk, sample_rate) {
-                    Ok(resampled) => resampled,
-                    Err(err) => {
-                        // Is the resample has failed, print the error message and return None
-                        eprintln!(
-                            "{}{}Error resampling audio:{} {}",
-                            ansi::BOLD,
-                            ansi::BG_RED,
-                            ansi::RESET,
-                            err
-                        );
-                        AudioSource::new(0, 0)
-                    }
-                };
-
-                for sample_index in 0..resampled_audio_source.samples() {
-                    for channel_index in 0..resampled_audio_source.channels {
-                        let sample = resampled_audio_source.data[channel_index][sample_index];
-                        // Call the callback function with the sample
-                        callback.as_mut()(sample);
-                    }
-                }
-
-                // add the chunk to the audio source
-                for (i, channel) in output_audio_source.data.iter_mut().enumerate() {
-                    if i < resampled_audio_source.channels {
-                        channel.extend(resampled_audio_source.data[i].to_owned());
-                    }
-                }
-
-                // Print the progress bar
-                let percentage = (chunk_index as f32 / total_chunks as f32) * 100.0;
-                let filled = (percentage as usize * bar_width) / 100;
-                print!(
-                    "\r[{}{}{}] {}{:.1}%{} ({}/{}) ",
-                    "=".repeat(filled),
-                    ">",
-                    " ".repeat(bar_width - filled),
-                    ansi::BOLD,
-                    percentage,
-                    ansi::RESET,
-                    chunk_index + 1,
-                    total_chunks
-                );
-
-                // Flush stdout to ensure the line is displayed
-                std::io::Write::flush(&mut std::io::stdout()).unwrap();
+        for region in self
+            .regions
+            .iter()
+            .filter(|r| r.is_active_at(playhead, chunk_size, sample_rate))
+        {
+            if playhead < region.end_time() {
+                completed = false;
             }
-            // Print the new line
-            println!();
+
+            if !region.is_active_at(playhead, chunk_size, sample_rate) {
+                continue;
+            }
+
+            let source = region.audio_source();
+            let region_start = region.start_time();
+            let offset = if playhead > region_start {
+                playhead - region_start
+            } else {
+                Duration::ZERO
+            };
+
+            let start_sample = (offset.as_secs_f64() * source.sample_rate as f64) as usize;
+            let end_sample = (start_sample + chunk_size).min(source.samples());
+
+            let mut chunk = AudioSource::new(sample_rate, self.channels);
+            for ch in 0..self.channels {
+                chunk.data[ch].extend_from_slice(&source.data[ch][start_sample..end_sample]);
+            }
+
+            // Process the chunk through the graph
+            let processed = match self.graph.process(chunk) {
+                Ok(chunk) => chunk,
+                Err(_) => continue,
+            };
+
+            // Resample the processed data
+            let resampled = match self.resampler {
+                Some(ref mut resampler) => match resampler.process(processed, sample_rate) {
+                    Ok(chunk) => chunk,
+                    Err(_) => continue,
+                },
+                None => continue,
+            };
+
+            output.mix(&resampled);
         }
 
         // Set the rendered data
-        self.rendered_data = Some(output_audio_source);
+        self.rendered_data = Some(output);
+
+        // Return whether the rendering has ended
+        completed
     }
 
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>> {

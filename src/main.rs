@@ -73,8 +73,10 @@ fn main() {
 
     // Move sample_sender into the closure to fix lifetime issues
     let sender = sample_sender;
+    mixer.prepare();
     mixer.mix(Box::new(move |sample| {
         let _ = sender.send(sample);
+        println!("Mixing sample");
     }));
 
     player.completion_handler = Some(Box::new(|| {
