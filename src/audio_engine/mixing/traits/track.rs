@@ -27,15 +27,9 @@ pub trait Track {
     /// Renders the specified area of the track.
     ///
     /// # Arguments
-    /// - `playhead` - The currently rendering duration of the audio track.
     /// - `sample_rate` - The sample rate of the audio track.
     /// - `callback` - The callback function to receive the rendered audio data.
-    fn render_chunk_at(
-        &mut self,
-        playhead: Duration,
-        sample_rate: usize,
-        callback: &mut Box<dyn FnMut(f32)>,
-    );
+    fn render(&mut self, sample_rate: usize, callback: &mut Box<dyn FnMut(f32)>);
 
     /// Returns the rendered audio source.
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;

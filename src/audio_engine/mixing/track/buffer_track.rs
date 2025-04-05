@@ -67,12 +67,7 @@ impl Track for BufferTrack {
         self.volume = volume;
     }
 
-    fn render_chunk_at(
-        &mut self,
-        playhead: Duration,
-        sample_rate: usize,
-        callback: &mut Box<dyn FnMut(f32)>,
-    ) {
+    fn render(&mut self, sample_rate: usize, callback: &mut Box<dyn FnMut(f32)>) {
         // Define the chunk size for processing
         let chunk_size = 1024;
 
