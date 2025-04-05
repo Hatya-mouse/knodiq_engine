@@ -2,7 +2,8 @@
 // Mixer mixes multiple audio tracks into AudioSource.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{AudioSource, Track};
+use crate::audio_engine::{AudioSource, Duration, Track};
+use crate::utils::ansi;
 
 pub struct Mixer {
     /// Tracks to be mixed.
@@ -13,6 +14,9 @@ pub struct Mixer {
 
     /// Sample rate of the output audio source.
     sample_rate: usize,
+
+    /// Currently rendering duration.
+    playhead_duration: Duration,
 }
 
 impl Mixer {
@@ -22,6 +26,7 @@ impl Mixer {
             tracks: Vec::new(),
             channels,
             sample_rate,
+            playhead_duration: Duration::ZERO,
         }
     }
 
@@ -49,6 +54,13 @@ impl Mixer {
             // Mix the rendered track into the output audio source
             output.mix(rendered_track);
         }
+
+        println!(
+            "{}{}Rendering finished.{}",
+            ansi::BOLD,
+            ansi::BRIGHT_MAGENTA,
+            ansi::RESET
+        );
 
         // Return the mixed output.
         output

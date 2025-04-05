@@ -2,12 +2,10 @@
 // A type of buffer that stores buffer as audio data.
 // © 2025 Shuntaro Kasatani
 
-use std::ops::DerefMut;
-
 use crate::audio_engine::{
-    mixing::region::BufferRegion, utils::ansi, utils::chunk, AudioResampler, AudioSource, Graph,
-    Region, Track,
+    mixing::region::BufferRegion, utils::chunk, AudioResampler, AudioSource, Duration, Graph, Track,
 };
+use crate::utils::ansi;
 
 pub struct BufferTrack {
     /// Unique identifier for the track.
@@ -57,6 +55,10 @@ impl Track for BufferTrack {
         self.name = name.to_string();
     }
 
+    fn graph(&mut self) -> &mut Graph {
+        &mut self.graph
+    }
+
     fn volume(&self) -> f32 {
         self.volume
     }
@@ -65,7 +67,12 @@ impl Track for BufferTrack {
         self.volume = volume;
     }
 
-    fn render(&mut self, sample_rate: usize, callback: &mut Box<dyn FnMut(f32)>) {
+    fn render_chunk_at(
+        &mut self,
+        playhead: Duration,
+        sample_rate: usize,
+        callback: &mut Box<dyn FnMut(f32)>,
+    ) {
         // Define the chunk size for processing
         let chunk_size = 1024;
 
@@ -74,12 +81,11 @@ impl Track for BufferTrack {
 
         // Print that the track is being processed
         println!(
-            "{}{}Processing the track {}\"{}\"{}",
+            "{}{}Processing the track{} \"{}\"",
             ansi::BOLD,
             ansi::GREEN,
-            ansi::WHITE,
-            self.name(),
             ansi::RESET,
+            self.name(),
         );
 
         for (region_index, region) in self.regions.iter().enumerate() {
@@ -100,12 +106,11 @@ impl Track for BufferTrack {
             let bar_width = 40;
 
             println!(
-                "{}{}Processing region{} {}{}",
+                "{}{}Processing region{} #{}",
                 ansi::BOLD,
                 ansi::CYAN,
-                ansi::WHITE,
+                ansi::RESET,
                 region_index,
-                ansi::RESET
             );
 
             // Loop through each chunk
@@ -118,7 +123,13 @@ impl Track for BufferTrack {
                 }) {
                     Ok(chunk) => chunk,
                     Err(err) => {
-                        eprintln!("Error processing chunk: {}", err);
+                        eprintln!(
+                            "{}{}Error processing chunk:{} {}",
+                            ansi::BOLD,
+                            ansi::BG_RED,
+                            ansi::RESET,
+                            err
+                        );
                         continue;
                     }
                 };
@@ -128,16 +139,17 @@ impl Track for BufferTrack {
                     Ok(resampled) => resampled,
                     Err(err) => {
                         // Is the resample has failed, print the error message and return None
-                        eprintln!("Error resampling audio: {}", err);
+                        eprintln!(
+                            "{}{}Error resampling audio:{} {}",
+                            ansi::BOLD,
+                            ansi::BG_RED,
+                            ansi::RESET,
+                            err
+                        );
                         AudioSource::new(0, 0)
                     }
                 };
 
-                // Call the callback function with the resampled audio data
-                println!(
-                    "Channel count is {}",
-                    resampled_audio_source.samples() == resampled_audio_source.data[1].len()
-                );
                 for sample_index in 0..resampled_audio_source.samples() {
                     for channel_index in 0..resampled_audio_source.channels {
                         let sample = resampled_audio_source.data[channel_index][sample_index];

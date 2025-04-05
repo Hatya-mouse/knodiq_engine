@@ -2,9 +2,7 @@
 // Type of region that stores buffer data as a data.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::AudioSource;
-use crate::audio_engine::Region;
-use std::time::Duration;
+use crate::audio_engine::{AudioSource, Duration, Region};
 
 pub struct BufferRegion {
     /// Start time of the region in frames
@@ -14,11 +12,17 @@ pub struct BufferRegion {
 }
 
 impl BufferRegion {
+    /// Creates a new buffer region with the given audio source.
     pub fn new(source: AudioSource) -> Self {
         Self {
             start_time: Duration::ZERO,
             source,
         }
+    }
+
+    /// Returns the audio source of the region.
+    pub fn audio_source(&self) -> &AudioSource {
+        &self.source
     }
 }
 
@@ -32,10 +36,17 @@ impl Region for BufferRegion {
     }
 
     fn duration(&self) -> Duration {
+        // Convert the number of samples to std::time::Duration.
         Duration::from_secs_f64(self.source.samples() as f64 / self.source.sample_rate as f64)
     }
 
-    fn audio_source(&self) -> &AudioSource {
-        &self.source
+    fn is_active_at(&self, playhead: Duration, chunk_size: usize, sample_rate: usize) -> bool {
+        // Calculate the chunk's duration.
+        let chunk_duration = Duration::from_secs_f64(chunk_size as f64 / sample_rate as f64);
+        // Then calculate the chunk's end time.
+        let chunk_end = playhead + chunk_duration;
+
+        // Check if the chunk overlaps with the region.
+        self.start_time < chunk_end && self.end_time() > playhead
     }
 }

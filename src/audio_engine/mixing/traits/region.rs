@@ -2,7 +2,6 @@
 // A trait that represents a region in the track.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::AudioSource;
 use std::time::Duration;
 
 pub trait Region: Send + Sync {
@@ -15,6 +14,6 @@ pub trait Region: Send + Sync {
     /// Returns the duration of the region std::time::Duration.
     fn duration(&self) -> Duration;
 
-    /// Returns the audio stream of the region.
-    fn audio_source(&self) -> &AudioSource;
+    /// Returns whether the region is active at the given area.
+    fn is_active_at(&self, playhead: Duration, chunk_size: usize, sample_rate: usize) -> bool;
 }
