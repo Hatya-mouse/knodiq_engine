@@ -1,2 +1,2 @@
-# Segment
-Segment is a simple, lightweight, beginner-friendly DAW, built with Rust.
+# Segment Engine
+An audio engine developed for Segment DAW.
