@@ -69,7 +69,7 @@ impl AudioPlayer {
     /// # Return
     /// - `cpal::Stream`: The playback stream.
     /// - `mpsc::Receiver<()>`: A channel to receive completion signals.
-    /// - `mpsc::Sender<f32>`: A channel to send volume changes.
+    /// - `mpsc::Sender<f32>`: A channel to send sample value.
     fn create_stream(
         &mut self,
     ) -> Result<(cpal::Stream, mpsc::Receiver<()>, mpsc::Sender<f32>), Box<dyn std::error::Error>>
