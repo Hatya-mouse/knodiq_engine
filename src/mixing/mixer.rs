@@ -2,8 +2,7 @@
 // Mixer mixes multiple audio tracks into AudioSource.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{audio_utils, AudioSource, Duration, Track};
-use crate::utils::ansi;
+use crate::{audio_utils, AudioSource, Duration, Track};
 
 const CHUNK_DURATION: Duration = Duration::from_millis(100);
 
@@ -78,13 +77,6 @@ impl Mixer {
             self.playhead_duration += CHUNK_DURATION;
         }
 
-        println!(
-            "{}{}Rendering finished.{}",
-            ansi::BOLD,
-            ansi::BRIGHT_MAGENTA,
-            ansi::RESET
-        );
-
         // Return the mixed output.
         output
     }
@@ -112,13 +104,6 @@ impl Mixer {
             let rendered_track = match track.rendered_data() {
                 Ok(data) => data,
                 Err(err) => {
-                    eprintln!(
-                        "{}{}Error rendering track{}: {}",
-                        ansi::BOLD,
-                        ansi::RED,
-                        ansi::RESET,
-                        err,
-                    );
                     continue;
                 }
             };

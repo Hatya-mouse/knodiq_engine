@@ -2,7 +2,7 @@
 // Type of region that stores buffer data as a data.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{AudioSource, Duration, Region};
+use crate::{AudioSource, Duration, Region};
 
 pub struct BufferRegion {
     /// Start time of the region in frames.

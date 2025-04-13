@@ -2,8 +2,8 @@
 // A graph node that just pass the audio source.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::graph::Node;
-use crate::audio_engine::AudioSource;
+use crate::graph::Node;
+use crate::AudioSource;
 use std::any::Any;
 use std::panic::panic_any;
 

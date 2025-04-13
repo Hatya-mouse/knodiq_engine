@@ -2,7 +2,7 @@
 // Audio source for holding audio data.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{audio_utils, AudioBuffer, Duration, Sample};
+use crate::{audio_utils, AudioBuffer, Duration, Sample};
 
 use std::f32;
 use std::fs::File;

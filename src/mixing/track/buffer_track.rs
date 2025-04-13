@@ -2,7 +2,7 @@
 // A type of buffer that stores buffer as audio data.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{
+use crate::{
     audio_utils, mixing::region::BufferRegion, AudioResampler, AudioSource, Duration, Graph,
     Region, Track,
 };

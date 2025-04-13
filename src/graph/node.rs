@@ -2,7 +2,7 @@
 // Traits for audio processing graph nodes.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::AudioSource;
+use crate::AudioSource;
 use std::any::Any;
 
 /// Represents a audio processing node.

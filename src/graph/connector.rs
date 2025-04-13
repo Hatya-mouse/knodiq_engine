@@ -2,7 +2,7 @@
 // Represents the connection between nodes.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::NodeId;
+use crate::NodeId;
 
 /// Represents the connection between nodes in the graph.
 pub struct Connector {

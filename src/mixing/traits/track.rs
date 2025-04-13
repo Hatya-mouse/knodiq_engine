@@ -2,7 +2,7 @@
 // Trait that represents a track.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{AudioSource, Duration, Graph};
+use crate::{AudioSource, Duration, Graph};
 
 pub trait Track {
     /// Returns the unique identifier of the track.

@@ -2,7 +2,7 @@
 // Resample the audio source to the desired sample rate.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::AudioSource;
+use crate::AudioSource;
 use rubato::{FftFixedIn, Resampler};
 
 /// AudioResampler is a struct that resamples audio sources to a desired sample rate.

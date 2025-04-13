@@ -2,7 +2,7 @@
 // Represents a graph of audio nodes that includes nodes, and connections between them.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::{graph::built_in::EmptyNode, AudioSource, Connector, Node};
+use crate::{graph::built_in::EmptyNode, AudioSource, Connector, Node};
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 

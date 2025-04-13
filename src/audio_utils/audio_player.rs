@@ -2,7 +2,7 @@
 // Audio player for playing audio sources.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_engine::AudioSource;
+use crate::AudioSource;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::sync::{mpsc, mpsc::TryRecvError, Arc, Mutex};
 
