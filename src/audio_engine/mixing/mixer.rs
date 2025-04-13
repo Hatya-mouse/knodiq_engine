@@ -5,6 +5,8 @@
 use crate::audio_engine::{audio_utils, AudioSource, Duration, Track};
 use crate::utils::ansi;
 
+const CHUNK_DURATION: Duration = Duration::from_millis(100);
+
 pub struct Mixer {
     /// Tracks to be mixed.
     tracks: Vec<Box<dyn Track>>,
@@ -38,7 +40,7 @@ impl Mixer {
     /// Prepares the mixer for rendering.
     pub fn prepare(&mut self) {
         for track in &mut self.tracks {
-            track.prepare(self.sample_rate);
+            track.prepare(CHUNK_DURATION, self.sample_rate);
         }
     }
 
@@ -53,14 +55,12 @@ impl Mixer {
         // Create a new AudioSource instance to return
         let mut output = AudioSource::new(self.sample_rate, self.channels);
 
-        // Define the chunk length in duration
-        let chunk_duration: Duration = Duration::from_millis(100);
         // Chunk size in output sample rate
-        let chunk_size = audio_utils::as_samples(self.sample_rate, chunk_duration);
+        let chunk_size = audio_utils::as_samples(self.sample_rate, CHUNK_DURATION);
 
         loop {
             // Process the chunk and get whether the rendering has completed
-            if self.process_chunk(&mut output, chunk_duration) {
+            if self.process_chunk(&mut output, CHUNK_DURATION) {
                 break;
             }
 
@@ -75,7 +75,7 @@ impl Mixer {
             }
 
             // Increment the playhead duration
-            self.playhead_duration += chunk_duration;
+            self.playhead_duration += CHUNK_DURATION;
         }
 
         println!(

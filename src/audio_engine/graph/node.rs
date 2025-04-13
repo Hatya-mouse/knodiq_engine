@@ -6,7 +6,7 @@ use crate::audio_engine::AudioSource;
 use std::any::Any;
 
 /// Represents a audio processing node.
-/// In Segno we process audio data using "Node", instead of "Effects".
+/// In Segment we process audio data using "Node", instead of "Effects".
 pub trait Node {
     /// Process the audio source and return the output audio source.
     fn process(&mut self) -> Result<AudioSource, Box<dyn std::error::Error>>;

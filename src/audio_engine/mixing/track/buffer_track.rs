@@ -24,6 +24,8 @@ pub struct BufferTrack {
     pub rendered_data: Option<AudioSource>,
     /// Resamplers for each regions.
     resamplers: Vec<AudioResampler>,
+    /// Residual sample numbers while rendering.
+    residual_samples: f64,
 }
 
 impl BufferTrack {
@@ -37,6 +39,7 @@ impl BufferTrack {
             regions: Vec::new(),
             rendered_data: None,
             resamplers: Vec::new(),
+            residual_samples: 0.0,
         }
     }
 
@@ -70,11 +73,15 @@ impl Track for BufferTrack {
         self.volume = volume;
     }
 
-    fn prepare(&mut self, _sample_rate: usize) {
-        let chunk_size = 1024;
-        self.graph.prepare(chunk_size);
+    fn prepare(&mut self, chunk_size: Duration, sample_rate: usize) {
+        self.graph.prepare(1024);
         self.resamplers
-            .resize_with(self.regions.len(), || AudioResampler::new(chunk_size));
+            .resize_with(self.regions.len(), || AudioResampler::new(441));
+        for region in &self.regions {
+            let source = region.audio_source();
+            self.resamplers.push(AudioResampler::new(source.sample_rate * chunk_size.as_secs() as usize));
+        }
+        self.residual_samples = 0.0;
     }
 
     fn render_chunk_at(
@@ -101,6 +108,20 @@ impl Track for BufferTrack {
 
             let region_source = region.audio_source();
 
+            // Calculate the actual chunk size (including fractional samples)
+            let actual_chunk_size = chunk_size.as_secs_f64() * region_source.sample_rate as f64;
+            // Chunk size (in Region sample rate)
+            let mut region_chunk_size =
+                audio_utils::as_samples(region_source.sample_rate, chunk_size);
+            // Increment the residual samples
+            self.residual_samples += actual_chunk_size - region_chunk_size as f64;
+
+            // If the residual samples number is greater than zero, add it to the chunk size
+            if self.residual_samples > 0.0 {
+                region_chunk_size += self.residual_samples.floor() as usize;
+                self.residual_samples -= self.residual_samples.floor();
+            }
+
             // Calculate the area to be sliced
             // ———————————————————————————————
             // Start sample index of the region (in Region sample rate) (in global position)
@@ -108,8 +129,6 @@ impl Track for BufferTrack {
                 audio_utils::as_samples(region_source.sample_rate, region.start_time());
             // Playhead position (in Region sample rate)
             let region_playhead = audio_utils::as_samples(region_source.sample_rate, playhead);
-            // Chunk size (in Region sample rate)
-            let region_chunk_size = audio_utils::as_samples(region_source.sample_rate, chunk_size);
 
             // Calculate the range to slice (in Region sample rate) (in Region-based position)
             let start_sample = region_playhead.saturating_sub(region_start);

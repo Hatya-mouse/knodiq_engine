@@ -24,7 +24,7 @@ pub trait Track {
     fn set_volume(&mut self, volume: f32);
 
     /// Prepare the track for rendering.
-    fn prepare(&mut self, sample_rate: usize);
+    fn prepare(&mut self, chunk_size: Duration, sample_rate: usize);
 
     /// Renders the specified area of the track.
     ///

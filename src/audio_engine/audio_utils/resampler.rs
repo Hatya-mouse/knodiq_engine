@@ -73,10 +73,6 @@ impl AudioResampler {
 
         // Resample each chunks
         loop {
-            // Calculate how many frames of delay the resampler gives
-            let _delay = <FftFixedIn<f32> as Resampler<f32>>::output_delay(&resampler);
-            // Calculate the new length of the clip
-            let _new_length = original_length * output_sample_rate / input_sample_rate;
             // Calculate how many frames resampler needs
             let needed_frames = <FftFixedIn<f32> as Resampler<f32>>::input_frames_next(&resampler);
 

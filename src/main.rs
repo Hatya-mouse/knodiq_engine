@@ -7,20 +7,20 @@ mod utils;
 use std::process::exit;
 
 use audio_engine::mixing::{region::BufferRegion, track::BufferTrack};
-use audio_engine::{audio_utils, AudioPlayer, AudioSource, Duration, Mixer, Region};
+use audio_engine::{AudioPlayer, AudioSource, Duration, Mixer, Region};
 use utils::ansi;
 
 fn main() {
     println!(
-        "{}{}— Segno —{}",
+        "{}{}— Segment —{}",
         ansi::BOLD,
         ansi::BG_BRIGHT_MAGENTA,
         ansi::RESET
     );
 
     let sample_rate = 48000;
-    let path1 = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/3-04 Necron Doom.mp3";
-    let path2 = "/Users/shuntaro/Music/Music/Media.localized/Music/ShinkoNet/Hypixel Skyblock Original Sound Track/3-03 Dungeon Drama.mp3";
+    let path1 = r"C:\Users\shunt\Documents\Programs\Games\Godot\air-international-inc\Assets\Audio\Music\Airborne.wav";
+    let path2 = r"C:\Users\shunt\Documents\Programs\Games\Godot\air-international-inc\Assets\Audio\Music\Airborne.wav";
 
     // Load the source 1 from a file path
     let mut source1 = AudioSource::from_path(path1, 0).unwrap();
