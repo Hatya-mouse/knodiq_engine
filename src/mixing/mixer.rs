@@ -8,7 +8,7 @@ const CHUNK_DURATION: Duration = Duration::from_millis(100);
 
 pub struct Mixer {
     /// Tracks to be mixed.
-    tracks: Vec<Box<dyn Track>>,
+    tracks: Vec<Box<dyn Track + Send>>,
 
     /// Number of channels in the output audio source.
     channels: usize,
@@ -32,7 +32,7 @@ impl Mixer {
     }
 
     /// Adds a new track to the mixer.
-    pub fn add_track(&mut self, track: Box<dyn Track>) {
+    pub fn add_track(&mut self, track: Box<dyn Track + Send>) {
         self.tracks.push(track);
     }
 
