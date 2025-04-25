@@ -4,7 +4,7 @@
 
 use crate::AudioSource;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use std::sync::{mpsc, mpsc::TryRecvError, Arc, Mutex};
+use std::sync::{Arc, Mutex, mpsc, mpsc::TryRecvError};
 
 pub struct AudioPlayer {
     /// Currently playing audio source.
@@ -135,3 +135,5 @@ impl AudioPlayer {
         }
     }
 }
+
+unsafe impl Send for AudioPlayer {}
