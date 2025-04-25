@@ -8,5 +8,5 @@ pub mod resampler;
 
 pub use audio_player::AudioPlayer;
 pub use chunk::chunk_buffer;
-pub use duration::{as_duration, as_samples};
+pub use duration::{beats_as_samples, samples_as_beats, Beats};
 pub use resampler::AudioResampler;

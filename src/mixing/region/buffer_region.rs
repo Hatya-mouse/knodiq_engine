@@ -6,16 +6,19 @@ use crate::{AudioSource, Duration, Region};
 
 pub struct BufferRegion {
     /// Start time of the region in frames.
-    start_time: Duration,
+    pub start_time: f32,
+    /// Number of samples in every single beat in the region.
+    pub samples_per_beat: f32,
     /// Audio source of the region.
-    source: AudioSource,
+    pub source: AudioSource,
 }
 
 impl BufferRegion {
     /// Creates a new buffer region with the given audio source.
     pub fn new(source: AudioSource) -> Self {
         Self {
-            start_time: Duration::ZERO,
+            start_time: 0.0,
+            samples_per_beat: 0.0,
             source,
         }
     }
@@ -32,26 +35,20 @@ impl BufferRegion {
 }
 
 impl Region for BufferRegion {
-    fn start_time(&self) -> Duration {
+    fn start_time(&self) -> f32 {
         self.start_time
     }
 
-    fn set_start_time(&mut self, start_time: Duration) {
+    fn set_start_time(&mut self, start_time: f32) {
         self.start_time = start_time;
     }
 
-    fn end_time(&self) -> Duration {
+    fn end_time(&self) -> f32 {
         self.start_time + self.duration()
     }
 
-    fn duration(&self) -> Duration {
-        // Convert the number of samples to std::time::Duration.
-        Duration::from_secs_f64(self.source.samples() as f64 / self.source.sample_rate as f64)
-    }
-
-    fn is_active_at(&self, start: Duration, end: Duration) -> bool {
-        // Check if the chunk overlaps with the region.
-        (start >= self.start_time && start <= self.end_time())
-            || (end >= self.start_time && end <= self.end_time())
+    fn duration(&self) -> f32 {
+        // Convert the number of samples to beats using the samples per beat.
+        self.source.samples() as f32 / self.samples_per_beat as f32
     }
 }

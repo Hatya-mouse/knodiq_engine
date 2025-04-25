@@ -2,14 +2,12 @@
 // Converts between std::time::Duration and sample count
 // © 2025 Shuntaro Kasatani
 
-use std::time::Duration;
+pub type Beats = f32;
 
-/// Converts duration to sample count.
-pub fn as_samples(sample_rate: usize, duration: Duration) -> usize {
-    (duration.as_secs_f64() * sample_rate as f64).round() as usize
+pub fn samples_as_beats(samples_per_beat: Beats, samples: usize) -> Beats {
+    samples as Beats / samples_per_beat
 }
 
-/// Converts sample count to duration.
-pub fn as_duration(sample_rate: usize, samples: usize) -> Duration {
-    Duration::from_secs_f64(samples as f64 / sample_rate as f64)
+pub fn beats_as_samples(samples_per_beat: Beats, beats: Beats) -> usize {
+    (beats * samples_per_beat).round() as usize
 }

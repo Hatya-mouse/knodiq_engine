@@ -113,10 +113,7 @@ impl AudioSource {
     /// # Arguments
     /// - `other` - The other audio source to mix with.
     /// - `at` - The duration at which to mix the audio buffers.
-    pub fn mix_at(&mut self, other: &AudioSource, at: Duration) {
-        // Convert Duration to usize
-        let offset = audio_utils::as_samples(self.sample_rate, at);
-
+    pub fn mix_at(&mut self, other: &AudioSource, offset: usize) {
         // Instead of cloning the entire audio source, we'll mix directly
         for (channel_index, other_channel) in other.data.iter().enumerate() {
             // If the other source has more channels than this one, add a new channel
