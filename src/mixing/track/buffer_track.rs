@@ -143,19 +143,25 @@ impl Track for BufferTrack {
                 chunk.data[ch].extend_from_slice(&region_source.data[ch][start_sample..end_sample]);
             }
 
+            println!("Target sample rate: {}", sample_rate);
+
             // Resample the chunk with the resampler dedicated to the region
             let resampled = match self.resamplers[region_index].process(chunk, sample_rate) {
                 Ok(chunk) => chunk,
-                Err(_) => continue,
+                Err(err) => {
+                    eprintln!("Error resampling chunk: {:?}", err);
+                    continue;
+                }
             };
 
             // Process the chunk through the graph
             let processed = match self.graph.process(resampled) {
                 Ok(chunk) => chunk,
-                Err(_) => continue,
+                Err(err) => {
+                    eprintln!("Error processing chunk: {:?}", err);
+                    continue;
+                }
             };
-
-            println!("Processed chunk successfully");
 
             if let Some(ref mut data) = self.rendered_data {
                 // Calculate the chunk start position (in chunk-based position)
@@ -167,11 +173,6 @@ impl Track for BufferTrack {
                 data.mix_at(&processed, chunk_start);
             }
         }
-
-        println!(
-            "Rendered the track successfully. Output size: {}",
-            self.rendered_data.as_ref().unwrap().samples()
-        );
 
         // Return whether the rendering has ended
         completed
