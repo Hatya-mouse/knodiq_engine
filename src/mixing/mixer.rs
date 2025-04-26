@@ -12,7 +12,7 @@ pub struct Mixer {
     tracks: Vec<Box<dyn Track>>,
 
     /// The tempo of the mixer.
-    tempo: f32,
+    tempo: Beats,
 
     /// Number of channels in the output audio source.
     channels: usize,
@@ -26,7 +26,7 @@ pub struct Mixer {
 
 impl Mixer {
     /// Creates a new mixer instance.
-    pub fn new(tempo: f32, sample_rate: usize, channels: usize) -> Self {
+    pub fn new(tempo: Beats, sample_rate: usize, channels: usize) -> Self {
         Mixer {
             tracks: Vec::new(),
             tempo,
@@ -49,7 +49,7 @@ impl Mixer {
     }
 
     pub fn samples_per_beat(&self) -> f32 {
-        (self.sample_rate as f32) / (self.tempo / 60.0)
+        (self.sample_rate as f32) / (self.tempo as f32 / 60.0)
     }
 
     /// Mixes all the tracks into a single audio source.
@@ -128,6 +128,7 @@ impl Mixer {
             let playhead_samples =
                 audio_utils::beats_as_samples(samples_per_beat, self.playhead_beats);
             output.mix_at(rendered_track, playhead_samples);
+            println!("Rendered track length: {}", rendered_track.data[0].len());
         }
 
         // Return whether the rendering has completed
