@@ -2,14 +2,14 @@
 // Mixer mixes multiple audio tracks into AudioSource.
 // © 2025 Shuntaro Kasatani
 
-use crate::{audio_utils, AudioSource, Duration, Track};
+use crate::{AudioSource, Track, audio_utils};
 use audio_utils::Beats;
 
 const CHUNK_BEATS: Beats = 2.0;
 
 pub struct Mixer {
     /// Tracks to be mixed.
-    tracks: Vec<Box<dyn Track + Send>>,
+    tracks: Vec<Box<dyn Track>>,
 
     /// The tempo of the mixer.
     tempo: f32,
@@ -37,7 +37,7 @@ impl Mixer {
     }
 
     /// Adds a new track to the mixer.
-    pub fn add_track(&mut self, track: Box<dyn Track + Send>) {
+    pub fn add_track(&mut self, track: Box<dyn Track>) {
         self.tracks.push(track);
     }
 
