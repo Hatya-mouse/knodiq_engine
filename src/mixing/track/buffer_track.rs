@@ -3,7 +3,7 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::{
-    audio_utils, mixing::region::BufferRegion, AudioResampler, AudioSource, Graph, Region, Track,
+    AudioResampler, AudioSource, Graph, Region, Track, audio_utils, mixing::region::BufferRegion,
 };
 
 pub struct BufferTrack {

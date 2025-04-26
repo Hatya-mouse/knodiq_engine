@@ -2,7 +2,7 @@
 // Represents a graph of audio nodes that includes nodes, and connections between them.
 // © 2025 Shuntaro Kasatani
 
-use crate::{graph::built_in::EmptyNode, AudioSource, Connector, Node};
+use crate::{AudioSource, Connector, Node, graph::built_in::EmptyNode};
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
@@ -13,7 +13,7 @@ pub type NodeId = Uuid;
 ///
 /// # What is `Graph`?
 ///
-/// In Segment DAW, `Graph` is a fundamental component that represents a network of audio processing nodes.
+/// In Segment Audio Engine, `Graph` is a fundamental component that represents a network of audio processing nodes.
 /// It allows the creation of complex audio processing chains by connecting various nodes together!
 pub struct Graph {
     /// Vector of node instances in the graph.

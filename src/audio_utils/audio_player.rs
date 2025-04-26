@@ -30,12 +30,12 @@ pub struct AudioPlayer {
 }
 
 impl AudioPlayer {
-    pub fn new() -> Self {
+    pub fn new(sample_rate: usize) -> Self {
         Self {
             playing_source: None,
             current_stream: None,
             completion_receiver: None,
-            sample_rate: 44100,
+            sample_rate,
             channels: 2,
             completion_handler: None,
             volume: 1.0,

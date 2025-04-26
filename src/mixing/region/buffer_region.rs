@@ -2,12 +2,12 @@
 // Type of region that stores buffer data as a data.
 // © 2025 Shuntaro Kasatani
 
-use crate::{AudioSource, Duration, Region};
+use crate::{AudioSource, Region};
 
 pub struct BufferRegion {
     /// Start time of the region in frames.
     pub start_time: f32,
-    /// Number of samples in every single beat in the region.
+    /// Number of samples per beat.
     pub samples_per_beat: f32,
     /// Audio source of the region.
     pub source: AudioSource,
@@ -15,10 +15,10 @@ pub struct BufferRegion {
 
 impl BufferRegion {
     /// Creates a new buffer region with the given audio source.
-    pub fn new(source: AudioSource) -> Self {
+    pub fn new(source: AudioSource, samples_per_beat: f32) -> Self {
         Self {
             start_time: 0.0,
-            samples_per_beat: 0.0,
+            samples_per_beat: samples_per_beat as f32,
             source,
         }
     }
