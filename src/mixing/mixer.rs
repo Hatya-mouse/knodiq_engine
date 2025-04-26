@@ -72,7 +72,7 @@ impl Mixer {
                 println!("Rendering completed.");
                 break;
             }
-            println("Rendering in progress...");
+            println!("Rendering in progress...");
 
             // Call the callback function for only the newly rendered chunk
             let start_sample =
