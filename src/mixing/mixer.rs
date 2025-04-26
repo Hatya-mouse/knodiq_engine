@@ -128,7 +128,6 @@ impl Mixer {
             let playhead_samples =
                 audio_utils::beats_as_samples(samples_per_beat, self.playhead_beats);
             output.mix_at(rendered_track, playhead_samples);
-            println!("Rendered track length: {}", rendered_track.data[0].len());
         }
 
         // Return whether the rendering has completed

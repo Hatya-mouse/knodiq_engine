@@ -104,6 +104,8 @@ impl Track for BufferTrack {
                 completed = false;
             }
 
+            println!("Rendering region: {region_index}");
+
             let region_source = region.audio_source();
 
             // Actual chunk size that isn't rounded
