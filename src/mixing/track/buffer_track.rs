@@ -144,7 +144,7 @@ impl Track for BufferTrack {
             }
 
             println!(
-                "Region start: {region_start}, Region playhead: {region_playhead}, Region chunk size: {region_chunk_size}"
+                "Region start: {start_sample}, Region playhead: {end_sample}, Region chunk size: {region_chunk_size}"
             );
 
             // Resample the chunk with the resampler dedicated to the region
