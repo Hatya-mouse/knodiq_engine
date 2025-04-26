@@ -75,9 +75,11 @@ impl Mixer {
             // Call the callback function for only the newly rendered chunk
             let start_sample =
                 audio_utils::beats_as_samples(self.samples_per_beat(), self.playhead_beats);
-            let end_sample = (start_sample + chunk_size).min(output.samples());
+            let end_sample = start_sample + chunk_size;
 
-            println!("Start sample: {start_sample}, End sample: {end_sample}");
+            println!(
+                "Start sample: {start_sample}, End sample: {end_sample}, Chunk size: {chunk_size}"
+            );
             for sample in start_sample..end_sample {
                 for channel in 0..self.channels {
                     callback(output.data[channel][sample]);
