@@ -143,10 +143,6 @@ impl Track for BufferTrack {
                 chunk.data[ch].extend_from_slice(&region_source.data[ch][start_sample..end_sample]);
             }
 
-            println!(
-                "Region start: {start_sample}, Region playhead: {end_sample}, Region chunk size: {region_chunk_size}"
-            );
-
             // Resample the chunk with the resampler dedicated to the region
             let resampled = match self.resamplers[region_index].process(chunk, sample_rate) {
                 Ok(chunk) => chunk,
@@ -159,6 +155,8 @@ impl Track for BufferTrack {
                 Err(_) => continue,
             };
 
+            println!("Processed chunk successfully");
+
             if let Some(ref mut data) = self.rendered_data {
                 // Calculate the chunk start position (in chunk-based position)
                 let region_start_in_chunk = (region.start_time() - playhead).max(0.0);
@@ -169,6 +167,11 @@ impl Track for BufferTrack {
                 data.mix_at(&processed, chunk_start);
             }
         }
+
+        println!(
+            "Rendered the track successfully. Output size: {}",
+            self.rendered_data.as_ref().unwrap().samples()
+        );
 
         // Return whether the rendering has ended
         completed
