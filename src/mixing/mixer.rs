@@ -77,10 +77,9 @@ impl Mixer {
                 audio_utils::beats_as_samples(self.samples_per_beat(), self.playhead_beats);
             let end_sample = (start_sample + chunk_size).min(output.samples());
 
+            println!("Start sample: {start_sample}, End sample: {end_sample}");
             for sample in start_sample..end_sample {
-                println!("Sample: {}", sample);
                 for channel in 0..self.channels {
-                    println!("Channel: {}", channel);
                     callback(output.data[channel][sample]);
                 }
             }
