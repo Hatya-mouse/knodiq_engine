@@ -69,8 +69,10 @@ impl Mixer {
         loop {
             // Process the chunk and get whether the rendering has completed
             if self.process_chunk(&mut output, CHUNK_BEATS) {
+                println!("Rendering completed.");
                 break;
             }
+            println("Rendering in progress...");
 
             // Call the callback function for only the newly rendered chunk
             let start_sample =
