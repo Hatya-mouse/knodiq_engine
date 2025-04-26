@@ -104,8 +104,6 @@ impl Track for BufferTrack {
                 completed = false;
             }
 
-            println!("Rendering region: {region_index}");
-
             let region_source = region.audio_source();
 
             // Actual chunk size that isn't rounded
@@ -144,6 +142,10 @@ impl Track for BufferTrack {
             for ch in 0..self.channels {
                 chunk.data[ch].extend_from_slice(&region_source.data[ch][start_sample..end_sample]);
             }
+
+            println!(
+                "Region start: {region_start}, Region playhead: {region_playhead}, Region chunk size: {region_chunk_size}"
+            );
 
             // Resample the chunk with the resampler dedicated to the region
             let resampled = match self.resamplers[region_index].process(chunk, sample_rate) {
