@@ -117,6 +117,7 @@ impl Mixer {
             let rendered_track = match track.rendered_data() {
                 Ok(data) => data,
                 Err(err) => {
+                    println!("Error rendering track: {}", err);
                     continue;
                 }
             };

@@ -2,28 +2,19 @@
 // Audio player for playing audio sources.
 // © 2025 Shuntaro Kasatani
 
-use crate::AudioSource;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use std::sync::{Arc, Mutex, mpsc, mpsc::TryRecvError};
+use std::sync::mpsc;
+use std::thread;
 
 pub struct AudioPlayer {
-    /// Currently playing audio source.
-    playing_source: Option<Arc<Mutex<AudioSource>>>,
-
     /// Currently playing stream.
     current_stream: Option<cpal::Stream>,
-
-    /// A mspc receiver to know when the audio stream has finished playback.
-    completion_receiver: Option<mpsc::Receiver<()>>,
 
     /// Sample rate of the audio player.
     pub sample_rate: usize,
 
     /// Channels of the audio player.
     pub channels: usize,
-
-    /// Playback completion handler
-    pub completion_handler: Option<Box<dyn FnOnce()>>,
 
     /// Volume of the playback.
     pub volume: f32,
@@ -32,12 +23,9 @@ pub struct AudioPlayer {
 impl AudioPlayer {
     pub fn new(sample_rate: usize) -> Self {
         Self {
-            playing_source: None,
             current_stream: None,
-            completion_receiver: None,
             sample_rate,
             channels: 2,
-            completion_handler: None,
             volume: 1.0,
         }
     }
@@ -50,16 +38,33 @@ impl AudioPlayer {
         &mut self,
         sample_rate: usize,
         channels: usize,
+        mut completion_handler: Option<Box<dyn FnOnce() + Send>>,
     ) -> Result<mpsc::Sender<f32>, Box<dyn std::error::Error>> {
         self.channels = channels;
         self.sample_rate = sample_rate;
 
         let (stream, completion_receiver, sample_sender) = self.create_stream()?;
-        self.completion_receiver = Some(completion_receiver);
         // Play the stream
         stream.play()?;
         // Set the current stream
         self.current_stream = Some(stream);
+
+        // Create a thread to handle the stream completion
+        thread::spawn(move || {
+            // Wait for the stream to finish playback
+            match completion_receiver.recv() {
+                Ok(_) => {
+                    // Call the completion handler if it exists
+                    if let Some(handler) = completion_handler.take() {
+                        handler();
+                    }
+                }
+                Err(err) => {
+                    println!("Audio stream couldn't be initialized: {}", err);
+                }
+            }
+        });
+
         // Return the sample sender
         Ok(sample_sender)
     }
@@ -119,20 +124,11 @@ impl AudioPlayer {
         }
     }
 
-    pub fn update(&mut self) {
-        if let Some(receiver) = &self.completion_receiver {
-            // Try to receive without blocking the main thread
-            match receiver.try_recv() {
-                Ok(()) => {
-                    // Run the completion handler
-                    if let Some(handler) = self.completion_handler.take() {
-                        handler();
-                    }
-                }
-                Err(TryRecvError::Empty) => {}
-                Err(TryRecvError::Disconnected) => {}
-            }
+    pub fn pause(&mut self) -> Result<(), cpal::PauseStreamError> {
+        if let Some(stream) = &self.current_stream {
+            return stream.pause();
         }
+        Ok(())
     }
 }
 
