@@ -57,7 +57,7 @@ impl Mixer {
     /// # Arguments
     /// - `callback` - Called when the chunk has rendered. Rendered sample is passed. Sample will be passed in this way:
     /// `Sample 0` from `Channel 0`, `Sample 0` from `Channel 1`, `Sample 1` from `Channel 0`, `Sample 1` from `Channel 1`...
-    pub fn mix(&mut self, mut callback: Box<dyn FnMut(f32)>) -> AudioSource {
+    pub fn mix(&mut self, mut callback: Box<dyn FnMut(f32) + Send>) -> AudioSource {
         self.playhead_beats = 0.0;
 
         // Create a new AudioSource instance to return
