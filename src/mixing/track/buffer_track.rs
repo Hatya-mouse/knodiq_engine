@@ -3,7 +3,9 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::{
-    AudioResampler, AudioSource, Graph, Region, Track, audio_utils, mixing::region::BufferRegion,
+    AudioResampler, AudioSource, Graph, Region, Track,
+    audio_utils::{self, Beats},
+    mixing::region::BufferRegion,
 };
 
 pub struct BufferTrack {
@@ -42,7 +44,9 @@ impl BufferTrack {
         }
     }
 
-    pub fn add_region(&mut self, region: BufferRegion) {
+    pub fn add_region(&mut self, mut region: BufferRegion, at: Beats, duration: Beats) {
+        region.set_start_time(at);
+        region.set_duration(duration);
         self.regions.push(region);
     }
 }
