@@ -105,6 +105,7 @@ impl Track for BufferTrack {
             }
 
             let region_source = region.audio_source();
+            let clipped_samples = region.duration() as f32 * region.samples_per_beat;
 
             // Actual chunk size that isn't rounded
             let actual_chunk_size = region.samples_per_beat as f32 * chunk_size;
@@ -135,7 +136,8 @@ impl Track for BufferTrack {
             // region_start ^  ^    ^ region_playhead + region_chunk_size
             //
             // >: Playhead, |: Chunk separation
-            let end_sample = (start_sample + region_chunk_size).clamp(0, region_source.samples());
+            let end_sample =
+                (start_sample + region_chunk_size).clamp(0, clipped_samples.round() as usize);
 
             // Slice the region to get the chunk
             let mut chunk = AudioSource::new(region_source.sample_rate, self.channels);

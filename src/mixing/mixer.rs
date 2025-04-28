@@ -9,16 +9,16 @@ const CHUNK_BEATS: Beats = 2.0;
 
 pub struct Mixer {
     /// Tracks to be mixed.
-    tracks: Vec<Box<dyn Track>>,
+    pub tracks: Vec<Box<dyn Track>>,
 
     /// The tempo of the mixer.
-    tempo: Beats,
+    pub tempo: Beats,
 
     /// Number of channels in the output audio source.
-    channels: usize,
+    pub channels: usize,
 
     /// Sample rate of the output audio source.
-    sample_rate: usize,
+    pub sample_rate: usize,
 
     /// Currently rendering position in beat.
     playhead_beats: f32,
@@ -50,6 +50,22 @@ impl Mixer {
 
     pub fn samples_per_beat(&self) -> f32 {
         (self.sample_rate as f32) / (self.tempo as f32 / 60.0)
+    }
+
+    pub fn set_tempo(&mut self, tempo: Beats) {
+        self.tempo = tempo;
+    }
+
+    pub fn set_sample_rate(&mut self, sample_rate: usize) {
+        self.sample_rate = sample_rate;
+    }
+
+    pub fn set_channels(&mut self, channels: usize) {
+        self.channels = channels;
+    }
+
+    pub fn get_track_by_id(&self, id: u32) -> Option<&Box<dyn Track>> {
+        self.tracks.iter().filter(|t| t.id() == id).next()
     }
 
     /// Mixes all the tracks into a single audio source.
