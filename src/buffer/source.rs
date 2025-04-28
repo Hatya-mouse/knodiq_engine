@@ -2,8 +2,9 @@
 // Audio source for holding audio data.
 // © 2025 Shuntaro Kasatani
 
-use crate::{audio_utils, AudioBuffer, Duration, Sample};
+use crate::{AudioBuffer, Sample};
 
+use serde::{Deserialize, Serialize};
 use std::f32;
 use std::fs::File;
 use symphonia::core::audio::{AudioBufferRef, Signal};
@@ -13,6 +14,7 @@ use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
 use symphonia::core::meta::MetadataOptions;
 
 /// A simple class representing an source.
+#[derive(Serialize, Deserialize)]
 pub struct AudioSource {
     /// Sample rate of the audio buffer.
     pub sample_rate: usize,
@@ -55,16 +57,18 @@ impl AudioSource {
 
         // Initialize the probe result
         let mut probe_result = match probe.format(
-                    &symphonia::core::probe::Hint::new(),
-                    source_stream,
-                    &format_options,
-                    &metadata_options,
-                ) {
-                    Ok(probe_result) => probe_result,
-                    Err(_) => return Err(
-                        "Failed to probe the audio format. 🔈 Maybe the file is corrupted or not supported? 😿",
-                    ),
-                };
+            &symphonia::core::probe::Hint::new(),
+            source_stream,
+            &format_options,
+            &metadata_options,
+        ) {
+            Ok(probe_result) => probe_result,
+            Err(_) => {
+                return Err(
+                    "Failed to probe the audio format. 🔈 Maybe the file is corrupted or not supported? 😿",
+                );
+            }
+        };
 
         // Get the tracks from the probe result
         let tracks = probe_result.format.tracks();
