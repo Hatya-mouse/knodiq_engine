@@ -82,3 +82,16 @@ impl Region for BufferRegion {
         &self.id
     }
 }
+
+impl Clone for BufferRegion {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            name: self.name.clone(),
+            start_time: self.start_time,
+            duration: self.duration,
+            samples_per_beat: self.samples_per_beat,
+            source: self.source.clone(),
+        }
+    }
+}

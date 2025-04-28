@@ -625,7 +625,7 @@ dependencies = [
 
 [[package]]
 name = "segment_engine"
-version = "0.2.20"
+version = "0.2.21"
 dependencies = [
  "cpal",
  "rubato",
