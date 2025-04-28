@@ -74,10 +74,10 @@ impl Track for BufferTrack {
 
     fn prepare(&mut self, chunk_size: f32, sample_rate: usize) {
         self.graph.prepare(1024);
-        self.resamplers
-            .resize_with(self.regions.len(), || AudioResampler::new(441));
+        self.resamplers.resize_with(self.regions.len(), || {
+            AudioResampler::new(sample_rate / 100)
+        });
         for region in &self.regions {
-            let source = region.audio_source();
             self.resamplers
                 .push(AudioResampler::new(audio_utils::beats_as_samples(
                     region.samples_per_beat as f32,
