@@ -5,7 +5,7 @@
 use crate::audio_utils::Beats;
 use std::any::Any;
 
-pub trait Region: Send + Sync + Clone + Any {
+pub trait Region: Send + Sync + Any {
     /// Returns the start time of the region in f32.
     fn start_time(&self) -> Beats;
 

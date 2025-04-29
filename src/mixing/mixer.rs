@@ -68,6 +68,10 @@ impl Mixer {
         self.tracks.iter().filter(|t| t.id() == id).next()
     }
 
+    pub fn get_track_by_id_mut(&mut self, id: u32) -> Option<&mut Box<dyn Track>> {
+        self.tracks.iter_mut().filter(|t| t.id() == id).next()
+    }
+
     /// Mixes all the tracks into a single audio source.
     ///
     /// # Arguments
