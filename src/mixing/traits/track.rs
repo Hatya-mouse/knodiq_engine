@@ -44,4 +44,6 @@ pub trait Track: Send + Sync + Any {
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;
 
     fn as_any(&self) -> &dyn Any;
+
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
