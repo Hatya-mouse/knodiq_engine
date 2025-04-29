@@ -7,7 +7,7 @@ use std::any::Any;
 
 /// Represents a audio processing node.
 /// In Segment we process audio data using "Node", instead of "Effects".
-pub trait Node {
+pub trait Node: Send + Sync + Any {
     /// Process the audio source and return the output audio source.
     fn process(&mut self) -> Result<AudioSource, Box<dyn std::error::Error>>;
 
@@ -25,4 +25,6 @@ pub trait Node {
 
     /// Set the node property.
     fn set_property(&mut self, property: &str, value: Box<dyn Any>);
+
+    fn as_any(&self) -> &dyn Any;
 }

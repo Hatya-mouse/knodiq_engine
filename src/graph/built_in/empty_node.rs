@@ -2,8 +2,8 @@
 // A graph node that just pass the audio source.
 // © 2025 Shuntaro Kasatani
 
-use crate::graph::Node;
 use crate::AudioSource;
+use crate::graph::Node;
 use std::any::Any;
 use std::panic::panic_any;
 
@@ -49,5 +49,9 @@ impl Node for EmptyNode {
             }
             _ => panic_any("Invalid property"),
         }
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

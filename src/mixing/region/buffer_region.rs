@@ -4,6 +4,7 @@
 
 use crate::audio_utils::Beats;
 use crate::{AudioSource, Region};
+use std::any::Any;
 
 pub struct BufferRegion {
     /// ID of the region.
@@ -80,6 +81,10 @@ impl Region for BufferRegion {
 
     fn id(&self) -> &u32 {
         &self.id
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

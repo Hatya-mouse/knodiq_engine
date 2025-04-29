@@ -7,6 +7,7 @@ use crate::{
     audio_utils::{self, Beats},
     mixing::region::BufferRegion,
 };
+use std::any::Any;
 
 pub struct BufferTrack {
     /// Unique identifier for the track.
@@ -189,5 +190,9 @@ impl Track for BufferTrack {
             Some(ref data) => Ok(data),
             None => Err("No rendered data available".into()),
         }
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

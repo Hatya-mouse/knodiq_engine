@@ -3,8 +3,9 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::audio_utils::Beats;
+use std::any::Any;
 
-pub trait Region: Send + Sync + Clone {
+pub trait Region: Send + Sync + Clone + Any {
     /// Returns the start time of the region in f32.
     fn start_time(&self) -> Beats;
 
@@ -38,4 +39,6 @@ pub trait Region: Send + Sync + Clone {
         (start >= self.start_time() && start <= self.end_time())
             || (end >= self.start_time() && end <= self.end_time())
     }
+
+    fn as_any(&self) -> &dyn Any;
 }

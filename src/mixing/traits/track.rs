@@ -4,8 +4,9 @@
 
 use crate::audio_utils::Beats;
 use crate::{AudioSource, Graph};
+use std::any::Any;
 
-pub trait Track {
+pub trait Track: Send + Sync + Any {
     /// Returns the unique identifier of the track.
     fn id(&self) -> u32;
 
@@ -41,4 +42,6 @@ pub trait Track {
 
     /// Returns the rendered audio source.
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;
+
+    fn as_any(&self) -> &dyn Any;
 }
