@@ -77,6 +77,10 @@ impl Track for BufferTrack {
         self.volume = volume;
     }
 
+    fn channels(&self) -> usize {
+        self.channels
+    }
+
     fn prepare(&mut self, chunk_size: f32, sample_rate: usize) {
         self.graph.prepare(1024);
         self.resamplers.resize_with(self.regions.len(), || {

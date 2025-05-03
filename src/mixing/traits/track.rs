@@ -25,6 +25,9 @@ pub trait Track: Send + Sync + Any {
     /// Sets the volume of the track.
     fn set_volume(&mut self, volume: f32);
 
+    /// Returns the number of channels of the track.
+    fn channels(&self) -> usize;
+
     /// Prepare the track for rendering.
     fn prepare(&mut self, chunk_size: Beats, sample_rate: usize);
 
