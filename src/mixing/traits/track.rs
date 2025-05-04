@@ -3,7 +3,7 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::audio_utils::Beats;
-use crate::{AudioSource, Graph};
+use crate::{AudioSource, Graph, Region};
 use std::any::Any;
 
 pub trait Track: Send + Sync + Any {
@@ -27,6 +27,9 @@ pub trait Track: Send + Sync + Any {
 
     /// Returns the number of channels of the track.
     fn channels(&self) -> usize;
+
+    /// Returns the regions of the track.
+    fn regions(&self) -> Vec<&dyn Region>;
 
     /// Prepare the track for rendering.
     fn prepare(&mut self, chunk_size: Beats, sample_rate: usize);
