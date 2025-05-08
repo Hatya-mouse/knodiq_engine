@@ -81,6 +81,10 @@ impl Track for BufferTrack {
         self.channels
     }
 
+    fn track_type(&self) -> String {
+        "BufferTrack".to_string()
+    }
+
     fn regions(&self) -> Vec<&dyn Region> {
         self.regions
             .iter()

@@ -40,6 +40,9 @@ pub trait Region: Send + Sync + Any {
             || (end >= self.start_time() && end <= self.end_time())
     }
 
+    /// Returns the type of the region as a string.
+    fn region_type(&self) -> String;
+
     fn as_any(&self) -> &dyn Any;
 
     fn as_any_mut(&mut self) -> &mut dyn Any;

@@ -31,6 +31,9 @@ pub trait Track: Send + Sync + Any {
     /// Returns the regions of the track.
     fn regions(&self) -> Vec<&dyn Region>;
 
+    /// Returns the type of the track in the form of a string.
+    fn track_type(&self) -> String;
+
     /// Prepare the track for rendering.
     fn prepare(&mut self, chunk_size: Beats, sample_rate: usize);
 

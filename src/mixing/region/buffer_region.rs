@@ -83,6 +83,10 @@ impl Region for BufferRegion {
         &self.id
     }
 
+    fn region_type(&self) -> String {
+        "BufferRegion".to_string()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
