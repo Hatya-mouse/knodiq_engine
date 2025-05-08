@@ -88,17 +88,6 @@ impl Track for BufferTrack {
             .collect()
     }
 
-    fn channels(&self) -> usize {
-        self.channels
-    }
-
-    fn regions(&self) -> Vec<Box<dyn Region>> {
-        self.regions
-            .iter()
-            .map(|r| Box::new(r.clone()) as Box<dyn Region>)
-            .collect()
-    }
-
     fn prepare(&mut self, chunk_size: f32, sample_rate: usize) {
         self.graph.prepare(1024);
         self.resamplers.resize_with(self.regions.len(), || {
