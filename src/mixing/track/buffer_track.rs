@@ -81,6 +81,17 @@ impl Track for BufferTrack {
         self.channels
     }
 
+    fn regions(&self) -> Vec<&dyn Region> {
+        self.regions
+            .iter()
+            .map(|region| region as &dyn Region)
+            .collect()
+    }
+
+    fn channels(&self) -> usize {
+        self.channels
+    }
+
     fn regions(&self) -> Vec<Box<dyn Region>> {
         self.regions
             .iter()
