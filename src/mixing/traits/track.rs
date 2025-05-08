@@ -6,6 +6,8 @@ use crate::audio_utils::Beats;
 use crate::{AudioSource, Graph};
 use std::any::Any;
 
+use super::Region;
+
 pub trait Track: Send + Sync + Any {
     /// Returns the unique identifier of the track.
     fn id(&self) -> u32;
@@ -24,6 +26,12 @@ pub trait Track: Send + Sync + Any {
 
     /// Sets the volume of the track.
     fn set_volume(&mut self, volume: f32);
+
+    /// Returns the number of channels in the track.
+    fn channels(&self) -> usize;
+
+    /// Returns the vector of cloned regions in the track.
+    fn regions(&self) -> Vec<Box<dyn Region>>;
 
     /// Prepare the track for rendering.
     fn prepare(&mut self, chunk_size: Beats, sample_rate: usize);

@@ -77,6 +77,17 @@ impl Track for BufferTrack {
         self.volume = volume;
     }
 
+    fn channels(&self) -> usize {
+        self.channels
+    }
+
+    fn regions(&self) -> Vec<Box<dyn Region>> {
+        self.regions
+            .iter()
+            .map(|r| Box::new(r.clone()) as Box<dyn Region>)
+            .collect()
+    }
+
     fn prepare(&mut self, chunk_size: f32, sample_rate: usize) {
         self.graph.prepare(1024);
         self.resamplers.resize_with(self.regions.len(), || {
@@ -149,8 +160,6 @@ impl Track for BufferTrack {
             for ch in 0..self.channels {
                 chunk.data[ch].extend_from_slice(&region_source.data[ch][start_sample..end_sample]);
             }
-
-            println!("Target sample rate: {}", sample_rate);
 
             // Resample the chunk with the resampler dedicated to the region
             let resampled = match self.resamplers[region_index].process(chunk, sample_rate) {
