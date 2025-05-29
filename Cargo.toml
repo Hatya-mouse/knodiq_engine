@@ -1,10 +1,10 @@
 [package]
-name = "segment_engine"
+name = "knodiq_engine"
 version = "0.2.28"
 edition = "2024"
 
 [lib]
-name = "segment_engine"
+name = "knodiq_engine"
 path = "src/lib.rs"
 
 [dependencies]

@@ -13,7 +13,7 @@ pub type NodeId = Uuid;
 ///
 /// # What is `Graph`?
 ///
-/// In Segment Audio Engine, `Graph` is a fundamental component that represents a network of audio processing nodes.
+/// In Knodiq Audio Engine, `Graph` is a fundamental component that represents a network of audio processing nodes.
 /// It allows the creation of complex audio processing chains by connecting various nodes together!
 pub struct Graph {
     /// Vector of node instances in the graph.
