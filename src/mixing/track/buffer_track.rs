@@ -156,8 +156,9 @@ impl Track for BufferTrack {
             // region_start ^  ^    ^ region_playhead + region_chunk_size
             //
             // >: Playhead, |: Chunk separation
-            let end_sample =
-                (start_sample + region_chunk_size).clamp(0, clipped_samples.round() as usize);
+            let end_sample = (start_sample + region_chunk_size)
+                .clamp(0, clipped_samples.round() as usize)
+                .min(region_source.data[0].len());
 
             // Slice the region to get the chunk
             let mut chunk = AudioSource::new(region_source.sample_rate, self.channels);
