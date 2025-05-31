@@ -31,6 +31,15 @@ pub trait Track: Send + Sync + Any {
     /// Returns the regions of the track.
     fn regions(&self) -> Vec<&dyn Region>;
 
+    /// Returns the regions of the track as mutable references.
+    fn regions_mut(&mut self) -> Vec<&mut dyn Region>;
+
+    /// Returns the specific region of the track by its identifier.
+    fn get_region(&mut self, id: u32) -> Option<&dyn Region>;
+
+    /// Returns the specific region of the track by its identifier as a mutable reference.
+    fn get_region_mut(&mut self, id: u32) -> Option<&mut dyn Region>;
+
     /// Returns the type of the track in the form of a string.
     fn track_type(&self) -> String;
 

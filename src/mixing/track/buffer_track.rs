@@ -92,7 +92,28 @@ impl Track for BufferTrack {
             .collect()
     }
 
-    fn prepare(&mut self, chunk_size: f32, sample_rate: usize) {
+    fn regions_mut(&mut self) -> Vec<&mut dyn Region> {
+        self.regions
+            .iter_mut()
+            .map(|region| region as &mut dyn Region)
+            .collect()
+    }
+
+    fn get_region(&mut self, id: u32) -> Option<&dyn Region> {
+        self.regions
+            .iter()
+            .find(|r| *r.id() == id)
+            .map(|r| r as &dyn Region)
+    }
+
+    fn get_region_mut(&mut self, id: u32) -> Option<&mut dyn Region> {
+        self.regions
+            .iter_mut()
+            .find(|r| *r.id() == id)
+            .map(|r| r as &mut dyn Region)
+    }
+
+    fn prepare(&mut self, _chunk_size: f32, sample_rate: usize) {
         self.graph.prepare(1024);
         self.resamplers.resize_with(self.regions.len(), || {
             AudioResampler::new(sample_rate / 100)
