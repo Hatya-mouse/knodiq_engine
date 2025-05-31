@@ -25,8 +25,7 @@ pub struct AudioSource {
 }
 
 impl AudioSource {
-    /// Create a new audio source instance from the audio file in the specified path.
-    /// Uses symphonia crate to decode the audio file.
+    /// Create a empty audio source with the specified sample rate and number of channels.
     pub fn new(sample_rate: usize, channels: usize) -> Self {
         Self {
             sample_rate,
@@ -35,6 +34,8 @@ impl AudioSource {
         }
     }
 
+    /// Create a new audio source instance from the audio file in the specified path.
+    /// Uses symphonia crate to decode the audio file.
     pub fn from_path(path: &str, track_number: usize) -> Result<Self, &'static str> {
         // Open the audio file
         let file = match File::open(path) {

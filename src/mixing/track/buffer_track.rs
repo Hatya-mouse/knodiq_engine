@@ -124,7 +124,12 @@ impl Track for BufferTrack {
                 completed = false;
             }
 
-            let region_source = region.audio_source();
+            // If the region does not have an audio source, skip it
+            if region.audio_source().is_none() {
+                continue;
+            }
+
+            let region_source = region.audio_source().as_ref().unwrap();
             let clipped_samples = region.duration() as f32 * region.samples_per_beat;
 
             // Actual chunk size that isn't rounded

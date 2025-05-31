@@ -2,7 +2,7 @@
 // Type of region that stores buffer data as a data.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_utils::Beats;
+use crate::audio_utils::{Beats, samples_as_beats};
 use crate::{AudioSource, Region};
 use std::any::Any;
 
@@ -18,30 +18,51 @@ pub struct BufferRegion {
     /// Number of samples per beat.
     pub samples_per_beat: f32,
     /// Audio source of the region.
-    pub source: AudioSource,
+    pub source: Option<AudioSource>,
 }
 
 impl BufferRegion {
     /// Creates a new buffer region with the given audio source.
-    pub fn new(id: u32, name: String, source: AudioSource, samples_per_beat: f32) -> Self {
+    pub fn new(id: u32, name: String, source: Option<AudioSource>, samples_per_beat: f32) -> Self {
+        let duration = match &source {
+            Some(src) => samples_as_beats(samples_per_beat, src.samples()),
+            None => Beats::default(),
+        };
         Self {
             id,
             name,
             start_time: Beats::default(),
-            duration: (source.samples() as f32 / samples_per_beat as f32) as Beats,
+            duration,
             samples_per_beat,
             source,
         }
     }
 
+    /// Creates a new empty buffer region.
+    /// This is useful for representing a region that is not yet filled with audio data.
+    pub fn empty(id: u32, name: String, samples_per_beat: f32, expected_duration: Beats) -> Self {
+        Self {
+            id,
+            name,
+            start_time: Beats::default(),
+            duration: expected_duration,
+            samples_per_beat,
+            source: None,
+        }
+    }
+
     /// Returns the audio source of the region.
-    pub fn audio_source(&self) -> &AudioSource {
+    pub fn audio_source(&self) -> &Option<AudioSource> {
         &self.source
     }
 
     /// Sets the audio source of the region.
-    pub fn set_audio_source(&mut self, source: AudioSource) {
+    pub fn set_audio_source(&mut self, source: Option<AudioSource>) {
         self.source = source;
+        self.duration = match &self.source {
+            Some(src) => samples_as_beats(self.samples_per_beat, src.samples()),
+            None => Beats::default(),
+        };
     }
 }
 
@@ -63,8 +84,7 @@ impl Region for BufferRegion {
     }
 
     fn duration(&self) -> f32 {
-        // Convert the number of samples to beats using the samples per beat.
-        self.source.samples() as f32 / self.samples_per_beat as f32
+        self.duration
     }
 
     fn set_name(&mut self, name: String) {
