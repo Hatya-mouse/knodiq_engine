@@ -2,11 +2,12 @@
 // Audio source for holding audio data.
 // © 2025 Shuntaro Kasatani
 
+use crate::audio_utils::duration;
 use crate::{AudioBuffer, Sample};
 
 use serde::{Deserialize, Serialize};
-use std::f32;
 use std::fs::File;
+use std::{default, f32};
 use symphonia::core::audio::{AudioBufferRef, Signal};
 use symphonia::core::codecs::DecoderOptions;
 use symphonia::core::formats::FormatOptions;
@@ -111,6 +112,52 @@ impl AudioSource {
             channels,
             data: output_buffer,
         })
+    }
+
+    pub fn get_duration_from_path(path: &str, track_number: usize) -> Result<f32, &'static str> {
+        // Open the audio file
+        let file = match File::open(path) {
+            Ok(file) => file,
+            Err(_) => return Err("Failed to open the audio file. 😿 File seems to not exist."),
+        };
+
+        // Instantiate the decoding options
+        let format_options = FormatOptions::default();
+        let metadata_options = MetadataOptions::default();
+
+        // Initialize the codec registry and probe
+        let probe = symphonia::default::get_probe();
+
+        // Initialize the source stream from the file
+        let source_stream =
+            MediaSourceStream::new(Box::new(file), MediaSourceStreamOptions::default());
+
+        // Initialize the probe result
+        let probe_result = match probe.format(
+            &symphonia::core::probe::Hint::new(),
+            source_stream,
+            &format_options,
+            &metadata_options,
+        ) {
+            Ok(probe_result) => probe_result,
+            Err(_) => {
+                return Err(
+                    "Failed to probe the audio format. 🔈 Maybe the file is corrupted or not supported? 😿",
+                );
+            }
+        };
+
+        // Get the tracks from the probe result
+        let tracks = probe_result.format.tracks();
+        // And get the track at the specified index
+        let track = &tracks[track_number];
+
+        // Get duration in seconds
+        let sample_rate = track.codec_params.sample_rate.unwrap_or(44100) as f32;
+        let sample_count = track.codec_params.n_frames.unwrap_or(0) as f32;
+        let duration = sample_count / sample_rate;
+
+        Ok(duration)
     }
 
     /// Mix the audio buffer with another buffer at a specific time.
