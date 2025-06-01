@@ -156,3 +156,7 @@ impl Mixer {
         completed
     }
 }
+
+unsafe impl Sync for Mixer {}
+
+unsafe impl Send for Mixer {}
