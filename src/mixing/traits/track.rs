@@ -40,6 +40,9 @@ pub trait Track: Send + Sync + Any {
     /// Returns the specific region of the track by its identifier as a mutable reference.
     fn get_region_mut(&mut self, id: u32) -> Option<&mut dyn Region>;
 
+    /// Removes the specified region from the track.
+    fn remove_region(&mut self, id: u32);
+
     /// Returns the type of the track in the form of a string.
     fn track_type(&self) -> String;
 

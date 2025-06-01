@@ -113,6 +113,10 @@ impl Track for BufferTrack {
             .map(|r| r as &mut dyn Region)
     }
 
+    fn remove_region(&mut self, id: u32) {
+        self.regions.retain(|r| *r.id() != id);
+    }
+
     fn prepare(&mut self, _chunk_size: f32, sample_rate: usize) {
         self.graph.prepare(1024);
         self.resamplers.resize_with(self.regions.len(), || {

@@ -72,6 +72,10 @@ impl Mixer {
         self.tracks.iter_mut().filter(|t| t.id() == id).next()
     }
 
+    pub fn remove_track_by_id(&mut self, id: u32) {
+        self.tracks.retain(|t| t.id() != id);
+    }
+
     /// Mixes all the tracks into a single audio source.
     ///
     /// # Arguments
