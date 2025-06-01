@@ -79,11 +79,12 @@ impl Mixer {
     /// Mixes all the tracks into a single audio source.
     ///
     /// # Arguments
+    /// - `at` - The position in beats to start mixing from.
     /// - `callback` - Called when the chunk has rendered. Rendered sample is passed. Sample will be passed in this way:
     /// `Sample 0` from `Channel 0`, `Sample 0` from `Channel 1`, `Sample 1` from `Channel 0`, `Sample 1` from `Channel 1`...
     /// The callback should return `true` to continue rendering, or `false` to stop rendering.
-    pub fn mix(&mut self, callback: Box<dyn Fn(f32) -> bool + Send>) -> AudioSource {
-        self.playhead_beats = 0.0;
+    pub fn mix(&mut self, at: Beats, callback: Box<dyn Fn(f32) -> bool + Send>) -> AudioSource {
+        self.playhead_beats = at;
 
         // Create a new AudioSource instance to return
         let mut output = AudioSource::new(self.sample_rate, self.channels);
