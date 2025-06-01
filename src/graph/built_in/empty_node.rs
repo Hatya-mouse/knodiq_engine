@@ -55,3 +55,11 @@ impl Node for EmptyNode {
         self
     }
 }
+
+impl Clone for EmptyNode {
+    fn clone(&self) -> Self {
+        EmptyNode {
+            input: self.input.clone(),
+        }
+    }
+}

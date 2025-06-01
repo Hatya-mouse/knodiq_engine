@@ -212,3 +212,14 @@ impl Graph {
         }
     }
 }
+
+impl Clone for Graph {
+    fn clone(&self) -> Self {
+        let mut cloned_graph = Graph::new();
+        cloned_graph.nodes = self.nodes.iter().map(|(k, v)| (*k, v.clone())).collect();
+        cloned_graph.connections = self.connections.clone();
+        cloned_graph.input_nodes = self.input_nodes.clone();
+        cloned_graph.output_node = self.output_node;
+        cloned_graph
+    }
+}

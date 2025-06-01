@@ -6,7 +6,26 @@ use crate::audio_utils::Beats;
 use crate::{AudioSource, Graph, Region};
 use std::any::Any;
 
-pub trait Track: Send + Sync + Any {
+pub trait TrackClone {
+    fn clone_box(&self) -> Box<dyn Track>;
+}
+
+impl<T> TrackClone for T
+where
+    T: 'static + Track + Clone,
+{
+    fn clone_box(&self) -> Box<dyn Track> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn Track> {
+    fn clone(&self) -> Box<dyn Track> {
+        self.clone_box()
+    }
+}
+
+pub trait Track: Send + Sync + Any + TrackClone {
     /// Returns the unique identifier of the track.
     fn id(&self) -> u32;
 

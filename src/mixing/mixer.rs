@@ -157,6 +157,19 @@ impl Mixer {
     }
 }
 
+// To enable cloning of Box<dyn Track>, the Track trait must support clone_box.
+impl Clone for Mixer {
+    fn clone(&self) -> Self {
+        Mixer {
+            tracks: self.tracks.iter().map(|t| t.clone_box()).collect(),
+            tempo: self.tempo,
+            channels: self.channels,
+            sample_rate: self.sample_rate,
+            playhead_beats: self.playhead_beats,
+        }
+    }
+}
+
 unsafe impl Sync for Mixer {}
 
 unsafe impl Send for Mixer {}

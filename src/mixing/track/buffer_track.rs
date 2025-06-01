@@ -244,3 +244,19 @@ impl Track for BufferTrack {
         self
     }
 }
+
+impl Clone for BufferTrack {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            name: self.name.clone(),
+            volume: self.volume,
+            graph: self.graph.clone(),
+            channels: self.channels,
+            regions: self.regions.clone(),
+            rendered_data: None, // Rendered data should be regenerated
+            resamplers: Vec::new(),
+            residual_samples: self.residual_samples,
+        }
+    }
+}
