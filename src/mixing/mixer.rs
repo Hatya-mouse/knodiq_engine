@@ -106,7 +106,7 @@ impl Mixer {
             for sample in start_sample..end_sample {
                 for channel in 0..self.channels {
                     if !callback(output.data[channel][sample]) {
-                        break;
+                        return output;
                     }
                 }
             }
