@@ -117,6 +117,13 @@ impl Track for BufferTrack {
         self.regions.retain(|r| *r.id() != id);
     }
 
+    fn duration(&self) -> Beats {
+        self.regions
+            .iter()
+            .map(|r| r.end_time())
+            .fold(0.0, |max, end| max.max(end))
+    }
+
     fn prepare(&mut self, _chunk_size: f32, sample_rate: usize) {
         self.graph.prepare(1024);
         self.resamplers.resize_with(self.regions.len(), || {

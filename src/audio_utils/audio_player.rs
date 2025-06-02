@@ -46,6 +46,7 @@ impl AudioPlayer {
         let (stream, completion_receiver, sample_sender) = self.create_stream()?;
         // Play the stream
         stream.play()?;
+
         // Set the current stream
         self.current_stream = Some(stream);
 
@@ -101,7 +102,8 @@ impl AudioPlayer {
         // Create a playback stream from the audio source
         match device.build_output_stream(
             &stream_config,
-            move |data: &mut [f32], _| {
+            move |data: &mut [f32], output_callback_info| {
+                output_callback_info.timestamp();
                 for sample_out in data.iter_mut() {
                     // Get the sample data from the receiver
                     let sample_data = match sample_receiver.recv() {

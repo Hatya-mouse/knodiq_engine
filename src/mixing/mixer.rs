@@ -20,7 +20,7 @@ pub struct Mixer {
     /// Sample rate of the output audio source.
     pub sample_rate: usize,
 
-    /// Currently rendering position in beat.
+    /// Currently rendering position in beats.
     playhead_beats: f32,
 }
 
@@ -48,32 +48,47 @@ impl Mixer {
         }
     }
 
+    /// Returns the current playhead position in beats.
     pub fn samples_per_beat(&self) -> f32 {
         (self.sample_rate as f32) / (self.tempo as f32 / 60.0)
     }
 
+    /// Returns the current playhead position in beats.
     pub fn set_tempo(&mut self, tempo: Beats) {
         self.tempo = tempo;
     }
 
+    /// Sets the sample rate of the mixer.
     pub fn set_sample_rate(&mut self, sample_rate: usize) {
         self.sample_rate = sample_rate;
     }
 
+    /// Sets the number of channels in the mixer.
     pub fn set_channels(&mut self, channels: usize) {
         self.channels = channels;
     }
 
+    /// Returns a reference to a track by its ID.
     pub fn get_track_by_id(&self, id: u32) -> Option<&Box<dyn Track>> {
         self.tracks.iter().filter(|t| t.id() == id).next()
     }
 
+    /// Returns a mutable reference to a track by its ID.
     pub fn get_track_by_id_mut(&mut self, id: u32) -> Option<&mut Box<dyn Track>> {
         self.tracks.iter_mut().filter(|t| t.id() == id).next()
     }
 
+    /// Removes a track from the mixer by its ID.
     pub fn remove_track(&mut self, id: u32) {
         self.tracks.retain(|t| t.id() != id);
+    }
+
+    /// Returns the duration of the mixer in beats.
+    pub fn duration(&self) -> Beats {
+        self.tracks
+            .iter()
+            .map(|track| track.duration())
+            .fold(0.0, |acc, duration| acc.max(duration))
     }
 
     /// Mixes all the tracks into a single audio source.

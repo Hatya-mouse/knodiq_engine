@@ -65,6 +65,9 @@ pub trait Track: Send + Sync + Any + TrackClone {
     /// Returns the type of the track in the form of a string.
     fn track_type(&self) -> String;
 
+    /// Returns the duration of the track in beats.
+    fn duration(&self) -> Beats;
+
     /// Prepare the track for rendering.
     fn prepare(&mut self, chunk_size: Beats, sample_rate: usize);
 
