@@ -2,7 +2,7 @@
 // Mixer mixes multiple audio tracks into AudioSource.
 // © 2025 Shuntaro Kasatani
 
-use crate::{AudioSource, Track, audio_utils};
+use crate::{AudioSource, Sample, Track, audio_utils};
 use audio_utils::Beats;
 
 const CHUNK_BEATS: Beats = 2.0;
@@ -80,10 +80,14 @@ impl Mixer {
     ///
     /// # Arguments
     /// - `at` - The position in beats to start mixing from.
-    /// - `callback` - Called when the chunk has rendered. Rendered sample is passed. Sample will be passed in this way:
+    /// - `callback` - Called when the chunk has rendered. Rendered sample and the current playhead time (is Beats) is passed. Sample will be passed in this way:
     /// `Sample 0` from `Channel 0`, `Sample 0` from `Channel 1`, `Sample 1` from `Channel 0`, `Sample 1` from `Channel 1`...
     /// The callback should return `true` to continue rendering, or `false` to stop rendering.
-    pub fn mix(&mut self, at: Beats, callback: Box<dyn Fn(f32) -> bool + Send>) -> AudioSource {
+    pub fn mix(
+        &mut self,
+        at: Beats,
+        callback: Box<dyn Fn(Sample, Beats) -> bool + Send>,
+    ) -> AudioSource {
         self.playhead_beats = at;
 
         // Create a new AudioSource instance to return
@@ -105,7 +109,7 @@ impl Mixer {
 
             for sample in start_sample..end_sample {
                 for channel in 0..self.channels {
-                    if !callback(output.data[channel][sample]) {
+                    if !callback(output.data[channel][sample], self.playhead_beats) {
                         return output;
                     }
                 }

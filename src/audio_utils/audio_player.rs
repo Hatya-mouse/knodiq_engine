@@ -60,7 +60,7 @@ impl AudioPlayer {
                     }
                 }
                 Err(err) => {
-                    eprintln!("Audio stream couldn't be initialized: {}", err);
+                    eprintln!("Couldn't receive the completion signal: {}", err);
                 }
             }
         });
