@@ -117,8 +117,6 @@ impl Mixer {
 
             // Increment the playhead duration
             self.playhead_beats += CHUNK_BEATS;
-
-            println!("Current playhead: {:.2} beats", self.playhead_beats);
         }
 
         // Return the mixed output.
