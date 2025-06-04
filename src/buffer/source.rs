@@ -37,11 +37,16 @@ impl AudioSource {
 
     /// Create a new audio source instance from the audio file in the specified path.
     /// Uses symphonia crate to decode the audio file.
-    pub fn from_path(path: &str, track_number: usize) -> Result<Self, &'static str> {
+    pub fn from_path(path: &str, track_number: usize) -> Result<Self, String> {
         // Open the audio file
         let file = match File::open(path) {
             Ok(file) => file,
-            Err(_) => return Err("Failed to open the audio file. 😿 File seems to not exist."),
+            Err(e) => {
+                return Err(format!(
+                    "Failed to open the audio file. 😿 File seems to not exist. [{}]",
+                    e
+                ));
+            }
         };
 
         // Instantiate the decoding options
@@ -65,10 +70,11 @@ impl AudioSource {
             &metadata_options,
         ) {
             Ok(probe_result) => probe_result,
-            Err(_) => {
-                return Err(
-                    "Failed to probe the audio format. 🔈 Maybe the file is corrupted or not supported? 😿",
-                );
+            Err(e) => {
+                return Err(format!(
+                    "Failed to probe the audio format. 🔈 Maybe the file is corrupted or not supported? 😿 [{}]",
+                    e
+                ));
             }
         };
 
@@ -80,19 +86,19 @@ impl AudioSource {
         // Get the sample rate from the track's codec parameters
         let sample_rate = match track.codec_params.sample_rate {
             Some(sample_rate) => sample_rate as usize,
-            None => return Err("Codec parameters invalid. 🎛️"),
+            None => return Err("Codec parameters invalid. 🎛️ (sample_rate missing)".into()),
         };
 
         let channels = match track.codec_params.channels {
             Some(channels) => channels,
-            None => return Err("Codec parameters invalid. 🎛️"),
+            None => return Err("Codec parameters invalid. 🎛️ (channels missing)".into()),
         }
         .count();
 
         // Make a decoder from the codec registry and the track's codec parameters
         let mut decoder = match codec_registry.make(&track.codec_params, &decoder_options) {
             Ok(decoder) => decoder,
-            Err(_) => return Err("The decoder could not be initialized. 😹"),
+            Err(e) => return Err(format!("The decoder could not be initialized. 😹 [{}]", e)),
         };
 
         // Create a vector to store the decoded samples
@@ -103,7 +109,7 @@ impl AudioSource {
             // Decode the packet using the decoder
             match decoder.decode(&packet) {
                 Ok(decoded) => merge_buffer(&mut output_buffer, decoded, channels),
-                Err(_) => return Err("Decode error. 😿"),
+                Err(e) => return Err(format!("Decode error: {}", e)),
             }
         }
 
