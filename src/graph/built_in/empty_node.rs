@@ -36,6 +36,11 @@ impl Node for EmptyNode {
             None => Value::Buffer(vec![vec![0.0; chunk_end - chunk_start]; channels]),
         };
 
+        println!(
+            "EmptyNode: Processing from {} to {}, buffer: {:?}",
+            chunk_start, chunk_end, buffer
+        );
+
         let mut result = HashMap::new();
         result.insert("output".to_string(), buffer);
         Ok(result)

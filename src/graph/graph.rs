@@ -205,14 +205,6 @@ impl Graph {
                     node.set_input(&to_param, value);
                 }
 
-                println!(
-                    "Processing node: {}",
-                    if node.as_any().is::<EmptyNode>() {
-                        "EmptyNode"
-                    } else {
-                        "Unknown Node"
-                    }
-                );
                 node.process(sample_rate, channels, chunk_start, chunk_end)?;
             }
         }
