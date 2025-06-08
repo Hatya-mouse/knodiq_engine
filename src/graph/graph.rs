@@ -197,10 +197,9 @@ impl Graph {
                     println!("Got connector: {:?}", connector);
                     self.nodes.get(&connector.from).and_then(|origin_node| {
                         println!(
-                            "Output from origin node: {:?}",
-                            origin_node
-                                .get_output(&connector.to_param)
-                                .map(|value| (connector.to_param.clone(), value))
+                            "Param {} from origin node: {:?}",
+                            connector.to_param,
+                            origin_node.get_output(&connector.to_param)
                         );
                         origin_node
                             .get_output(&connector.to_param)
