@@ -194,37 +194,20 @@ impl Graph {
                 .filter(|connector| connector.to == node_id)
                 .filter_map(|connector| {
                     // Get the output from the origin node
+                    println!("Got connector: {:?}", connector);
                     self.nodes.get(&connector.from).and_then(|origin_node| {
+                        println!(
+                            "Output from origin node: {:?}",
+                            origin_node
+                                .get_output(&connector.to_param)
+                                .map(|value| (connector.to_param.clone(), value))
+                        );
                         origin_node
                             .get_output(&connector.to_param)
                             .map(|value| (connector.to_param.clone(), value))
                     })
                 })
                 .collect();
-
-            println!(
-                "Step 1: {:?}",
-                self.connections
-                    .iter()
-                    .filter(|c| c.to == node_id)
-                    .collect::<Vec<_>>()
-            );
-
-            println!(
-                "Step 2: {:?}",
-                self.connections
-                    .iter()
-                    .filter(|connector| connector.to == node_id)
-                    .filter_map(|connector| {
-                        // Get the output from the origin node
-                        self.nodes.get(&connector.from).and_then(|origin_node| {
-                            origin_node
-                                .get_output(&connector.to_param)
-                                .map(|value| (connector.to_param.clone(), value))
-                        })
-                    })
-                    .collect::<Vec<(String, Value)>>()
-            );
 
             if let Some(node) = self.nodes.get_mut(&node_id) {
                 println!(

@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "knodiq_engine"
-version = "0.2.53-dev6"
+version = "0.2.53-dev7"
 dependencies = [
  "cpal",
  "rubato",
