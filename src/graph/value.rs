@@ -35,7 +35,7 @@ impl Value {
         }
     }
 
-    /// Applies a operation which takes two `Sample`(s) and returns a processed `Value`.
+    /// Applies a operation which takes more than one `Sample`s and returns a processed `Value`.
     ///
     /// ## Arguments
     /// - `other`: Another `Value` to apply the operation with.
