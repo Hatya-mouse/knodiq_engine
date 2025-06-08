@@ -202,8 +202,6 @@ impl Graph {
                 })
                 .collect();
 
-            println!("Processing node: {}, inputs: {:?}", node_id, input_values);
-
             if let Some(node) = self.nodes.get_mut(&node_id) {
                 // Pass each input
                 for (to_param, value) in input_values {
@@ -218,11 +216,14 @@ impl Graph {
         match self.get_node(self.output_node) {
             Some(node) => match node.get_output("output") {
                 Some(value) => match value {
-                    Value::Buffer(buffer) => Ok(AudioSource::from_buffer(
-                        buffer,
-                        input_audio.sample_rate,
-                        input_audio.channels,
-                    )),
+                    Value::Buffer(buffer) => {
+                        println!("{:?}", buffer);
+                        Ok(AudioSource::from_buffer(
+                            buffer,
+                            input_audio.sample_rate,
+                            input_audio.channels,
+                        ))
+                    }
                     _ => Err("Output wasn't a buffer".into()),
                 },
                 None => Err("Output not found".into()),
