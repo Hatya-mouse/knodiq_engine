@@ -26,6 +26,7 @@ impl Node for EmptyNode {
     fn process(
         &mut self,
         _sample_rate: usize,
+        _channels: usize,
         _chunk_start: usize,
         _chunk_end: usize,
     ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {

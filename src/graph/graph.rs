@@ -168,6 +168,7 @@ impl Graph {
         &mut self,
         input_audio: AudioSource,
         sample_rate: usize,
+        channels: usize,
         chunk_start: usize,
         chunk_end: usize,
     ) -> Result<AudioSource, Box<dyn std::error::Error>> {
@@ -204,7 +205,7 @@ impl Graph {
                     node.set_input(&to_param, value);
                 }
 
-                node.process(sample_rate, chunk_start, chunk_end)?;
+                node.process(sample_rate, channels, chunk_start, chunk_end)?;
             }
         }
 

@@ -216,6 +216,7 @@ impl Track for BufferTrack {
             let processed = match self.graph.process(
                 resampled,
                 sample_rate,
+                self.channels,
                 region_playhead,
                 region_playhead + region_chunk_size,
             ) {
