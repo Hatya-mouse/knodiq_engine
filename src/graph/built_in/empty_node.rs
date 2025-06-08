@@ -29,26 +29,18 @@ impl Node for EmptyNode {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
-    ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let buffer = match self.input.as_ref() {
             Some(Value::Buffer(buffer)) => Value::Buffer(buffer.clone()),
             Some(value) => value.clone(),
             None => Value::Buffer(vec![vec![0.0; chunk_end - chunk_start]; channels]),
         };
 
-        println!(
-            "EmptyNode: Processing from {} to {}, buffer: {}",
-            chunk_start,
-            chunk_end,
-            match buffer {
-                Value::Buffer(ref b) => b.len(),
-                _ => 0,
-            }
-        );
-
         let mut result = HashMap::new();
-        result.insert("output".to_string(), buffer);
-        Ok(result)
+        result.insert("output".to_string(), buffer.clone());
+        self.output = Some(buffer);
+
+        Ok(())
     }
 
     fn prepare(&mut self, _: usize) {}

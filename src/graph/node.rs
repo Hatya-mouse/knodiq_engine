@@ -3,7 +3,7 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::Value;
-use std::{any::Any, collections::HashMap};
+use std::any::Any;
 
 /// Represents a audio processing node.
 /// In Knodiq we process audio data using "Node", instead of "Effects".
@@ -22,7 +22,7 @@ pub trait Node: Send + Sync + Any + NodeClone {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
-    ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>>;
+    ) -> Result<(), Box<dyn std::error::Error>>;
 
     /// Prepare the node for processing. Called before processing.
     /// Chunk size is passed to the node to prepare for processing.
