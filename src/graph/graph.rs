@@ -199,6 +199,8 @@ impl Graph {
                 })
                 .collect();
 
+            println!("Processing node: {}, inputs: {:?}", node_id, input_values);
+
             if let Some(node) = self.nodes.get_mut(&node_id) {
                 // Pass each input
                 for (to_param, value) in input_values {
