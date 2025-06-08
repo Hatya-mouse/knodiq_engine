@@ -40,8 +40,6 @@ impl Node for EmptyNode {
         result.insert("output".to_string(), buffer.clone());
         self.output = Some(buffer);
 
-        println!("{:?}", self.output);
-
         Ok(())
     }
 
