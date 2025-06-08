@@ -194,7 +194,6 @@ impl Graph {
                 .filter(|connector| connector.to == node_id)
                 .filter_map(|connector| {
                     // Get the output from the origin node
-                    println!("Got connector: {:?}", connector);
                     self.nodes.get(&connector.from).and_then(|origin_node| {
                         origin_node
                             .get_output(&connector.from_param)

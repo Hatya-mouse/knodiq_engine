@@ -117,7 +117,7 @@ impl AudioPlayer {
                 }
             },
             move |err| {
-                println!("Audio stream couldn't be initialized: {}", err);
+                eprintln!("Audio stream couldn't be initialized: {}", err);
             },
             None,
         ) {
