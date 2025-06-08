@@ -205,6 +205,9 @@ impl Graph {
             if let Some(node) = self.nodes.get_mut(&node_id) {
                 // Pass each input
                 for (to_param, value) in input_values {
+                    if to_param == "input" {
+                        println!("Setting input for node {}: {:?}", node_id, value);
+                    }
                     node.set_input(&to_param, value);
                 }
 
