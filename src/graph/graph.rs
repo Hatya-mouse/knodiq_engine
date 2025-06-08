@@ -209,7 +209,6 @@ impl Graph {
                 }
 
                 node.process(sample_rate, channels, chunk_start, chunk_end)?;
-                println!("Node output: {:?}", node.get_output("output"));
             }
         }
 

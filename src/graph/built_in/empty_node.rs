@@ -30,6 +30,8 @@ impl Node for EmptyNode {
         chunk_start: usize,
         chunk_end: usize,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        println!("{:?}", self.input.as_ref());
+
         let buffer = match self.input.as_ref() {
             Some(Value::Buffer(buffer)) => Value::Buffer(buffer.clone()),
             Some(value) => value.clone(),
