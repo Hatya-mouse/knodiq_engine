@@ -8,7 +8,7 @@ pub mod mixing;
 
 pub use buffer::{AudioBuffer, AudioSource, Sample};
 
-pub use graph::{Connector, Graph, Node, NodeId};
+pub use graph::{Connector, Graph, Node, NodeId, Value};
 
 pub use mixing::{Mixer, Region, Track};
 

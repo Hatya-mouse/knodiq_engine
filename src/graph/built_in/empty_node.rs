@@ -2,52 +2,66 @@
 // A graph node that just pass the audio source.
 // © 2025 Shuntaro Kasatani
 
-use crate::AudioSource;
-use crate::graph::Node;
+use crate::{Node, Value};
 use std::any::Any;
-use std::panic::panic_any;
+use std::collections::HashMap;
 
 /// A node that does nothing.
 pub struct EmptyNode {
-    input: Option<AudioSource>,
+    input: Option<Value>,
+    output: Option<Value>,
 }
 
 impl EmptyNode {
     /// Creates a new instance of the EmptyNode.
     pub fn new() -> Self {
-        EmptyNode { input: None }
+        EmptyNode {
+            input: None,
+            output: None,
+        }
     }
 }
 
 impl Node for EmptyNode {
-    fn process(&mut self) -> Result<AudioSource, Box<dyn std::error::Error>> {
-        Ok(self.input.as_ref().ok_or("Input not provided")?.clone())
+    fn process(&mut self) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
+        let buffer = self.input.as_ref().ok_or("Input not provided")?.clone();
+
+        let mut result = HashMap::new();
+        result.insert("output".to_string(), buffer);
+        Ok(result)
     }
 
     fn prepare(&mut self, _: usize) {}
 
-    fn get_property_list(&self) -> Vec<String> {
-        Vec::new()
+    fn get_input_list(&self) -> Vec<String> {
+        vec!["input".to_string()]
     }
 
-    fn get_property(&self, property: &str) -> Box<dyn Any> {
+    fn get_output_list(&self) -> Vec<String> {
+        vec!["output".to_string()]
+    }
+
+    fn get_input(&self, property: &str) -> Option<Value> {
         match property {
-            "input" => Box::new(match self.input {
+            "input" => match self.input {
                 Some(ref input) => Some(input.clone()),
                 None => None,
-            }),
-            _ => panic_any("Invalid property"),
+            },
+            _ => None,
         }
     }
 
-    fn set_property(&mut self, property: &str, value: Box<dyn Any>) {
+    fn set_input(&mut self, property: &str, value: Value) {
         match property {
-            "input" => {
-                if let Some(input) = value.downcast_ref::<AudioSource>() {
-                    self.input = Some(input.clone());
-                }
-            }
-            _ => panic_any("Invalid property"),
+            "input" => self.input = Some(value),
+            _ => (),
+        }
+    }
+
+    fn get_output(&self, output: &str) -> Option<Value> {
+        match output {
+            "output" => self.output.clone(),
+            _ => None,
         }
     }
 
@@ -60,6 +74,7 @@ impl Clone for EmptyNode {
     fn clone(&self) -> Self {
         EmptyNode {
             input: self.input.clone(),
+            output: self.output.clone(),
         }
     }
 }

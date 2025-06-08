@@ -2,14 +2,14 @@
 // Traits for audio processing graph nodes.
 // © 2025 Shuntaro Kasatani
 
-use crate::AudioSource;
-use std::any::Any;
+use crate::Value;
+use std::{any::Any, collections::HashMap};
 
 /// Represents a audio processing node.
 /// In Knodiq we process audio data using "Node", instead of "Effects".
 pub trait Node: Send + Sync + Any + NodeClone {
-    /// Process the audio source and return the output audio source.
-    fn process(&mut self) -> Result<AudioSource, Box<dyn std::error::Error>>;
+    /// Process the audio source.
+    fn process(&mut self) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>>;
 
     /// Prepare the node for processing. Called before processing.
     /// Chunk size is passed to the node to prepare for processing.
@@ -18,13 +18,19 @@ pub trait Node: Send + Sync + Any + NodeClone {
     fn prepare(&mut self, chunk_size: usize);
 
     /// Get the list of properties that can be set on this node.
-    fn get_property_list(&self) -> Vec<String>;
+    fn get_input_list(&self) -> Vec<String>;
 
-    /// Get the node property. Panics if the property does not exist.
-    fn get_property(&self, property: &str) -> Box<dyn Any>;
+    /// Get the list of output properties that can be retrieved from this node.
+    fn get_output_list(&self) -> Vec<String>;
+
+    /// Get the node property. Returns `None` if the property does not exist.
+    fn get_input(&self, property: &str) -> Option<Value>;
 
     /// Set the node property.
-    fn set_property(&mut self, property: &str, value: Box<dyn Any>);
+    fn set_input(&mut self, property: &str, value: Value);
+
+    /// Get the output with given name. Returns `None` if the property does not exist.
+    fn get_output(&self, output: &str) -> Option<Value>;
 
     fn as_any(&self) -> &dyn Any;
 }

@@ -2,12 +2,11 @@
 // Audio source for holding audio data.
 // © 2025 Shuntaro Kasatani
 
-use crate::audio_utils::duration;
-use crate::{AudioBuffer, Sample};
+use crate::{AudioBuffer, Sample, Value};
 
 use serde::{Deserialize, Serialize};
+use std::f32;
 use std::fs::File;
-use std::{default, f32};
 use symphonia::core::audio::{AudioBufferRef, Signal};
 use symphonia::core::codecs::DecoderOptions;
 use symphonia::core::formats::FormatOptions;
@@ -32,6 +31,15 @@ impl AudioSource {
             sample_rate,
             channels,
             data: vec![vec![]; channels],
+        }
+    }
+
+    /// Create a new audio source instance from the audio buffer.
+    pub fn from_buffer(buffer: AudioBuffer, sample_rate: usize, channels: usize) -> Self {
+        Self {
+            sample_rate,
+            channels,
+            data: buffer,
         }
     }
 
@@ -218,6 +226,11 @@ impl AudioSource {
     /// Returns the copy of the buffer.
     pub fn clone_buffer(&self) -> Vec<Vec<Sample>> {
         self.data.clone()
+    }
+
+    /// Returns the copy of the buffer, but as Value.
+    pub fn clone_buffer_as_value(&self) -> Value {
+        Value::Buffer(self.clone_buffer())
     }
 }
 

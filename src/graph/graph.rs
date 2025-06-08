@@ -2,7 +2,7 @@
 // Represents a graph of audio nodes that includes nodes, and connections between them.
 // © 2025 Shuntaro Kasatani
 
-use crate::{AudioSource, Connector, Node, graph::built_in::EmptyNode};
+use crate::{AudioSource, Connector, Node, Value, graph::built_in::EmptyNode};
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
@@ -45,6 +45,16 @@ impl Graph {
             input_nodes: vec![input_id],
             output_node: output_id,
         }
+    }
+
+    /// Returns the node with the given id.
+    pub fn get_node(&self, id: NodeId) -> Option<&Box<dyn Node>> {
+        self.nodes.get(&id)
+    }
+
+    /// Returns the mutable node with the given id.
+    pub fn get_node_mut(&mut self, id: NodeId) -> Option<&mut Box<dyn Node>> {
+        self.nodes.get_mut(&id)
     }
 
     /// Adds a new node to the graph and return the id.
@@ -157,57 +167,53 @@ impl Graph {
         // 1. Decide the process order using topological sort
         let sorted_nodes = self.topological_sort()?;
 
-        // 2. Create a buffer map
-        let mut sources: HashMap<NodeId, AudioSource> = HashMap::new();
-
         // 3. Set the input data to the input nodes
         for node_id in &self.input_nodes {
             self.nodes.get_mut(&node_id).map(|ref mut node| {
-                node.set_property("input", Box::new(input_audio.clone()));
+                node.set_input("input", input_audio.clone_buffer_as_value());
             });
         }
 
         // 4. Process nodes in order calculated
         for node_id in sorted_nodes {
+            // Collect the input values before mutably borrowing self.nodes
+            let input_values: Vec<(String, Value)> = self
+                .connections
+                .iter()
+                .filter(|connector| connector.to == node_id)
+                .filter_map(|connector| {
+                    // Get the output from the origin node
+                    self.nodes.get(&connector.from).and_then(|origin_node| {
+                        origin_node
+                            .get_output(&connector.to_param)
+                            .map(|value| (connector.to_param.clone(), value))
+                    })
+                })
+                .collect();
+
             if let Some(node) = self.nodes.get_mut(&node_id) {
-                // If the node's output is not connected to other nodes, skip it
-                // if !self.connections.iter().any(|conn| conn.from == node_id) {
-                //     continue;
-                // }
-
-                // Get the output of the node and pass the source to connected nodes
-                // Filter the connections to the current node, and then get the source from the connected node
-                // Create a vector to store the inputs we need to process
-                let inputs: Vec<_> = self
-                    .connections
-                    .iter()
-                    .filter(|connector| connector.to == node_id)
-                    .map(|connection| (connection.to_param.clone(), connection.from))
-                    .collect();
-
                 // Pass each input
-                for (to_param, from_node_id) in inputs {
-                    if let Some(source) = sources.get(&from_node_id) {
-                        // Clone the audio source and set the property
-                        let source = source.clone();
-                        node.set_property(&to_param, Box::new(source));
-                    }
+                for (to_param, value) in input_values {
+                    node.set_input(&to_param, value);
                 }
 
-                // Process the audio and get the output
-                let output_source = match node.process() {
-                    Ok(source) => source,
-                    Err(err) => return Err(err),
-                };
-
-                // Save the source
-                sources.insert(node_id, output_source);
+                node.process()?;
             }
         }
 
         // 5. Get the output of the output node and return it
-        match sources.remove(&self.output_node) {
-            Some(source) => Ok(source),
+        match self.get_node(self.output_node) {
+            Some(node) => match node.get_output("output") {
+                Some(value) => match value {
+                    Value::Buffer(buffer) => Ok(AudioSource::from_buffer(
+                        buffer,
+                        input_audio.sample_rate,
+                        input_audio.channels,
+                    )),
+                    _ => Err("Output wasn't a buffer".into()),
+                },
+                None => Err("Output not found".into()),
+            },
             None => Err("Output node not found".into()),
         }
     }
