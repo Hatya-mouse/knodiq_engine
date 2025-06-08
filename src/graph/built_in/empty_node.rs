@@ -23,7 +23,12 @@ impl EmptyNode {
 }
 
 impl Node for EmptyNode {
-    fn process(&mut self) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
+    fn process(
+        &mut self,
+        _sample_rate: usize,
+        _chunk_start: usize,
+        _chunk_end: usize,
+    ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
         let buffer = self.input.as_ref().ok_or("Input not provided")?.clone();
 
         let mut result = HashMap::new();

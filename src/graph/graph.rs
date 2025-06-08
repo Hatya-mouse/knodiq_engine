@@ -160,9 +160,16 @@ impl Graph {
     }
 
     /// Processes the input audio source and returns the output.
+    ///
+    /// # Arguments
+    /// - `input_audio`: The input audio source to process.
+    /// - `time`: The sample index of the first sample in the processing chunk.
     pub fn process(
         &mut self,
         input_audio: AudioSource,
+        sample_rate: usize,
+        chunk_start: usize,
+        chunk_end: usize,
     ) -> Result<AudioSource, Box<dyn std::error::Error>> {
         // 1. Decide the process order using topological sort
         let sorted_nodes = self.topological_sort()?;
@@ -197,7 +204,7 @@ impl Graph {
                     node.set_input(&to_param, value);
                 }
 
-                node.process()?;
+                node.process(sample_rate, chunk_start, chunk_end)?;
             }
         }
 

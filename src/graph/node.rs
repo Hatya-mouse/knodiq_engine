@@ -9,7 +9,18 @@ use std::{any::Any, collections::HashMap};
 /// In Knodiq we process audio data using "Node", instead of "Effects".
 pub trait Node: Send + Sync + Any + NodeClone {
     /// Process the audio source.
-    fn process(&mut self) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>>;
+    /// This method is called when the node is ready to process audio data.
+    ///
+    /// # Arguments
+    /// - `sample_rate`: The sample rate of the audio data
+    /// - `chunk_start`: The start index of the chunk to process
+    /// - `chunk_end`: The end index of the chunk to process
+    fn process(
+        &mut self,
+        sample_rate: usize,
+        chunk_start: usize,
+        chunk_end: usize,
+    ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>>;
 
     /// Prepare the node for processing. Called before processing.
     /// Chunk size is passed to the node to prepare for processing.

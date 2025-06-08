@@ -12,6 +12,6 @@ pub use graph::{Connector, Graph, Node, NodeId, Value};
 
 pub use mixing::{Mixer, Region, Track};
 
-pub use audio_utils::{AudioPlayer, AudioResampler};
+pub use audio_utils::{AudioPlayer, AudioResampler, Beats};
 
 pub use std::time::Duration;

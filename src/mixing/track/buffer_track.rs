@@ -213,7 +213,12 @@ impl Track for BufferTrack {
             };
 
             // Process the chunk through the graph
-            let processed = match self.graph.process(resampled) {
+            let processed = match self.graph.process(
+                resampled,
+                sample_rate,
+                region_playhead,
+                region_playhead + region_chunk_size,
+            ) {
                 Ok(chunk) => chunk,
                 Err(err) => {
                     eprintln!("Error processing chunk: {:?}", err);
