@@ -4,7 +4,7 @@
 
 use crate::NodeId;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 /// Represents the connection between nodes in the graph.
 pub struct Connector {
     /// The ID of the node that provides the input signal.
