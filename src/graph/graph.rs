@@ -216,14 +216,11 @@ impl Graph {
         match self.get_node(self.output_node) {
             Some(node) => match node.get_output("output") {
                 Some(value) => match value {
-                    Value::Buffer(buffer) => {
-                        println!("{:?}", buffer);
-                        Ok(AudioSource::from_buffer(
-                            buffer,
-                            input_audio.sample_rate,
-                            input_audio.channels,
-                        ))
-                    }
+                    Value::Buffer(buffer) => Ok(AudioSource::from_buffer(
+                        buffer,
+                        input_audio.sample_rate,
+                        input_audio.channels,
+                    )),
                     _ => Err("Output wasn't a buffer".into()),
                 },
                 None => Err("Output not found".into()),

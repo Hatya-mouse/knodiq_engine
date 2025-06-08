@@ -71,6 +71,7 @@ impl Node for EmptyNode {
     }
 
     fn get_output(&self, output: &str) -> Option<Value> {
+        println!("get_output: {:?}", self.output);
         match output {
             "output" => self.output.clone(),
             _ => None,
