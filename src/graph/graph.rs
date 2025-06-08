@@ -196,25 +196,14 @@ impl Graph {
                     // Get the output from the origin node
                     println!("Got connector: {:?}", connector);
                     self.nodes.get(&connector.from).and_then(|origin_node| {
-                        println!(
-                            "Param {} from origin node: {:?}",
-                            connector.to_param,
-                            origin_node.get_output(&connector.to_param)
-                        );
                         origin_node
-                            .get_output(&connector.to_param)
-                            .map(|value| (connector.to_param.clone(), value))
+                            .get_output(&connector.from_param)
+                            .map(|value| (connector.from_param.clone(), value))
                     })
                 })
                 .collect();
 
             if let Some(node) = self.nodes.get_mut(&node_id) {
-                println!(
-                    "Processing node: {} with inputs: {:?}",
-                    node_id,
-                    input_values.len()
-                );
-
                 // Pass each input
                 for (to_param, value) in input_values {
                     node.set_input(&to_param, value);
