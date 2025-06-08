@@ -26,11 +26,15 @@ impl Node for EmptyNode {
     fn process(
         &mut self,
         _sample_rate: usize,
-        _channels: usize,
-        _chunk_start: usize,
-        _chunk_end: usize,
+        channels: usize,
+        chunk_start: usize,
+        chunk_end: usize,
     ) -> Result<HashMap<String, Value>, Box<dyn std::error::Error>> {
-        let buffer = self.input.as_ref().ok_or("Input not provided")?.clone();
+        let buffer = match self.input.as_ref() {
+            Some(Value::Buffer(buffer)) => Value::Buffer(buffer.clone()),
+            Some(value) => value.clone(),
+            None => Value::Buffer(vec![vec![0.0; chunk_end - chunk_start]; channels]),
+        };
 
         let mut result = HashMap::new();
         result.insert("output".to_string(), buffer);
