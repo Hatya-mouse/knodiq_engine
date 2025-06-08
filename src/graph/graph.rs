@@ -185,8 +185,6 @@ impl Graph {
             });
         }
 
-        println!("{:?}", self.connections);
-
         // 4. Process nodes in order calculated
         for node_id in sorted_nodes {
             // Collect the input values before mutably borrowing self.nodes
@@ -197,7 +195,6 @@ impl Graph {
                 .filter_map(|connector| {
                     // Get the output from the origin node
                     self.nodes.get(&connector.from).and_then(|origin_node| {
-                        println!("Getting output from {} to {}", connector.from, connector.to);
                         origin_node
                             .get_output(&connector.to_param)
                             .map(|value| (connector.to_param.clone(), value))
@@ -206,6 +203,12 @@ impl Graph {
                 .collect();
 
             if let Some(node) = self.nodes.get_mut(&node_id) {
+                println!(
+                    "Processing node: {} with inputs: {:?}",
+                    node_id,
+                    input_values.iter().map(|(p, _)| p).collect::<Vec<_>>()
+                );
+
                 // Pass each input
                 for (to_param, value) in input_values {
                     node.set_input(&to_param, value);
