@@ -37,8 +37,13 @@ impl Node for EmptyNode {
         };
 
         println!(
-            "EmptyNode: Processing from {} to {}, buffer: {:?}",
-            chunk_start, chunk_end, buffer
+            "EmptyNode: Processing from {} to {}, buffer: {}",
+            chunk_start,
+            chunk_end,
+            match buffer {
+                Value::Buffer(ref b) => b.len(),
+                _ => 0,
+            }
         );
 
         let mut result = HashMap::new();
