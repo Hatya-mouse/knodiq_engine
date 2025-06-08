@@ -76,7 +76,10 @@ impl Graph {
     /// Connect the node to one another.
     /// Doesn't add a connection to the node if it already exists.
     pub fn connect(&mut self, from: NodeId, from_param: String, to: NodeId, to_param: String) {
-        if self.connections.iter().any(|c| c.to == to) {
+        // Check if the exact connection already exists
+        if self.connections.iter().any(|c| {
+            c.to == to && c.from == from && c.to_param == to_param && c.from_param == from_param
+        }) {
             return;
         }
         self.connections.push(Connector {
@@ -198,8 +201,6 @@ impl Graph {
                     })
                 })
                 .collect();
-
-            println!("Processing node: {}, inputs: {:?}", node_id, input_values);
 
             if let Some(node) = self.nodes.get_mut(&node_id) {
                 // Pass each input
