@@ -1,6 +1,6 @@
 [package]
 name = "knodiq_engine"
-version = "0.2.55-dev4"
+version = "0.2.55-dev5"
 edition = "2024"
 
 [lib]

@@ -40,7 +40,14 @@ impl Node for EmptyNode {
         result.insert("output".to_string(), buffer.clone());
         self.output = Some(buffer);
 
-        println!("{:?}", self.output);
+        println!(
+            "{:?}",
+            if self.input.is_some() {
+                "EmptyNode: Processed input and produced output."
+            } else {
+                "EmptyNode: No input provided, produced empty output."
+            }
+        );
 
         Ok(())
     }
