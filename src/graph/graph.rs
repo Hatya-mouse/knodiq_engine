@@ -197,7 +197,7 @@ impl Graph {
                     self.nodes.get(&connector.from).and_then(|origin_node| {
                         origin_node
                             .get_output(&connector.from_param)
-                            .map(|value| (connector.from_param.clone(), value))
+                            .map(|value| (connector.to_param.clone(), value))
                     })
                 })
                 .collect();
