@@ -40,6 +40,8 @@ impl Node for EmptyNode {
         result.insert("output".to_string(), buffer.clone());
         self.output = Some(buffer);
 
+        println!("{:?}", self.output);
+
         Ok(())
     }
 
@@ -71,7 +73,6 @@ impl Node for EmptyNode {
     }
 
     fn get_output(&self, output: &str) -> Option<Value> {
-        println!("get_output: {:?}", self.output);
         match output {
             "output" => self.output.clone(),
             _ => None,
