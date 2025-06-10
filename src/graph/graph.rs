@@ -211,9 +211,7 @@ impl Graph {
                     node.set_input(&to_param, value);
                 }
 
-                let start_time = Instant::now();
                 node.process(sample_rate, channels, chunk_start, chunk_end)?;
-                println!("Processed node {} in {:?}", node_id, start_time.elapsed());
             }
         }
 
