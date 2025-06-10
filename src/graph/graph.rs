@@ -3,7 +3,10 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::{AudioSource, Connector, Node, Value, graph::built_in::EmptyNode};
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    time::Instant,
+};
 use uuid::Uuid;
 
 pub type NodeId = Uuid;
@@ -208,7 +211,9 @@ impl Graph {
                     node.set_input(&to_param, value);
                 }
 
+                let start_time = Instant::now();
                 node.process(sample_rate, channels, chunk_start, chunk_end)?;
+                println!("Processed node {} in {:?}", node_id, start_time.elapsed());
             }
         }
 
