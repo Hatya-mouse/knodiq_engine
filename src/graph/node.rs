@@ -45,6 +45,9 @@ pub trait Node: Send + Sync + Any + NodeClone {
     /// Get the output with given name. Returns `None` if the property does not exist, or has not processed yet.
     fn get_output(&self, key: &str) -> Option<Value>;
 
+    /// Get the node type.
+    fn get_type(&self) -> String;
+
     fn as_any(&self) -> &dyn Any;
 }
 

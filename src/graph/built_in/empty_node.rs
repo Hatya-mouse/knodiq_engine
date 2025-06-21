@@ -77,6 +77,10 @@ impl Node for EmptyNode {
         }
     }
 
+    fn get_type(&self) -> String {
+        "EmptyNode".to_string()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
