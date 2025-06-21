@@ -3,10 +3,7 @@
 // © 2025 Shuntaro Kasatani
 
 use crate::{AudioSource, Connector, Node, Value, graph::built_in::EmptyNode};
-use std::{
-    collections::{HashMap, VecDeque},
-    time::Instant,
-};
+use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
 pub type NodeId = Uuid;
@@ -48,6 +45,26 @@ impl Graph {
             input_nodes: vec![input_id],
             output_node: output_id,
         }
+    }
+
+    /// Returns all nodes in the graph.
+    pub fn get_nodes(&self) -> &HashMap<NodeId, Box<dyn Node>> {
+        &self.nodes
+    }
+
+    /// Returns all mutable nodes in the graph.
+    pub fn get_nodes_mut(&mut self) -> &mut HashMap<NodeId, Box<dyn Node>> {
+        &mut self.nodes
+    }
+
+    /// Returns all connections in the graph.
+    pub fn get_connections(&self) -> &Vec<Connector> {
+        &self.connections
+    }
+
+    /// Returns all mutable connections in the graph.
+    pub fn get_connections_mut(&mut self) -> &mut Vec<Connector> {
+        &mut self.connections
     }
 
     /// Returns the node with the given id.
