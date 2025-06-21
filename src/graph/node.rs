@@ -2,7 +2,7 @@
 // Traits for audio processing graph nodes.
 // © 2025 Shuntaro Kasatani
 
-use crate::Value;
+use crate::{NodeId, Value};
 use std::any::Any;
 
 /// Represents a audio processing node.
@@ -47,6 +47,12 @@ pub trait Node: Send + Sync + Any + NodeClone {
 
     /// Get the node type.
     fn get_type(&self) -> String;
+
+    /// Set the node id.
+    fn set_id(&mut self, id: NodeId);
+
+    /// Get the node id.
+    fn get_id(&self) -> NodeId;
 
     fn as_any(&self) -> &dyn Any;
 }

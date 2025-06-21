@@ -2,12 +2,13 @@
 // A graph node that just pass the audio source.
 // © 2025 Shuntaro Kasatani
 
-use crate::{Node, Value};
+use crate::{Node, NodeId, Value};
 use std::any::Any;
 use std::collections::HashMap;
 
 /// A node that does nothing.
 pub struct EmptyNode {
+    id: NodeId,
     input: Option<Value>,
     output: Option<Value>,
 }
@@ -16,6 +17,7 @@ impl EmptyNode {
     /// Creates a new instance of the EmptyNode.
     pub fn new() -> Self {
         EmptyNode {
+            id: NodeId::new_v4(),
             input: None,
             output: None,
         }
@@ -81,6 +83,14 @@ impl Node for EmptyNode {
         "EmptyNode".to_string()
     }
 
+    fn set_id(&mut self, id: crate::NodeId) {
+        self.id = id;
+    }
+
+    fn get_id(&self) -> NodeId {
+        self.id
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -89,6 +99,7 @@ impl Node for EmptyNode {
 impl Clone for EmptyNode {
     fn clone(&self) -> Self {
         EmptyNode {
+            id: self.id.clone(),
             input: self.input.clone(),
             output: self.output.clone(),
         }

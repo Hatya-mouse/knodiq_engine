@@ -17,12 +17,12 @@ pub type NodeId = Uuid;
 /// It allows the creation of complex audio processing chains by connecting various nodes together!
 pub struct Graph {
     /// Vector of node instances in the graph.
-    nodes: HashMap<NodeId, Box<dyn Node>>,
+    nodes: Vec<Box<dyn Node>>,
     /// Represents the connections between nodes in the graph.
     connections: Vec<Connector>,
 
     /// UUID of the input node.
-    pub input_nodes: Vec<NodeId>,
+    pub input_node: NodeId,
     /// UUID of the output node.
     pub output_node: NodeId,
 }
@@ -30,30 +30,31 @@ pub struct Graph {
 impl Graph {
     /// Creates a new instance of `Graph`.
     pub fn new() -> Self {
-        // Create UUID for input and output nodes
-        let input_id = Uuid::new_v4();
-        let output_id = Uuid::new_v4();
-
         // Create input and output nodes
-        let mut nodes = HashMap::new();
-        nodes.insert(input_id, Box::new(EmptyNode::new()) as Box<dyn Node>);
-        nodes.insert(output_id, Box::new(EmptyNode::new()) as Box<dyn Node>);
+        let mut nodes = Vec::new();
+        let input_node = Box::new(EmptyNode::new()) as Box<dyn Node>;
+        let input_id = input_node.get_id();
+        let output_node = Box::new(EmptyNode::new()) as Box<dyn Node>;
+        let output_id = output_node.get_id();
+
+        nodes.push(input_node);
+        nodes.push(output_node);
 
         Graph {
             nodes,
             connections: Vec::new(),
-            input_nodes: vec![input_id],
+            input_node: input_id,
             output_node: output_id,
         }
     }
 
     /// Returns all nodes in the graph.
-    pub fn get_nodes(&self) -> &HashMap<NodeId, Box<dyn Node>> {
+    pub fn get_nodes(&self) -> &Vec<Box<dyn Node>> {
         &self.nodes
     }
 
     /// Returns all mutable nodes in the graph.
-    pub fn get_nodes_mut(&mut self) -> &mut HashMap<NodeId, Box<dyn Node>> {
+    pub fn get_nodes_mut(&mut self) -> &mut Vec<Box<dyn Node>> {
         &mut self.nodes
     }
 
@@ -69,25 +70,25 @@ impl Graph {
 
     /// Returns the node with the given id.
     pub fn get_node(&self, id: NodeId) -> Option<&Box<dyn Node>> {
-        self.nodes.get(&id)
+        self.nodes.iter().find(|node| node.get_id() == id)
     }
 
     /// Returns the mutable node with the given id.
     pub fn get_node_mut(&mut self, id: NodeId) -> Option<&mut Box<dyn Node>> {
-        self.nodes.get_mut(&id)
+        self.nodes.iter_mut().find(|node| node.get_id() == id)
     }
 
     /// Adds a new node to the graph and return the id.
     pub fn add_node(&mut self, node: Box<dyn Node>) -> NodeId {
         let id = Uuid::new_v4();
-        self.nodes.insert(id, node);
+        self.nodes.push(node);
         id
     }
 
     /// Removes a node from the graph.
     pub fn remove_node(&mut self, id: NodeId) {
-        // Remove the node from the HashMap
-        self.nodes.remove(&id);
+        // Remove the node from the Vec
+        self.nodes.retain(|node| node.get_id() != id);
         // Remove all connections from or to the node
         self.connections
             .retain(|connector| connector.from != id && connector.to != id);
@@ -126,7 +127,7 @@ impl Graph {
         let mut adj_list = HashMap::new();
 
         // Initialize all the nodes with 0 degree
-        for &node_id in self.nodes.keys() {
+        for node_id in self.nodes.iter().map(|node| node.get_id()) {
             in_degree.insert(node_id, 0);
             adj_list.insert(node_id, vec![]);
         }
@@ -177,7 +178,7 @@ impl Graph {
     pub fn prepare(&mut self, chunk_size: usize) {
         // Prepare the graph for processing
         // Call prepare() on each node
-        for (_uuid, node) in self.nodes.iter_mut() {
+        for node in self.nodes.iter_mut() {
             node.prepare(chunk_size);
         }
     }
@@ -199,22 +200,26 @@ impl Graph {
         let sorted_nodes = self.topological_sort()?;
 
         // 3. Set the input data to the input nodes
-        for node_id in &self.input_nodes {
-            self.nodes.get_mut(&node_id).map(|ref mut node| {
-                node.set_input("input", input_audio.clone_buffer_as_value());
-            });
-        }
+        self.get_node_mut(self.input_node).map(|ref mut node| {
+            node.set_input("input", input_audio.clone_buffer_as_value());
+        });
 
         // 4. Process nodes in order calculated
         for node_id in sorted_nodes {
-            // Collect the input values before mutably borrowing self.nodes
-            let input_values: Vec<(String, Value)> = self
+            // Collect the connectors first to avoid borrowing issues
+            let connected_connectors: Vec<Connector> = self
                 .connections
                 .iter()
                 .filter(|connector| connector.to == node_id)
+                .cloned()
+                .collect();
+
+            // Collect the input values before mutably borrowing self.nodes
+            let input_values: Vec<(String, Value)> = connected_connectors
+                .into_iter()
                 .filter_map(|connector| {
                     // Get the output from the origin node
-                    self.nodes.get(&connector.from).and_then(|origin_node| {
+                    self.get_node_mut(connector.from).and_then(|origin_node| {
                         origin_node
                             .get_output(&connector.from_param)
                             .map(|value| (connector.to_param.clone(), value))
@@ -222,7 +227,7 @@ impl Graph {
                 })
                 .collect();
 
-            if let Some(node) = self.nodes.get_mut(&node_id) {
+            if let Some(node) = self.get_node_mut(node_id) {
                 // Pass each input
                 for (to_param, value) in input_values {
                     node.set_input(&to_param, value);
@@ -253,10 +258,10 @@ impl Graph {
 impl Clone for Graph {
     fn clone(&self) -> Self {
         let mut cloned_graph = Graph::new();
-        cloned_graph.nodes = self.nodes.iter().map(|(k, v)| (*k, v.clone())).collect();
+        cloned_graph.nodes = self.nodes.iter().map(|node| node.clone()).collect();
         cloned_graph.connections = self.connections.clone();
-        cloned_graph.input_nodes = self.input_nodes.clone();
-        cloned_graph.output_node = self.output_node;
+        cloned_graph.input_node = self.input_node.clone();
+        cloned_graph.output_node = self.output_node.clone();
         cloned_graph
     }
 }
