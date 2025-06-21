@@ -80,7 +80,7 @@ impl Graph {
 
     /// Adds a new node to the graph and return the id.
     pub fn add_node(&mut self, node: Box<dyn Node>) -> NodeId {
-        let id = Uuid::new_v4();
+        let id = node.get_id();
         self.nodes.push(node);
         id
     }
