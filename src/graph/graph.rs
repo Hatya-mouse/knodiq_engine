@@ -83,13 +83,6 @@ impl Graph {
 
     /// Gets the output node of the graph.
     pub fn get_output_node(&self) -> Option<&Box<dyn Node>> {
-        self.nodes
-            .iter()
-            .find(|node| node.get_id() == self.output_node)
-    }
-
-    /// Gets the mutable output node of the graph.
-    pub fn get_output_node_mut(&mut self) -> Option<&mut Box<dyn Node>> {
         println!(
             "{:?}",
             self.nodes
@@ -98,6 +91,14 @@ impl Graph {
                 .collect::<Vec<NodeId>>()
         );
         println!("{:?}", self.output_node);
+
+        self.nodes
+            .iter()
+            .find(|node| node.get_id() == self.output_node)
+    }
+
+    /// Gets the mutable output node of the graph.
+    pub fn get_output_node_mut(&mut self) -> Option<&mut Box<dyn Node>> {
         self.nodes
             .iter_mut()
             .find(|node| node.get_id() == self.output_node)
