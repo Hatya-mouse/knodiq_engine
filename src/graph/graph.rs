@@ -307,7 +307,7 @@ impl Graph {
         }
 
         // 3. Get the output of the output node and return it
-        match self.get_node(self.output_node) {
+        match self.get_output_node() {
             Some(node) => match node.get_output("output") {
                 Some(value) => match value {
                     Value::Buffer(buffer) => {
