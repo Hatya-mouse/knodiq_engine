@@ -90,7 +90,13 @@ impl Graph {
 
     /// Gets the mutable output node of the graph.
     pub fn get_output_node_mut(&mut self) -> Option<&mut Box<dyn Node>> {
-        println!("{:?}", self.nodes.iter().map(|node| node.get_id()));
+        println!(
+            "{:?}",
+            self.nodes
+                .iter()
+                .map(|node| node.get_id())
+                .collect::<Vec<NodeId>>()
+        );
         println!("{:?}", self.output_node);
         self.nodes
             .iter_mut()
