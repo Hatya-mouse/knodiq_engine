@@ -16,7 +16,10 @@
 // limitations under the License.
 //
 
-use crate::{AudioSource, Connector, Node, Value, graph::built_in::EmptyNode};
+use crate::{
+    AudioSource, Connector, Node, Value,
+    graph::built_in::{BufferInputNode, BufferOutputNode, EmptyNode},
+};
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
@@ -46,9 +49,9 @@ impl Graph {
     pub fn new() -> Self {
         // Create input and output nodes
         let mut nodes = Vec::new();
-        let input_node = Box::new(EmptyNode::new()) as Box<dyn Node>;
+        let input_node = Box::new(BufferInputNode::new()) as Box<dyn Node>;
         let input_id = input_node.get_id();
-        let output_node = Box::new(EmptyNode::new()) as Box<dyn Node>;
+        let output_node = Box::new(BufferOutputNode::new()) as Box<dyn Node>;
         let output_id = output_node.get_id();
 
         nodes.push(input_node);
