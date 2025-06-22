@@ -2,6 +2,8 @@
 name = "knodiq_engine"
 version = "0.2.64"
 edition = "2024"
+license = "Apache-2.0"
+license-file = "LICENSE"
 
 [lib]
 name = "knodiq_engine"
