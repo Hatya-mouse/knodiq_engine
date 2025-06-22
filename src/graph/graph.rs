@@ -117,7 +117,9 @@ impl Graph {
 
     /// Returns the node with the given id.
     pub fn get_node(&self, id: NodeId) -> Option<&Box<dyn Node>> {
-        self.nodes.iter().find(|node| node.get_id() == id)
+        self.nodes
+            .iter()
+            .find(|node| node.get_id().to_string() == id.to_string())
     }
 
     /// Returns the mutable node with the given id.
