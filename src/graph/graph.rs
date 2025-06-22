@@ -160,6 +160,13 @@ impl Graph {
             return;
         }
 
+        println!("Connecting {}:{} to {}:{}", from, from_param, to, to_param);
+        println!(
+            "From node output list: {:?}, To node input list: {:?}",
+            self.get_node(from).unwrap().get_output_list(),
+            self.get_node(to).unwrap().get_input_list()
+        );
+
         // Check if the parameters are valid
         if self
             .get_node(from)
