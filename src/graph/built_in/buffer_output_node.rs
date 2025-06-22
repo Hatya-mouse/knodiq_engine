@@ -66,7 +66,7 @@ impl Node for BufferOutputNode {
     }
 
     fn get_output_list(&self) -> Vec<String> {
-        vec!["output".to_string()]
+        vec![]
     }
 
     fn get_input(&self, property: &str) -> Option<Value> {

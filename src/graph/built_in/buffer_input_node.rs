@@ -62,7 +62,7 @@ impl Node for BufferInputNode {
     fn prepare(&mut self, _: usize) {}
 
     fn get_input_list(&self) -> Vec<String> {
-        vec!["input".to_string()]
+        vec![]
     }
 
     fn get_output_list(&self) -> Vec<String> {
