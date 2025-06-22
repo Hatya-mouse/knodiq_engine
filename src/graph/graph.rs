@@ -162,9 +162,17 @@ impl Graph {
 
         println!("Connecting {}:{} to {}:{}", from, from_param, to, to_param);
         println!(
-            "From node output list: {:?}, To node input list: {:?}",
-            self.get_node(from).unwrap().get_output_list(),
-            self.get_node(to).unwrap().get_input_list()
+            "From node output list contains {}: {}, To node input list contains {}: {}",
+            from_param,
+            self.get_node(from)
+                .unwrap()
+                .get_output_list()
+                .contains(&from_param),
+            to_param,
+            self.get_node(to)
+                .unwrap()
+                .get_output_list()
+                .contains(&to_param)
         );
 
         // Check if the parameters are valid
