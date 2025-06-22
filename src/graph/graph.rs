@@ -160,18 +160,31 @@ impl Graph {
             return;
         }
 
+        println!("Connecting {}:{} to {}:{}", from, from_param, to, to_param);
+        println!("Origin node: {:?}, ", self.get_node(from).is_none());
+        println!("Destination node: {:?}", self.get_node(to).is_none());
+        println!(
+            "Origin param: {:?}, ",
+            self.get_node(from)
+                .and_then(|node| node.get_output(&from_param))
+                .is_none()
+        );
+        println!(
+            "Destination param: {:?}, ",
+            self.get_node(to)
+                .and_then(|node| node.get_input(&to_param))
+                .is_none()
+        );
+
         // Check if the parameters are valid
         if self
             .get_node(from)
             .and_then(|node| node.get_output(&from_param))
             .is_none()
-        {
-            return;
-        }
-        if self
-            .get_node(to)
-            .and_then(|node| node.get_input(&to_param))
-            .is_none()
+            || self
+                .get_node(to)
+                .and_then(|node| node.get_input(&to_param))
+                .is_none()
         {
             return;
         }
