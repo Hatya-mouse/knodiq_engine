@@ -16,10 +16,7 @@
 // limitations under the License.
 //
 
-use crate::{
-    AudioSource, Connector, Node, Value,
-    graph::built_in::{BufferInputNode, BufferOutputNode, EmptyNode},
-};
+use crate::{AudioSource, Connector, Node, Value, graph::built_in::BufferOutputNode};
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
@@ -39,30 +36,63 @@ pub struct Graph {
     connections: Vec<Connector>,
 
     /// UUID of the input node.
-    pub input_node: NodeId,
+    input_node: NodeId,
     /// UUID of the output node.
-    pub output_node: NodeId,
+    output_node: NodeId,
 }
 
 impl Graph {
     /// Creates a new instance of `Graph`.
-    pub fn new() -> Self {
+    pub fn new(input_node: Box<dyn Node>) -> Self {
         // Create input and output nodes
-        let mut nodes = Vec::new();
-        let input_node = Box::new(BufferInputNode::new()) as Box<dyn Node>;
         let input_id = input_node.get_id();
-        let output_node = Box::new(BufferOutputNode::new()) as Box<dyn Node>;
+        let output_node = Box::new(BufferOutputNode::new());
         let output_id = output_node.get_id();
 
-        nodes.push(input_node);
-        nodes.push(output_node);
-
         Graph {
-            nodes,
+            nodes: vec![input_node, output_node],
             connections: Vec::new(),
             input_node: input_id,
             output_node: output_id,
         }
+    }
+
+    /// Gets the uuid of the input node of the graph.
+    pub fn get_input_node_id(&self) -> NodeId {
+        self.input_node
+    }
+
+    /// Gets the input node of the graph.
+    pub fn get_input_node(&self) -> Option<&Box<dyn Node>> {
+        self.nodes
+            .iter()
+            .find(|node| node.get_id() == self.input_node)
+    }
+
+    /// Gets the mutable input node of the graph.
+    pub fn get_input_node_mut(&mut self) -> Option<&mut Box<dyn Node>> {
+        self.nodes
+            .iter_mut()
+            .find(|node| node.get_id() == self.input_node)
+    }
+
+    /// Gets the uuid of the output node of the graph.
+    pub fn get_output_node_id(&self) -> NodeId {
+        self.output_node
+    }
+
+    /// Gets the output node of the graph.
+    pub fn get_output_node(&self) -> Option<&Box<dyn Node>> {
+        self.nodes
+            .iter()
+            .find(|node| node.get_id() == self.output_node)
+    }
+
+    /// Gets the mutable output node of the graph.
+    pub fn get_output_node_mut(&mut self) -> Option<&mut Box<dyn Node>> {
+        self.nodes
+            .iter_mut()
+            .find(|node| node.get_id() == self.output_node)
     }
 
     /// Returns all nodes in the graph.
@@ -104,6 +134,10 @@ impl Graph {
 
     /// Removes a node from the graph.
     pub fn remove_node(&mut self, id: NodeId) {
+        // Check if the node is not the input or output node
+        if id == self.input_node || id == self.output_node {
+            return;
+        }
         // Remove the node from the Vec
         self.nodes.retain(|node| node.get_id() != id);
         // Remove all connections from or to the node
@@ -120,6 +154,28 @@ impl Graph {
         }) {
             return;
         }
+
+        // Check if the node is valid
+        if self.get_node(from).is_none() || self.get_node(to).is_none() {
+            return;
+        }
+
+        // Check if the parameters are valid
+        if self
+            .get_node(from)
+            .and_then(|node| node.get_output(&from_param))
+            .is_none()
+        {
+            return;
+        }
+        if self
+            .get_node(to)
+            .and_then(|node| node.get_input(&to_param))
+            .is_none()
+        {
+            return;
+        }
+
         self.connections.push(Connector {
             from,
             from_param,
@@ -203,11 +259,12 @@ impl Graph {
     /// Processes the input audio source and returns the output.
     ///
     /// # Arguments
-    /// - `input_audio`: The input audio source to process.
-    /// - `time`: The sample index of the first sample in the processing chunk.
+    /// - `sample_rate`: The sample rate of the audio source.
+    /// - `channels`: The number of channels in the audio source.
+    /// - `chunk_start`: The sample index of the first sample in the processing chunk.
+    /// - `chunk_end`: The sample index of the last sample in the processing chunk.
     pub fn process(
         &mut self,
-        input_audio: AudioSource,
         sample_rate: usize,
         channels: usize,
         chunk_start: usize,
@@ -216,12 +273,7 @@ impl Graph {
         // 1. Decide the process order using topological sort
         let sorted_nodes = self.topological_sort()?;
 
-        // 3. Set the input data to the input nodes
-        self.get_node_mut(self.input_node).map(|ref mut node| {
-            node.set_input("input", input_audio.clone_buffer_as_value());
-        });
-
-        // 4. Process nodes in order calculated
+        // 2. Process nodes in order calculated
         for node_id in sorted_nodes {
             // Collect the connectors first to avoid borrowing issues
             let connected_connectors: Vec<Connector> = self
@@ -254,15 +306,13 @@ impl Graph {
             }
         }
 
-        // 5. Get the output of the output node and return it
+        // 3. Get the output of the output node and return it
         match self.get_node(self.output_node) {
             Some(node) => match node.get_output("output") {
                 Some(value) => match value {
-                    Value::Buffer(buffer) => Ok(AudioSource::from_buffer(
-                        buffer,
-                        input_audio.sample_rate,
-                        input_audio.channels,
-                    )),
+                    Value::Buffer(buffer) => {
+                        Ok(AudioSource::from_buffer(buffer, sample_rate, channels))
+                    }
                     _ => Err("Output wasn't a buffer".into()),
                 },
                 None => Err("Output not found".into()),
@@ -274,11 +324,9 @@ impl Graph {
 
 impl Clone for Graph {
     fn clone(&self) -> Self {
-        let mut cloned_graph = Graph::new();
+        let mut cloned_graph = Graph::new(self.get_input_node().unwrap().clone());
         cloned_graph.nodes = self.nodes.iter().map(|node| node.clone()).collect();
         cloned_graph.connections = self.connections.clone();
-        cloned_graph.input_node = self.input_node.clone();
-        cloned_graph.output_node = self.output_node.clone();
         cloned_graph
     }
 }

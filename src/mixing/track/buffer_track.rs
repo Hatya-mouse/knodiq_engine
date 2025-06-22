@@ -17,8 +17,9 @@
 //
 
 use crate::{
-    AudioResampler, AudioSource, Graph, Region, Track,
+    AudioResampler, AudioSource, Graph, Region, Track, Value,
     audio_utils::{self, Beats},
+    graph::built_in::BufferInputNode,
     mixing::region::BufferRegion,
 };
 use std::any::Any;
@@ -50,7 +51,7 @@ impl BufferTrack {
             id,
             name: name.to_string(),
             volume: 1.0,
-            graph: Graph::new(),
+            graph: Graph::new(Box::new(BufferInputNode::new())),
             channels,
             regions: Vec::new(),
             rendered_data: None,
@@ -226,9 +227,13 @@ impl Track for BufferTrack {
                 }
             };
 
+            // Pass the resampled chunk to the graph input node
+            if let Some(input_node) = self.graph.get_input_node_mut() {
+                input_node.set_input("audio", Value::Buffer(resampled.data));
+            }
+
             // Process the chunk through the graph
             let processed = match self.graph.process(
-                resampled,
                 sample_rate,
                 self.channels,
                 region_playhead,
