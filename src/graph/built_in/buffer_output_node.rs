@@ -71,7 +71,7 @@ impl Node for BufferOutputNode {
 
     fn get_input(&self, property: &str) -> Option<Value> {
         match property {
-            "input" => match self.input {
+            "buffer" => match self.input {
                 Some(ref input) => Some(input.clone()),
                 None => None,
             },
@@ -81,7 +81,7 @@ impl Node for BufferOutputNode {
 
     fn set_input(&mut self, property: &str, value: Value) {
         match property {
-            "input" => self.input = Some(value),
+            "buffer" => self.input = Some(value),
             _ => (),
         }
     }

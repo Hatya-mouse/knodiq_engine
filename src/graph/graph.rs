@@ -308,7 +308,7 @@ impl Graph {
 
         // 3. Get the output of the output node and return it
         match self.get_output_node() {
-            Some(node) => match node.get_output("output") {
+            Some(node) => match node.get_output("buffer") {
                 Some(value) => match value {
                     Value::Buffer(buffer) => {
                         Ok(AudioSource::from_buffer(buffer, sample_rate, channels))

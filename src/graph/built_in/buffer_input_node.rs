@@ -53,7 +53,7 @@ impl Node for BufferInputNode {
         };
 
         let mut result = HashMap::new();
-        result.insert("output".to_string(), buffer.clone());
+        result.insert("buffer".to_string(), buffer.clone());
         self.output = Some(buffer);
 
         Ok(())
@@ -88,7 +88,7 @@ impl Node for BufferInputNode {
 
     fn get_output(&self, output: &str) -> Option<Value> {
         match output {
-            "output" => self.output.clone(),
+            "buffer" => self.output.clone(),
             _ => None,
         }
     }
