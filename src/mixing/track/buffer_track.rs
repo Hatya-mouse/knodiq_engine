@@ -165,8 +165,9 @@ impl Track for BufferTrack {
         self.rendered_data = Some(AudioSource::new(sample_rate, self.channels));
 
         // Mixed audio data for the chunk
+        let playhead_samples = audio_utils::beats_as_samples(samples_per_beat, playhead);
         let chunk_size_samples = audio_utils::beats_as_samples(samples_per_beat, chunk_size);
-        let mut resampled = AudioSource::zeros(sample_rate, self.channels, chunk_size_samples);
+        let mut mixed = AudioSource::zeros(sample_rate, self.channels, chunk_size_samples);
 
         for (region_index, region) in self
             .regions
@@ -209,6 +210,7 @@ impl Track for BufferTrack {
             let start_sample = region_playhead.saturating_sub(region_start);
             //  |    |    | [ R>E G |I O |N ] |    |    |    |    |    |    |
             // region_start ^  ^    ^ region_playhead + region_chunk_size
+            //                 region_playhead
             //
             // >: Playhead, |: Chunk separation
             let end_sample = (start_sample + region_chunk_size)
@@ -231,16 +233,18 @@ impl Track for BufferTrack {
             };
 
             // Mix the resampled chunk into the mixed audio data
-            resampled.mix_at(&resampled_region, 0);
+            mixed.mix_at(&resampled_region, 0);
         }
-
-        let playhead_samples = audio_utils::beats_as_samples(samples_per_beat, playhead);
-        let chunk_size_samples = audio_utils::beats_as_samples(samples_per_beat, chunk_size);
 
         // Pass the resampled chunk to the graph input node
         if let Some(input_node) = self.graph.get_input_node_mut() {
-            input_node.set_input("input", Value::Buffer(resampled.data));
+            input_node.set_input("input", Value::Buffer(mixed.data));
         }
+
+        println!(
+            "Processing chunk at playhead: {}, chunk size: {}",
+            playhead_samples, chunk_size_samples
+        );
 
         // Process the chunk through the graph
         let processed = match self.graph.process(
