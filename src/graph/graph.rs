@@ -49,6 +49,8 @@ impl Graph {
         let output_node = Box::new(BufferOutputNode::new());
         let output_id = output_node.get_id();
 
+        println!("Output Node ID: {:?}", output_id);
+
         Graph {
             nodes: vec![input_node, output_node],
             connections: Vec::new(),
