@@ -164,9 +164,6 @@ impl Track for BufferTrack {
         // Clear the rendered data
         self.rendered_data = Some(AudioSource::new(sample_rate, self.channels));
 
-        // Whether the rendering has finished
-        let mut completed = true;
-
         // Mixed audio data for the chunk
         let chunk_size_samples = audio_utils::beats_as_samples(samples_per_beat, chunk_size);
         let mut resampled = AudioSource::zeros(sample_rate, self.channels, chunk_size_samples);
@@ -177,10 +174,6 @@ impl Track for BufferTrack {
             .filter(|r| r.is_active_at(playhead, playhead + chunk_size))
             .enumerate()
         {
-            if playhead < region.end_time() {
-                completed = false;
-            }
-
             // If the region does not have an audio source, skip it
             if region.audio_source().is_none() {
                 continue;
@@ -268,8 +261,7 @@ impl Track for BufferTrack {
             data.mix_at(&processed, playhead_samples);
         }
 
-        // Return whether the rendering has ended
-        completed
+        true
     }
 
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>> {
