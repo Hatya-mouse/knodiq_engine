@@ -334,9 +334,11 @@ impl Graph {
 
 impl Clone for Graph {
     fn clone(&self) -> Self {
-        let mut cloned_graph = Graph::new(self.get_input_node().unwrap().clone());
-        cloned_graph.nodes = self.nodes.iter().map(|node| node.clone()).collect();
-        cloned_graph.connections = self.connections.clone();
-        cloned_graph
+        Graph {
+            nodes: self.nodes.clone(),
+            connections: self.connections.clone(),
+            input_node: self.input_node,
+            output_node: self.output_node,
+        }
     }
 }
