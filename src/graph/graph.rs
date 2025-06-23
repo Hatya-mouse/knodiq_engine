@@ -85,28 +85,6 @@ impl Graph {
 
     /// Gets the output node of the graph.
     pub fn get_output_node(&self) -> Option<&Box<dyn Node>> {
-        println!(
-            "{:?}",
-            self.nodes
-                .iter()
-                .map(|node| node.get_id())
-                .collect::<Vec<NodeId>>()
-        );
-        println!("{:?}", self.output_node);
-        println!(
-            "output: {}",
-            if self
-                .nodes
-                .iter()
-                .find(|node| node.get_id() == self.output_node)
-                .is_some()
-            {
-                "found"
-            } else {
-                "not found"
-            }
-        );
-
         self.nodes
             .iter()
             .find(|node| node.get_id() == self.output_node)
@@ -331,14 +309,14 @@ impl Graph {
 
         // 3. Get the output of the output node and return it
         match self.get_output_node() {
-            Some(node) => match node.get_output("buffer") {
+            Some(node) => match node.get_output("output") {
                 Some(value) => match value {
                     Value::Buffer(buffer) => {
                         Ok(AudioSource::from_buffer(buffer, sample_rate, channels))
                     }
                     _ => Err("Output wasn't a buffer".into()),
                 },
-                None => Err("Output not found".into()),
+                None => Err("Output property not found".into()),
             },
             None => Err("Output node not found".into()),
         }
