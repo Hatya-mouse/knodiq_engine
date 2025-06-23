@@ -1,6 +1,6 @@
 [package]
 name = "knodiq_engine"
-version = "0.2.77-dev1"
+version = "0.2.78"
 edition = "2024"
 license = "Apache-2.0"
 license-file = "LICENSE"

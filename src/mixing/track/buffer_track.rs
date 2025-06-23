@@ -161,9 +161,6 @@ impl Track for BufferTrack {
         sample_rate: usize,
         samples_per_beat: f32,
     ) {
-        // Clear the rendered data
-        self.rendered_data = Some(AudioSource::new(sample_rate, self.channels));
-
         // Mixed audio data for the chunk
         let playhead_samples = audio_utils::beats_as_samples(samples_per_beat, playhead);
         let chunk_size_samples = audio_utils::beats_as_samples(samples_per_beat, chunk_size);
@@ -241,11 +238,6 @@ impl Track for BufferTrack {
             input_node.set_input("input", Value::Buffer(mixed.data));
         }
 
-        println!(
-            "Processing chunk at playhead: {}, chunk size: {}",
-            playhead_samples, chunk_size_samples
-        );
-
         // Process the chunk through the graph
         let processed = match self.graph.process(
             sample_rate,
@@ -260,10 +252,7 @@ impl Track for BufferTrack {
             }
         };
 
-        if let Some(ref mut data) = self.rendered_data {
-            // Add the processed chunk to the rendered data at the chunk start position
-            data.mix_at(&processed, playhead_samples);
-        }
+        self.rendered_data = Some(processed);
     }
 
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>> {
