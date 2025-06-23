@@ -166,13 +166,17 @@ impl Mixer {
         // Whether the processing has finished
         let mut completed = true;
 
-        // Precompute samples per beat to avoid immutable borrow during the loop
         let samples_per_beat = self.samples_per_beat();
 
         // Loop through tracks
         for track in &mut self.tracks {
             // Render the track and get the rendered audio source from the track
-            if !track.render_chunk_at(self.playhead_beats, chunk_duration, self.sample_rate) {
+            if !track.render_chunk_at(
+                self.playhead_beats,
+                chunk_duration,
+                self.sample_rate,
+                samples_per_beat,
+            ) {
                 completed = false;
             };
             let rendered_track = match track.rendered_data() {

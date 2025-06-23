@@ -154,7 +154,13 @@ impl Track for BufferTrack {
         self.residual_samples = 0.0;
     }
 
-    fn render_chunk_at(&mut self, playhead: f32, chunk_size: f32, sample_rate: usize) -> bool {
+    fn render_chunk_at(
+        &mut self,
+        playhead: f32,
+        chunk_size: f32,
+        sample_rate: usize,
+        samples_per_beat: f32,
+    ) -> bool {
         // Clear the rendered data
         self.rendered_data = Some(AudioSource::new(sample_rate, self.channels));
 
@@ -234,8 +240,8 @@ impl Track for BufferTrack {
             resampled.mix_at(&resampled_region, 0);
         }
 
-        let playhead_samples = audio_utils::beats_as_samples(self.channels as f32, playhead);
-        let chunk_size_samples = audio_utils::beats_as_samples(self.channels as f32, chunk_size);
+        let playhead_samples = audio_utils::beats_as_samples(samples_per_beat, playhead);
+        let chunk_size_samples = audio_utils::beats_as_samples(samples_per_beat, chunk_size);
 
         // Pass the resampled chunk to the graph input node
         if let Some(input_node) = self.graph.get_input_node_mut() {

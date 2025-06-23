@@ -95,7 +95,13 @@ pub trait Track: Send + Sync + Any + TrackClone {
     /// # Returns
     /// - `true` The track has finished rendering.
     /// - `false` The track still has regions or the graph to render.
-    fn render_chunk_at(&mut self, playhead: Beats, chunk_size: Beats, sample_rate: usize) -> bool;
+    fn render_chunk_at(
+        &mut self,
+        playhead: Beats,
+        chunk_size: Beats,
+        sample_rate: usize,
+        samples_per_beat: f32,
+    ) -> bool;
 
     /// Returns the rendered audio source.
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;
