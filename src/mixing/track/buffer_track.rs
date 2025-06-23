@@ -161,6 +161,9 @@ impl Track for BufferTrack {
         // Whether the rendering has finished
         let mut completed = true;
 
+        // Mixed audio data for the chunk
+        let mut resampled = AudioSource::new(sample_rate, self.channels);
+
         for (region_index, region) in self
             .regions
             .iter_mut()
@@ -219,7 +222,7 @@ impl Track for BufferTrack {
             }
 
             // Resample the chunk with the resampler dedicated to the region
-            let resampled = match self.resamplers[region_index].process(chunk, sample_rate) {
+            let resampled_region = match self.resamplers[region_index].process(chunk, sample_rate) {
                 Ok(chunk) => chunk,
                 Err(err) => {
                     eprintln!("Error resampling chunk: {:?}", err);
@@ -227,34 +230,35 @@ impl Track for BufferTrack {
                 }
             };
 
-            // Pass the resampled chunk to the graph input node
-            if let Some(input_node) = self.graph.get_input_node_mut() {
-                input_node.set_input("input", Value::Buffer(resampled.data));
-            }
+            // Mix the resampled chunk into the mixed audio data
+            resampled.mix_at(&resampled_region, 0);
+        }
 
-            // Process the chunk through the graph
-            let processed = match self.graph.process(
-                sample_rate,
-                self.channels,
-                region_playhead,
-                region_playhead + region_chunk_size,
-            ) {
-                Ok(chunk) => chunk,
-                Err(err) => {
-                    eprintln!("Error processing chunk: {:?}", err);
-                    continue;
-                }
-            };
+        let playhead_samples = audio_utils::beats_as_samples(self.channels as f32, playhead);
+        let chunk_size_samples = audio_utils::beats_as_samples(self.channels as f32, chunk_size);
 
-            if let Some(ref mut data) = self.rendered_data {
-                // Calculate the chunk start position (in chunk-based position)
-                let region_start_in_chunk = (region.start_time() - playhead).max(0.0);
-                // Convert the chunk start position to the sample index
-                let chunk_start =
-                    audio_utils::beats_as_samples(region.samples_per_beat, region_start_in_chunk);
-                // Add the processed chunk to the rendered data at the chunk start position
-                data.mix_at(&processed, chunk_start);
+        // Pass the resampled chunk to the graph input node
+        if let Some(input_node) = self.graph.get_input_node_mut() {
+            input_node.set_input("input", Value::Buffer(resampled.data));
+        }
+
+        // Process the chunk through the graph
+        let processed = match self.graph.process(
+            sample_rate,
+            self.channels,
+            playhead_samples,
+            playhead_samples + chunk_size_samples,
+        ) {
+            Ok(chunk) => chunk,
+            Err(err) => {
+                eprintln!("Error processing chunk: {:?}", err);
+                return false;
             }
+        };
+
+        if let Some(ref mut data) = self.rendered_data {
+            // Add the processed chunk to the rendered data at the chunk start position
+            data.mix_at(&processed, playhead_samples);
         }
 
         // Return whether the rendering has ended
