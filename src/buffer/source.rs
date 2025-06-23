@@ -48,6 +48,16 @@ impl AudioSource {
         }
     }
 
+    /// Create a empty audio source with the specified sample rate and number of channels, filled with zeros.
+    pub fn zeros(sample_rate: usize, channels: usize, length: usize) -> Self {
+        let data = vec![vec![0.0; length]; channels];
+        Self {
+            sample_rate,
+            channels,
+            data,
+        }
+    }
+
     /// Create a new audio source instance from the audio buffer.
     pub fn from_buffer(buffer: AudioBuffer, sample_rate: usize, channels: usize) -> Self {
         Self {
