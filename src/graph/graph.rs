@@ -93,6 +93,19 @@ impl Graph {
                 .collect::<Vec<NodeId>>()
         );
         println!("{:?}", self.output_node);
+        println!(
+            "output: {}",
+            if self
+                .nodes
+                .iter()
+                .find(|node| node.get_id() == self.output_node)
+                .is_some()
+            {
+                "found"
+            } else {
+                "not found"
+            }
+        );
 
         self.nodes
             .iter()
