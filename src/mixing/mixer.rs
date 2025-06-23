@@ -124,12 +124,11 @@ impl Mixer {
 
         // Chunk size in output sample rate
         let chunk_size = audio_utils::beats_as_samples(self.samples_per_beat(), CHUNK_BEATS);
+        let duration = self.duration();
 
-        loop {
+        while self.playhead_beats < duration {
             // Process the chunk and get whether the rendering has completed
-            if self.process_chunk(&mut output, CHUNK_BEATS) {
-                break;
-            }
+            self.process_chunk(&mut output, CHUNK_BEATS);
 
             // Call the callback function for only the newly rendered chunk
             let start_sample =
@@ -158,27 +157,18 @@ impl Mixer {
     /// - `output` - The output audio source to save the rendered data. Must be an mutable reference.
     /// - `chunk_duration` - Processing chunk duration in beats.
     /// - `callback` - Called when the chunk has rendered.
-    ///
-    /// # Returns
-    /// - `true` - The rendering has completed.
-    /// - `false` - The rendering hasn't completed yet.
-    pub fn process_chunk(&mut self, output: &mut AudioSource, chunk_duration: Beats) -> bool {
-        // Whether the processing has finished
-        let mut completed = true;
-
+    pub fn process_chunk(&mut self, output: &mut AudioSource, chunk_duration: Beats) {
         let samples_per_beat = self.samples_per_beat();
 
         // Loop through tracks
         for track in &mut self.tracks {
             // Render the track and get the rendered audio source from the track
-            if !track.render_chunk_at(
+            track.render_chunk_at(
                 self.playhead_beats,
                 chunk_duration,
                 self.sample_rate,
                 samples_per_beat,
-            ) {
-                completed = false;
-            };
+            );
             let rendered_track = match track.rendered_data() {
                 Ok(data) => data,
                 Err(err) => {
@@ -192,9 +182,6 @@ impl Mixer {
                 audio_utils::beats_as_samples(samples_per_beat, self.playhead_beats);
             output.mix_at(rendered_track, playhead_samples);
         }
-
-        // Return whether the rendering has completed
-        completed
     }
 }
 

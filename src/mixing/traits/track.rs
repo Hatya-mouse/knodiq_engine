@@ -101,7 +101,7 @@ pub trait Track: Send + Sync + Any + TrackClone {
         chunk_size: Beats,
         sample_rate: usize,
         samples_per_beat: f32,
-    ) -> bool;
+    );
 
     /// Returns the rendered audio source.
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;

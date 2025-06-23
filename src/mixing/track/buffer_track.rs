@@ -160,7 +160,7 @@ impl Track for BufferTrack {
         chunk_size: f32,
         sample_rate: usize,
         samples_per_beat: f32,
-    ) -> bool {
+    ) {
         // Clear the rendered data
         self.rendered_data = Some(AudioSource::new(sample_rate, self.channels));
 
@@ -252,7 +252,7 @@ impl Track for BufferTrack {
             Ok(chunk) => chunk,
             Err(err) => {
                 eprintln!("Error processing chunk: {:?}", err);
-                return false;
+                return;
             }
         };
 
@@ -260,8 +260,6 @@ impl Track for BufferTrack {
             // Add the processed chunk to the rendered data at the chunk start position
             data.mix_at(&processed, playhead_samples);
         }
-
-        true
     }
 
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>> {
