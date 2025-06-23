@@ -94,6 +94,13 @@ impl Graph {
         );
         println!("{:?}", self.output_node);
 
+        println!(
+            "{:?}",
+            self.nodes
+                .iter()
+                .find(|node| node.get_id() == self.output_node)
+        );
+
         self.nodes
             .iter()
             .find(|node| node.get_id() == self.output_node)
