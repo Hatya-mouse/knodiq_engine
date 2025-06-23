@@ -168,7 +168,8 @@ impl Track for BufferTrack {
         let mut completed = true;
 
         // Mixed audio data for the chunk
-        let mut resampled = AudioSource::new(sample_rate, self.channels);
+        let chunk_size_samples = audio_utils::beats_as_samples(samples_per_beat, chunk_size);
+        let mut resampled = AudioSource::zeros(sample_rate, self.channels, chunk_size_samples);
 
         for (region_index, region) in self
             .regions
