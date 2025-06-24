@@ -23,6 +23,7 @@ use std::collections::HashMap;
 /// A node that does nothing.
 pub struct EmptyNode {
     id: NodeId,
+    name: String,
     input: Option<Value>,
     output: Option<Value>,
 }
@@ -32,6 +33,7 @@ impl EmptyNode {
     pub fn new() -> Self {
         EmptyNode {
             id: NodeId::new_v4(),
+            name: "Empty Node".to_string(),
             input: None,
             output: None,
         }
@@ -105,6 +107,22 @@ impl Node for EmptyNode {
         self.id
     }
 
+    fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn is_input(&self) -> bool {
+        false
+    }
+
+    fn is_output(&self) -> bool {
+        false
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -114,6 +132,7 @@ impl Clone for EmptyNode {
     fn clone(&self) -> Self {
         EmptyNode {
             id: self.id.clone(),
+            name: self.name.clone(),
             input: self.input.clone(),
             output: self.output.clone(),
         }

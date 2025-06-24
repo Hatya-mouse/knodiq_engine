@@ -60,6 +60,7 @@ pub trait Node: Send + Sync + Any + NodeClone {
     fn get_output(&self, key: &str) -> Option<Value>;
 
     /// Get the node type.
+    /// This is used to identify the type of the node, such as "BufferInputNode", "BufferOutputNode", etc.
     fn get_type(&self) -> String;
 
     /// Set the node id.
@@ -67,6 +68,20 @@ pub trait Node: Send + Sync + Any + NodeClone {
 
     /// Get the node id.
     fn get_id(&self) -> NodeId;
+
+    /// Set the node name.
+    /// This is used to label the node in the UI.
+    fn set_name(&mut self, name: String);
+
+    /// Get the node name.
+    /// This is used to label the node in the UI.
+    fn get_name(&self) -> String;
+
+    /// Get whether the node is an input node.
+    fn is_input(&self) -> bool;
+
+    /// Get whether the node is an output node.
+    fn is_output(&self) -> bool;
 
     fn as_any(&self) -> &dyn Any;
 }

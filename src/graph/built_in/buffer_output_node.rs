@@ -23,6 +23,7 @@ use std::collections::HashMap;
 /// A node that does nothing.
 pub struct BufferOutputNode {
     id: NodeId,
+    name: String,
     input: Option<Value>,
     output: Option<Value>,
 }
@@ -32,6 +33,7 @@ impl BufferOutputNode {
     pub fn new() -> Self {
         BufferOutputNode {
             id: NodeId::new_v4(),
+            name: "Buffer Output Node".to_string(),
             input: None,
             output: None,
         }
@@ -66,7 +68,7 @@ impl Node for BufferOutputNode {
     }
 
     fn get_output_list(&self) -> Vec<String> {
-        vec![]
+        vec!["output".to_string()]
     }
 
     fn get_input(&self, property: &str) -> Option<Value> {
@@ -105,6 +107,22 @@ impl Node for BufferOutputNode {
         self.id
     }
 
+    fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn is_input(&self) -> bool {
+        false
+    }
+
+    fn is_output(&self) -> bool {
+        true
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -114,6 +132,7 @@ impl Clone for BufferOutputNode {
     fn clone(&self) -> Self {
         BufferOutputNode {
             id: self.id.clone(),
+            name: self.name.clone(),
             input: self.input.clone(),
             output: self.output.clone(),
         }
