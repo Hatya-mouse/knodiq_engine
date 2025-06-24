@@ -137,11 +137,23 @@ impl Track for BufferTrack {
             .map(|r| r as &mut dyn Region)
     }
 
-    fn add_region(&mut self, region: Box<dyn Region>) {
+    fn add_region(
+        &mut self,
+        region: Box<dyn Region>,
+        at: Beats,
+        duration: Beats,
+    ) -> Result<u32, Box<dyn std::error::Error>> {
         if let Some(buffer_region) = region.as_any().downcast_ref::<BufferRegion>() {
-            self.regions.push(buffer_region.clone());
+            let mut buffer_region = buffer_region.clone();
+            let id = self.generate_region_id();
+            buffer_region.set_start_time(at);
+            buffer_region.set_duration(duration);
+            buffer_region.set_id(id);
+            self.regions.push(buffer_region);
+            return Ok(id);
         } else {
             eprintln!("Failed to add region: not a BufferRegion");
+            return Err("Failed to add region: not a BufferRegion".into());
         }
     }
 

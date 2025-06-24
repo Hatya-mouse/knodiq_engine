@@ -80,7 +80,19 @@ pub trait Track: Send + Sync + Any + TrackClone {
     fn get_region_mut(&mut self, id: u32) -> Option<&mut dyn Region>;
 
     /// Adds a new region to the track.
-    fn add_region(&mut self, region: Box<dyn Region>);
+    /// # Arguments
+    /// - `region` - The region to add.
+    /// - `at` - The position in beats where the region should be added.
+    /// - `duration` - The duration of the region in beats.
+    ///
+    /// # Return
+    /// - The unique identifier of the added region.
+    fn add_region(
+        &mut self,
+        region: Box<dyn Region>,
+        at: Beats,
+        duration: Beats,
+    ) -> Result<u32, Box<dyn std::error::Error>>;
 
     /// Removes the specified region from the track.
     fn remove_region(&mut self, id: u32);
@@ -104,7 +116,7 @@ pub trait Track: Send + Sync + Any + TrackClone {
     /// - `chunk_size` - The size of the chunk to render.
     /// - `sample_rate` - The sample rate of the audio track.
     ///
-    /// # Returns
+    /// # Return
     /// - `true` The track has finished rendering.
     /// - `false` The track still has regions or the graph to render.
     fn render_chunk_at(
