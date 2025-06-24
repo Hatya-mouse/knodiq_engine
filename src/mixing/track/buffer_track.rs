@@ -120,14 +120,14 @@ impl Track for BufferTrack {
     fn get_region(&mut self, id: u32) -> Option<&dyn Region> {
         self.regions
             .iter()
-            .find(|r| *r.id() == id)
+            .find(|r| *r.get_id() == id)
             .map(|r| r as &dyn Region)
     }
 
     fn get_region_mut(&mut self, id: u32) -> Option<&mut dyn Region> {
         self.regions
             .iter_mut()
-            .find(|r| *r.id() == id)
+            .find(|r| *r.get_id() == id)
             .map(|r| r as &mut dyn Region)
     }
 
@@ -152,12 +152,12 @@ impl Track for BufferTrack {
     }
 
     fn remove_region(&mut self, id: u32) {
-        self.regions.retain(|r| *r.id() != id);
+        self.regions.retain(|r| *r.get_id() != id);
     }
 
     fn generate_region_id(&self) -> u32 {
         let mut id = 0;
-        while self.regions.iter().any(|r| *r.id() == id) {
+        while self.regions.iter().any(|r| *r.get_id() == id) {
             id += 1;
         }
         id

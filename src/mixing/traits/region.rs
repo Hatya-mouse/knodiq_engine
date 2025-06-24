@@ -20,7 +20,20 @@ use crate::audio_utils::Beats;
 use std::any::Any;
 
 pub trait Region: Send + Sync + Any {
+    /// Returns the id of the region.
+    fn get_id(&self) -> &u32;
+
+    /// Sets the id of the region.
+    fn set_id(&mut self, id: u32);
+
     /// Returns the start time of the region in f32.
+    /// Sets the name of the region.
+    fn set_name(&mut self, name: String);
+
+    /// Returns the name of the region.
+    fn get_name(&self) -> &str;
+
+    /// Read the name and you'll know what this does.
     fn start_time(&self) -> Beats;
 
     /// Sets the start time of the region in beats.
@@ -34,18 +47,6 @@ pub trait Region: Send + Sync + Any {
 
     /// Returns the duration of the region in beats.
     fn duration(&self) -> Beats;
-
-    /// Sets the name of the region.
-    fn set_name(&mut self, name: String);
-
-    /// Returns the name of the region.
-    fn name(&self) -> &str;
-
-    /// Sets the id of the region.
-    fn set_id(&mut self, id: u32);
-
-    /// Returns the id of the region.
-    fn id(&self) -> &u32;
 
     /// Returns whether the region overlaps with the given area.
     fn is_active_at(&self, start: Beats, end: Beats) -> bool {

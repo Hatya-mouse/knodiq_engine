@@ -82,6 +82,22 @@ impl BufferRegion {
 }
 
 impl Region for BufferRegion {
+    fn get_id(&self) -> &u32 {
+        &self.id
+    }
+
+    fn set_id(&mut self, id: u32) {
+        self.id = id;
+    }
+
+    fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
     fn set_duration(&mut self, duration: Beats) {
         self.duration = duration;
     }
@@ -100,22 +116,6 @@ impl Region for BufferRegion {
 
     fn duration(&self) -> f32 {
         self.duration
-    }
-
-    fn set_name(&mut self, name: String) {
-        self.name = name;
-    }
-
-    fn name(&self) -> &str {
-        &self.name
-    }
-
-    fn set_id(&mut self, id: u32) {
-        self.id = id;
-    }
-
-    fn id(&self) -> &u32 {
-        &self.id
     }
 
     fn region_type(&self) -> String {
