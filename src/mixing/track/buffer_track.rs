@@ -60,12 +60,6 @@ impl BufferTrack {
             residual_samples: 0.0,
         }
     }
-
-    pub fn add_region(&mut self, mut region: BufferRegion, at: Beats, duration: Beats) {
-        region.set_start_time(at);
-        region.set_duration(duration);
-        self.regions.push(region);
-    }
 }
 
 impl Track for BufferTrack {
