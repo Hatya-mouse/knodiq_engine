@@ -22,6 +22,7 @@ use std::any::Any;
 
 pub struct BufferRegion {
     /// ID of the region.
+    /// This will be set by adding the region to a track, so you don't need to set it manually.
     pub id: u32,
     /// Name of the region.
     pub name: String,
@@ -37,13 +38,13 @@ pub struct BufferRegion {
 
 impl BufferRegion {
     /// Creates a new buffer region with the given audio source.
-    pub fn new(id: u32, name: String, source: Option<AudioSource>, samples_per_beat: f32) -> Self {
+    pub fn new(name: String, source: Option<AudioSource>, samples_per_beat: f32) -> Self {
         let duration = match &source {
             Some(src) => samples_as_beats(samples_per_beat, src.samples()),
             None => Beats::default(),
         };
         Self {
-            id,
+            id: 0,
             name,
             start_time: Beats::default(),
             duration,

@@ -79,8 +79,14 @@ pub trait Track: Send + Sync + Any + TrackClone {
     /// Returns the specific region of the track by its identifier as a mutable reference.
     fn get_region_mut(&mut self, id: u32) -> Option<&mut dyn Region>;
 
+    /// Adds a new region to the track.
+    fn add_region(&mut self, region: Box<dyn Region>);
+
     /// Removes the specified region from the track.
     fn remove_region(&mut self, id: u32);
+
+    /// Gets the next available region ID.
+    fn generate_region_id(&self) -> u32;
 
     /// Returns the type of the track in the form of a string.
     fn track_type(&self) -> String;

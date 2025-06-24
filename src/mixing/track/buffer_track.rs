@@ -26,6 +26,7 @@ use std::any::Any;
 
 pub struct BufferTrack {
     /// Unique identifier for the track.
+    /// This will be set by adding the track to a mixer, so you don't need to set it manually.
     pub id: u32,
     /// Name of the track.
     pub name: String,
@@ -46,9 +47,9 @@ pub struct BufferTrack {
 }
 
 impl BufferTrack {
-    pub fn new(id: u32, name: &str, channels: usize) -> Self {
+    pub fn new(name: &str, channels: usize) -> Self {
         Self {
-            id,
+            id: 0,
             name: name.to_string(),
             volume: 1.0,
             graph: Graph::new(Box::new(BufferInputNode::new())),
@@ -136,8 +137,24 @@ impl Track for BufferTrack {
             .map(|r| r as &mut dyn Region)
     }
 
+    fn add_region(&mut self, region: Box<dyn Region>) {
+        if let Some(buffer_region) = region.as_any().downcast_ref::<BufferRegion>() {
+            self.regions.push(buffer_region.clone());
+        } else {
+            eprintln!("Failed to add region: not a BufferRegion");
+        }
+    }
+
     fn remove_region(&mut self, id: u32) {
         self.regions.retain(|r| *r.id() != id);
+    }
+
+    fn generate_region_id(&self) -> u32 {
+        let mut id = 0;
+        while self.regions.iter().any(|r| *r.id() == id) {
+            id += 1;
+        }
+        id
     }
 
     fn duration(&self) -> Beats {
