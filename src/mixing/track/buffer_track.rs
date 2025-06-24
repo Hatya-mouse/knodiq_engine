@@ -68,11 +68,15 @@ impl BufferTrack {
 }
 
 impl Track for BufferTrack {
-    fn id(&self) -> u32 {
+    fn get_id(&self) -> u32 {
         self.id
     }
 
-    fn name(&self) -> &str {
+    fn set_id(&mut self, id: u32) {
+        self.id = id;
+    }
+
+    fn get_name(&self) -> &str {
         self.name.as_str()
     }
 
@@ -80,7 +84,11 @@ impl Track for BufferTrack {
         self.name = name.to_string();
     }
 
-    fn graph(&mut self) -> &mut Graph {
+    fn graph(&self) -> &Graph {
+        &self.graph
+    }
+
+    fn graph_mut(&mut self) -> &mut Graph {
         &mut self.graph
     }
 

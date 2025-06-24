@@ -52,7 +52,9 @@ impl Mixer {
 
     /// Adds a new track to the mixer.
     pub fn add_track(&mut self, track: Box<dyn Track>) {
-        self.tracks.push(track);
+        let mut new_track = track;
+        new_track.set_id(self.generate_track_id());
+        self.tracks.push(new_track);
     }
 
     /// Prepares the mixer for rendering.
@@ -84,17 +86,26 @@ impl Mixer {
 
     /// Returns a reference to a track by its ID.
     pub fn get_track_by_id(&self, id: u32) -> Option<&Box<dyn Track>> {
-        self.tracks.iter().filter(|t| t.id() == id).next()
+        self.tracks.iter().filter(|t| t.get_id() == id).next()
     }
 
     /// Returns a mutable reference to a track by its ID.
     pub fn get_track_by_id_mut(&mut self, id: u32) -> Option<&mut Box<dyn Track>> {
-        self.tracks.iter_mut().filter(|t| t.id() == id).next()
+        self.tracks.iter_mut().filter(|t| t.get_id() == id).next()
     }
 
     /// Removes a track from the mixer by its ID.
     pub fn remove_track(&mut self, id: u32) {
-        self.tracks.retain(|t| t.id() != id);
+        self.tracks.retain(|t| t.get_id() != id);
+    }
+
+    /// Generates a unique ID for a new track.
+    pub fn generate_track_id(&self) -> u32 {
+        let mut id = 0;
+        while self.tracks.iter().any(|t| t.get_id() == id) {
+            id += 1;
+        }
+        id
     }
 
     /// Returns the duration of the mixer in beats.

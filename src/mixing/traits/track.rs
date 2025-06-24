@@ -41,16 +41,22 @@ impl Clone for Box<dyn Track> {
 
 pub trait Track: Send + Sync + Any + TrackClone {
     /// Returns the unique identifier of the track.
-    fn id(&self) -> u32;
+    fn get_id(&self) -> u32;
+
+    /// Sets the unique identifier of the track.
+    fn set_id(&mut self, id: u32);
 
     /// Returns the name of the track.
-    fn name(&self) -> &str;
+    fn get_name(&self) -> &str;
 
     /// Sets the name of the track.
     fn set_name(&mut self, name: &str);
 
     /// Get the graph of the track.
-    fn graph(&mut self) -> &mut Graph;
+    fn graph(&self) -> &Graph;
+
+    /// Get the graph of the track as a mutable reference.
+    fn graph_mut(&mut self) -> &mut Graph;
 
     /// Returns the current volume of the track.
     fn volume(&self) -> f32;
