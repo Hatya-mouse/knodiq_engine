@@ -55,9 +55,9 @@ impl BufferRegion {
 
     /// Creates a new empty buffer region.
     /// This is useful for representing a region that is not yet filled with audio data.
-    pub fn empty(id: u32, name: String, samples_per_beat: f32, expected_duration: Beats) -> Self {
+    pub fn empty(name: String, samples_per_beat: f32, expected_duration: Beats) -> Self {
         Self {
-            id,
+            id: 0,
             name,
             start_time: Beats::default(),
             duration: expected_duration,
