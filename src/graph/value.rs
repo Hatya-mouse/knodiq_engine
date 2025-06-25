@@ -38,7 +38,7 @@ impl Value {
     /// If the `self` is of type `Array`, it will apply the function to each sample in the array and return a new array with the results.
     ///
     /// The provided function should not rely on the order of samples.
-    pub fn apply_fn<F>(&self, f: &F) -> Option<Value>
+    pub fn apply_fn<F>(&self, f: F) -> Option<Value>
     where
         F: Fn(Sample) -> Sample,
     {
