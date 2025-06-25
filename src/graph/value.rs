@@ -82,7 +82,7 @@ impl Value {
     /// If both are of type `Buffer`, it will apply the function to each pair of samples in the buffers and return a new buffer with the results.
     pub fn apply_op<F>(&self, other: &Value, f: F) -> Option<Value>
     where
-        F: Fn(Sample, Sample) -> Sample,
+        F: Fn(Sample, Sample) -> Sample + Clone,
     {
         match (self, other) {
             (Value::Float(a), Value::Float(b)) => Some(Value::Float(f(*a, *b))),
@@ -93,7 +93,7 @@ impl Value {
                 let processed_array: Vec<Value> = a
                     .iter()
                     .zip(b.iter())
-                    .map(|(v_a, v_b)| v_a.apply_op(v_b, &f))
+                    .map(|(v_a, v_b)| v_a.apply_op(v_b, f.clone()))
                     .filter_map(|opt| opt) // Filter out None values
                     .collect();
                 Some(Value::Array(processed_array))
@@ -108,7 +108,7 @@ impl Value {
                             // If apply_op returns None, also return None in this level
                             let processed_inner = vec
                                 .iter()
-                                .map(|val| val.apply_op(&Value::Float(*v), &f))
+                                .map(|val| val.apply_op(&Value::Float(*v), f.clone()))
                                 .filter_map(|opt| opt) // Filter out None values
                                 .collect();
                             Value::Array(processed_inner)
