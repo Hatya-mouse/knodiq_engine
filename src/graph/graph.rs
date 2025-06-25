@@ -310,9 +310,11 @@ impl Graph {
         // 3. Get the output of the output node and return it
         match self.get_output_node() {
             Some(node) => match node.get_output("output") {
-                Some(value) => match value {
-                    Value::Buffer(buffer) => {
-                        Ok(AudioSource::from_buffer(buffer, sample_rate, channels))
+                Some(value) => match value.as_buffer() {
+                    Some(buffer) => {
+                        // Convert the buffer to AudioSource
+                        let audio_source = AudioSource::from_buffer(buffer, sample_rate, channels);
+                        Ok(audio_source)
                     }
                     _ => Err("Output wasn't a buffer".into()),
                 },

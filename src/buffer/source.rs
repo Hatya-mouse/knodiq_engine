@@ -254,7 +254,7 @@ impl AudioSource {
 
     /// Returns the copy of the buffer, but as Value.
     pub fn clone_buffer_as_value(&self) -> Value {
-        Value::Buffer(self.clone_buffer())
+        Value::from_buffer(self.clone_buffer())
     }
 }
 

@@ -49,9 +49,9 @@ impl Node for EmptyNode {
         chunk_end: usize,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let buffer = match self.input.as_ref() {
-            Some(Value::Buffer(buffer)) => Value::Buffer(buffer.clone()),
+            Some(Value::Array(array)) => Value::Array(array.clone()),
             Some(value) => value.clone(),
-            None => Value::Buffer(vec![vec![0.0; chunk_end - chunk_start]; channels]),
+            None => Value::from_buffer(vec![vec![0.0; chunk_end - chunk_start]; channels]),
         };
 
         let mut result = HashMap::new();
