@@ -40,7 +40,7 @@ impl Value {
     /// The provided function should not rely on the order of samples.
     pub fn apply_fn<F>(&self, f: F) -> Option<Value>
     where
-        F: Fn(Sample) -> Sample,
+        F: Fn(Sample) -> Sample + Clone,
     {
         match self {
             Value::Float(sample) => Some(Value::Float(f(*sample))),
@@ -59,7 +59,7 @@ impl Value {
                             // If apply_fn returns None, also return None in this level
                             let processed_inner = vec
                                 .iter()
-                                .map(|val| val.apply_fn(&f))
+                                .map(|val| val.apply_fn(f.clone()))
                                 .filter_map(|opt| opt) // Filter out None values
                                 .collect();
                             Value::Array(processed_inner)
