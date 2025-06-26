@@ -22,7 +22,7 @@ use crate::{
     graph::built_in::BufferInputNode,
     mixing::region::BufferRegion,
 };
-use std::any::Any;
+use std::{any::Any, error::Error};
 
 pub struct BufferTrack {
     /// Unique identifier for the track.
@@ -136,7 +136,7 @@ impl Track for BufferTrack {
         region: Box<dyn Region>,
         at: Beats,
         duration: Beats,
-    ) -> Result<u32, Box<dyn std::error::Error>> {
+    ) -> Result<u32, Box<dyn Error>> {
         if let Some(buffer_region) = region.as_any().downcast_ref::<BufferRegion>() {
             let mut buffer_region = buffer_region.clone();
             let id = self.generate_region_id();
@@ -170,8 +170,8 @@ impl Track for BufferTrack {
             .fold(0.0, |max, end| max.max(end))
     }
 
-    fn prepare(&mut self, _chunk_size: f32, sample_rate: usize) {
-        self.graph.prepare(1024);
+    fn prepare(&mut self, _chunk_size: f32, sample_rate: usize) -> Result<(), Box<dyn Error>> {
+        self.graph.prepare(1024)?;
         self.resamplers.resize_with(self.regions.len(), || {
             AudioResampler::new(sample_rate / 100)
         });
@@ -183,6 +183,7 @@ impl Track for BufferTrack {
                 )));
         }
         self.residual_samples = 0.0;
+        Ok(())
     }
 
     fn render_chunk_at(

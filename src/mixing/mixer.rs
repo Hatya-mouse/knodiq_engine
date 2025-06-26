@@ -16,6 +16,8 @@
 // limitations under the License.
 //
 
+use std::error::Error;
+
 use crate::{AudioSource, Sample, Track, audio_utils};
 use audio_utils::Beats;
 
@@ -58,10 +60,11 @@ impl Mixer {
     }
 
     /// Prepares the mixer for rendering.
-    pub fn prepare(&mut self) {
+    pub fn prepare(&mut self) -> Result<(), Box<dyn Error>> {
         for track in &mut self.tracks {
-            track.prepare(CHUNK_BEATS, self.sample_rate);
+            track.prepare(CHUNK_BEATS, self.sample_rate)?;
         }
+        Ok(())
     }
 
     /// Returns the current playhead position in beats.

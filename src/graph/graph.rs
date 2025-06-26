@@ -16,9 +16,7 @@
 // limitations under the License.
 //
 
-use crate::{
-    AudioSource, Connector, Node, Value, error::GraphError, graph::built_in::BufferOutputNode,
-};
+use crate::{AudioSource, Connector, Node, Value, graph::built_in::BufferOutputNode};
 use std::{
     collections::{HashMap, VecDeque},
     error::Error,
@@ -254,12 +252,14 @@ impl Graph {
         Ok(sorted)
     }
 
-    pub fn prepare(&mut self, chunk_size: usize) {
+    pub fn prepare(&mut self, chunk_size: usize) -> Result<(), Box<dyn Error>> {
         // Prepare the graph for processing
         // Call prepare() on each node
         for node in self.nodes.iter_mut() {
-            node.prepare(chunk_size);
+            node.prepare(chunk_size)
+                .map_err(|e| -> Box<dyn Error> { e })?;
         }
+        Ok(())
     }
 
     /// Processes the input audio source and returns the output.

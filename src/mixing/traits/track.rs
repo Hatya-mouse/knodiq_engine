@@ -19,6 +19,7 @@
 use crate::audio_utils::Beats;
 use crate::{AudioSource, Graph, Region};
 use std::any::Any;
+use std::error::Error;
 
 pub trait TrackClone {
     fn clone_box(&self) -> Box<dyn Track>;
@@ -107,7 +108,7 @@ pub trait Track: Send + Sync + Any + TrackClone {
     fn duration(&self) -> Beats;
 
     /// Prepare the track for rendering.
-    fn prepare(&mut self, chunk_size: Beats, sample_rate: usize);
+    fn prepare(&mut self, chunk_size: Beats, sample_rate: usize) -> Result<(), Box<dyn Error>>;
 
     /// Renders the specified area of the track.
     ///
