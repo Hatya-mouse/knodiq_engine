@@ -252,11 +252,16 @@ impl Graph {
         Ok(sorted)
     }
 
-    pub fn prepare(&mut self, chunk_size: Beats, sample_rate: usize) -> Result<(), Box<dyn Error>> {
+    pub fn prepare(
+        &mut self,
+        chunk_size: Beats,
+        sample_rate: usize,
+        tempo: Beats,
+    ) -> Result<(), Box<dyn Error>> {
         // Prepare the graph for processing
         // Call prepare() on each node
         for node in self.nodes.iter_mut() {
-            node.prepare(chunk_size, sample_rate)
+            node.prepare(chunk_size, sample_rate, tempo)
                 .map_err(|e| -> Box<dyn Error> { e })?;
         }
         Ok(())

@@ -108,7 +108,12 @@ pub trait Track: Send + Sync + Any + TrackClone {
     fn duration(&self) -> Beats;
 
     /// Prepare the track for rendering.
-    fn prepare(&mut self, chunk_size: Beats, sample_rate: usize) -> Result<(), Box<dyn Error>>;
+    fn prepare(
+        &mut self,
+        chunk_size: Beats,
+        sample_rate: usize,
+        tempo: Beats,
+    ) -> Result<(), Box<dyn Error>>;
 
     /// Renders the specified area of the track.
     ///

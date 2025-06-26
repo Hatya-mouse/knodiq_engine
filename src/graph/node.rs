@@ -46,10 +46,12 @@ pub trait Node: Send + Sync + Any + NodeClone {
     /// # Arguments
     /// - `chunk_size`: The size of the chunk to process, in beats.
     /// - `sample_rate`: The sample rate.
+    /// - `tempo`: The tempo of the audio data, in beats per minute.
     fn prepare(
         &mut self,
         _chunk_size: Beats,
         _sample_rate: usize,
+        _tempo: Beats,
     ) -> Result<(), Box<dyn crate::error::GraphError>> {
         Ok(())
     }

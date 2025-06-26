@@ -62,7 +62,7 @@ impl Mixer {
     /// Prepares the mixer for rendering.
     pub fn prepare(&mut self) -> Result<(), Box<dyn Error>> {
         for track in &mut self.tracks {
-            track.prepare(CHUNK_BEATS, self.sample_rate)?;
+            track.prepare(CHUNK_BEATS, self.sample_rate, self.tempo)?;
         }
         Ok(())
     }
