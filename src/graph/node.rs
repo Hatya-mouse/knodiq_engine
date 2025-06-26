@@ -28,8 +28,8 @@ pub trait Node: Send + Sync + Any + NodeClone {
     /// # Arguments
     /// - `sample_rate`: The sample rate of the audio data
     /// - `channels`: The number of audio channels
-    /// - `chunk_start`: The start index of the chunk to process
-    /// - `chunk_end`: The end index of the chunk to process
+    /// - `chunk_start`: The start sample index of the chunk to process
+    /// - `chunk_end`: The end sample index of the chunk to process
     fn process(
         &mut self,
         sample_rate: usize,

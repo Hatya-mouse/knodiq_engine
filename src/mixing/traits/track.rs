@@ -115,6 +115,7 @@ pub trait Track: Send + Sync + Any + TrackClone {
     /// - `playhead` - The currently rendering duration of the audio track in beats.
     /// - `chunk_size` - The size of the chunk to render.
     /// - `sample_rate` - The sample rate of the audio track.
+    /// - `samples_per_beat` - The number of samples per beat at the given sample rate.
     ///
     /// # Return
     /// - `true` The track has finished rendering.
