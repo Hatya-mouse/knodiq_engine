@@ -20,6 +20,9 @@ pub mod buffer;
 pub mod graph;
 pub mod mixing;
 
+#[cfg(test)]
+mod test;
+
 pub use audio_utils::{AudioPlayer, AudioResampler, Beats, error};
 pub use buffer::{AudioBuffer, AudioSource, Sample};
 pub use graph::{Connector, Graph, Node, NodeId, Value};
