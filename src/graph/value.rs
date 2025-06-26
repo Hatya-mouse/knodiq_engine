@@ -155,4 +155,11 @@ impl Value {
             }
         }
     }
+
+    pub fn get_type(&self) -> String {
+        match self {
+            Value::Float(_) => "Float".to_string(),
+            Value::Array(_) => "Array".to_string(),
+        }
+    }
 }

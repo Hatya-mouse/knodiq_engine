@@ -47,21 +47,35 @@ impl Node for BufferInputNode {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn crate::error::GraphError>> {
+        let mut err = None;
+
         let buffer = match self.input.as_ref() {
             Some(Value::Array(array)) => Value::Array(array.clone()),
-            Some(value) => value.clone(),
-            None => Value::from_buffer(vec![vec![0.0; chunk_end - chunk_start]; channels]),
+            _ => {
+                err = Some(crate::error::NodeInputTypeError {
+                    node_id: self.id.clone(),
+                    input_name: "input".to_string(),
+                    expected_type: "Array".to_string(),
+                    received_type: self
+                        .input
+                        .as_ref()
+                        .map_or("None".to_string(), |v| v.get_type()),
+                });
+                Value::from_buffer(vec![vec![0.0; chunk_end - chunk_start]; channels])
+            }
         };
 
         let mut result = HashMap::new();
         result.insert("buffer".to_string(), buffer.clone());
         self.output = Some(buffer);
 
-        Ok(())
+        if let Some(e) = err {
+            Err(Box::new(e))
+        } else {
+            Ok(())
+        }
     }
-
-    fn prepare(&mut self, _: usize) {}
 
     fn get_input_list(&self) -> Vec<String> {
         vec!["input".to_string()]

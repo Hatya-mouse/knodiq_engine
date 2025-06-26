@@ -16,8 +16,13 @@
 // limitations under the License.
 //
 
-use crate::{AudioSource, Connector, Node, Value, graph::built_in::BufferOutputNode};
-use std::collections::{HashMap, VecDeque};
+use crate::{
+    AudioSource, Connector, Node, Value, error::GraphError, graph::built_in::BufferOutputNode,
+};
+use std::{
+    collections::{HashMap, VecDeque},
+    error::Error,
+};
 use uuid::Uuid;
 
 pub type NodeId = Uuid;
@@ -270,7 +275,7 @@ impl Graph {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
-    ) -> Result<AudioSource, Box<dyn std::error::Error>> {
+    ) -> Result<AudioSource, Box<dyn Error>> {
         // 1. Decide the process order using topological sort
         let sorted_nodes = self.topological_sort()?;
 
@@ -303,7 +308,8 @@ impl Graph {
                     node.set_input(&to_param, value);
                 }
 
-                node.process(sample_rate, channels, chunk_start, chunk_end)?;
+                node.process(sample_rate, channels, chunk_start, chunk_end)
+                    .map_err(|e| -> Box<dyn Error> { e })?;
             }
         }
 

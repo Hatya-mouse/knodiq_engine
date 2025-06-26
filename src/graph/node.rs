@@ -36,13 +36,15 @@ pub trait Node: Send + Sync + Any + NodeClone {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
-    ) -> Result<(), Box<dyn std::error::Error>>;
+    ) -> Result<(), Box<dyn crate::error::GraphError>>;
 
     /// Prepare the node for processing. Called before processing.
     /// Chunk size is passed to the node to prepare for processing.
     ///
     /// This method is called after the all input properties are set.
-    fn prepare(&mut self, chunk_size: usize);
+    fn prepare(&mut self, _chunk_size: usize) -> Result<(), Box<dyn crate::error::GraphError>> {
+        Ok(())
+    }
 
     /// Get the list of properties that can be set on this node.
     fn get_input_list(&self) -> Vec<String>;

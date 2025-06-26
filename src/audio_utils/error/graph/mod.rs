@@ -1,4 +1,4 @@
-// buffer/mod.rs
+// audio_utils/error/graph/mod.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //
@@ -15,10 +15,10 @@
 // limitations under the License.
 //
 
-pub mod audio_buffer;
-pub mod sample;
-pub mod source;
+pub mod node_input_type_error;
 
-pub use audio_buffer::AudioBuffer;
-pub use sample::Sample;
-pub use source::AudioSource;
+pub use node_input_type_error::NodeInputTypeError;
+
+use std::fmt::{Debug, Display};
+
+pub trait GraphError: std::error::Error + Display + Debug + Send + Sync + 'static {}

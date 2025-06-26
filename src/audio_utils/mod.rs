@@ -1,4 +1,4 @@
-// audio_engine/audio_utils/mod.rs
+// audio_utils/mod.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //
@@ -18,6 +18,7 @@
 pub mod audio_player;
 pub mod chunk;
 pub mod duration;
+pub mod error;
 pub mod resampler;
 
 pub use audio_player::AudioPlayer;

@@ -1,4 +1,4 @@
-// audio_engine/graph/mod.rs
+// graph/mod.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //

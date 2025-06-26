@@ -1,4 +1,4 @@
-// audio_engine/mixing/mod.rs
+// mixing/mod.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //

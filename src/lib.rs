@@ -1,4 +1,4 @@
-// audio_engine/mod.rs
+// mod.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //
@@ -20,12 +20,8 @@ pub mod buffer;
 pub mod graph;
 pub mod mixing;
 
+pub use audio_utils::{AudioPlayer, AudioResampler, Beats, error};
 pub use buffer::{AudioBuffer, AudioSource, Sample};
-
 pub use graph::{Connector, Graph, Node, NodeId, Value};
-
 pub use mixing::{Mixer, Region, Track};
-
-pub use audio_utils::{AudioPlayer, AudioResampler, Beats};
-
 pub use std::time::Duration;
