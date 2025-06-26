@@ -170,8 +170,13 @@ impl Track for BufferTrack {
             .fold(0.0, |max, end| max.max(end))
     }
 
-    fn prepare(&mut self, chunk_size: Beats, sample_rate: usize) -> Result<(), Box<dyn Error>> {
-        self.graph.prepare(chunk_size, sample_rate)?;
+    fn prepare(
+        &mut self,
+        chunk_size: Beats,
+        sample_rate: usize,
+        tempo: Beats,
+    ) -> Result<(), Box<dyn Error>> {
+        self.graph.prepare(chunk_size, sample_rate, tempo)?;
         self.resamplers.resize_with(self.regions.len(), || {
             AudioResampler::new(sample_rate / 100)
         });
