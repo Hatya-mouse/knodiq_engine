@@ -16,11 +16,14 @@
 // limitations under the License.
 //
 
-use crate::{AudioSource, Beats, Connector, Node, Value, graph::built_in::BufferOutputNode};
-use std::{
-    collections::{HashMap, VecDeque},
-    error::Error,
+use crate::{
+    AudioSource, Beats, Connector, Node, Value,
+    error::{
+        NodeCycleError, NodeNotFoundError, NodeOutputTypeError, PropertyNotFoundError, TrackError,
+    },
+    graph::built_in::BufferOutputNode,
 };
+use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
 pub type NodeId = Uuid;
@@ -199,7 +202,7 @@ impl Graph {
     }
 
     /// Sort the node using tolopogical sort
-    pub fn topological_sort(&self) -> Result<Vec<NodeId>, &'static str> {
+    pub fn topological_sort(&self) -> Result<Vec<NodeId>, Box<dyn TrackError>> {
         let mut in_degree = HashMap::new();
         let mut adj_list = HashMap::new();
 
@@ -246,7 +249,7 @@ impl Graph {
 
         // Return the error when the cycle is detected
         if sorted.len() != self.nodes.len() {
-            return Err("Cycle detected");
+            return Err(Box::new(NodeCycleError {}));
         }
 
         Ok(sorted)
@@ -257,12 +260,12 @@ impl Graph {
         chunk_size: Beats,
         sample_rate: usize,
         tempo: Beats,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), Box<dyn TrackError>> {
         // Prepare the graph for processing
         // Call prepare() on each node
         for node in self.nodes.iter_mut() {
             node.prepare(chunk_size, sample_rate, tempo)
-                .map_err(|e| -> Box<dyn Error> { e })?;
+                .map_err(|e| -> Box<dyn TrackError> { e })?;
         }
         Ok(())
     }
@@ -280,7 +283,7 @@ impl Graph {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
-    ) -> Result<AudioSource, Box<dyn Error>> {
+    ) -> Result<AudioSource, Box<dyn TrackError>> {
         // 1. Decide the process order using topological sort
         let sorted_nodes = self.topological_sort()?;
 
@@ -314,7 +317,7 @@ impl Graph {
                 }
 
                 node.process(sample_rate, channels, chunk_start, chunk_end)
-                    .map_err(|e| -> Box<dyn Error> { e })?;
+                    .map_err(|e| -> Box<dyn TrackError> { e })?;
             }
         }
 
@@ -322,16 +325,27 @@ impl Graph {
         match self.get_output_node() {
             Some(node) => match node.get_output("output") {
                 Some(value) => match value.as_buffer() {
-                    Some(buffer) => {
+                    Ok(buffer) => {
                         // Convert the buffer to AudioSource
                         let audio_source = AudioSource::from_buffer(buffer, sample_rate, channels);
                         Ok(audio_source)
                     }
-                    _ => Err("Output wasn't a buffer".into()),
+                    Err(e) => Err(Box::new(NodeOutputTypeError {
+                        node_id: self.get_output_node_id(),
+                        output_name: "output".to_string(),
+                        expected_type: e.expected_type,
+                        received_type: e.received_type,
+                    })),
                 },
-                None => Err("Output property not found".into()),
+                None => Err(Box::new(PropertyNotFoundError {
+                    node_id: self.get_output_node_id(),
+                    property_name: "output".to_string(),
+                    is_input: false,
+                })),
             },
-            None => Err("Output node not found".into()),
+            None => Err(Box::new(NodeNotFoundError {
+                node_id: self.get_output_node_id(),
+            })),
         }
     }
 }

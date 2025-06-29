@@ -1,4 +1,4 @@
-// mod.rs
+// node_not_found_error.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //
@@ -15,16 +15,20 @@
 // limitations under the License.
 //
 
-pub mod audio_utils;
-pub mod buffer;
-pub mod graph;
-pub mod mixing;
+use crate::{NodeId, error::TrackError};
+use std::{error::Error, fmt::Display};
 
-#[cfg(test)]
-mod test;
+#[derive(Debug)]
+pub struct NodeNotFoundError {
+    pub node_id: NodeId,
+}
 
-pub use audio_utils::{AudioPlayer, AudioResampler, Beats, error};
-pub use buffer::{AudioBuffer, AudioSource, Sample};
-pub use graph::{Connector, Graph, Node, NodeId, Type, Value};
-pub use mixing::{Mixer, Region, Track};
-pub use std::time::Duration;
+impl TrackError for NodeNotFoundError {}
+
+impl Error for NodeNotFoundError {}
+
+impl Display for NodeNotFoundError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Node not found: {}", self.node_id)
+    }
+}

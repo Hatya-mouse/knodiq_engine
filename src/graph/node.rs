@@ -36,7 +36,7 @@ pub trait Node: Send + Sync + Any + NodeClone {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
-    ) -> Result<(), Box<dyn crate::error::GraphError>>;
+    ) -> Result<(), Box<dyn crate::error::TrackError>>;
 
     /// Prepare the node for processing. Called before processing.
     /// Chunk size is passed to the node to prepare for processing.
@@ -52,7 +52,7 @@ pub trait Node: Send + Sync + Any + NodeClone {
         _chunk_size: Beats,
         _sample_rate: usize,
         _tempo: Beats,
-    ) -> Result<(), Box<dyn crate::error::GraphError>> {
+    ) -> Result<(), Box<dyn crate::error::TrackError>> {
         Ok(())
     }
 

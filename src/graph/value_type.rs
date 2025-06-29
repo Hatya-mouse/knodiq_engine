@@ -1,4 +1,4 @@
-// mod.rs
+// value_type.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //
@@ -15,16 +15,25 @@
 // limitations under the License.
 //
 
-pub mod audio_utils;
-pub mod buffer;
-pub mod graph;
-pub mod mixing;
+use std::fmt::Display;
 
-#[cfg(test)]
-mod test;
+#[derive(Debug, PartialEq, Clone)]
+pub enum Type {
+    Float,
+    Array(Box<Type>),
+    None,
+}
 
-pub use audio_utils::{AudioPlayer, AudioResampler, Beats, error};
-pub use buffer::{AudioBuffer, AudioSource, Sample};
-pub use graph::{Connector, Graph, Node, NodeId, Type, Value};
-pub use mixing::{Mixer, Region, Track};
-pub use std::time::Duration;
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Type::Float => "Float".to_string(),
+                Type::Array(t) => format!("[{}]", t),
+                Type::None => "None".to_string(),
+            }
+        )
+    }
+}

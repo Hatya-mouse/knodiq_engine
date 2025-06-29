@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-use crate::{Node, NodeId, Value};
+use crate::{Node, NodeId, Type, Value};
 use std::any::Any;
 use std::collections::HashMap;
 
@@ -47,7 +47,7 @@ impl Node for BufferOutputNode {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
-    ) -> Result<(), Box<dyn crate::error::GraphError>> {
+    ) -> Result<(), Box<dyn crate::error::TrackError>> {
         let mut err = None;
 
         let buffer = match self.input.as_ref() {
@@ -56,11 +56,11 @@ impl Node for BufferOutputNode {
                 err = Some(crate::error::NodeInputTypeError {
                     node_id: self.id.clone(),
                     input_name: "input".to_string(),
-                    expected_type: "Array".to_string(),
+                    expected_type: Type::Array(Box::new(Type::Array(Box::new(Type::Float)))),
                     received_type: self
                         .input
                         .as_ref()
-                        .map_or("None".to_string(), |v| v.get_type()),
+                        .map_or(Type::None, |input| input.get_type()),
                 });
                 Value::from_buffer(vec![vec![0.0; chunk_end - chunk_start]; channels])
             }

@@ -17,9 +17,9 @@
 //
 
 use crate::audio_utils::Beats;
+use crate::error::TrackError;
 use crate::{AudioSource, Graph, Region};
 use std::any::Any;
-use std::error::Error;
 
 pub trait TrackClone {
     fn clone_box(&self) -> Box<dyn Track>;
@@ -93,7 +93,7 @@ pub trait Track: Send + Sync + Any + TrackClone {
         region: Box<dyn Region>,
         at: Beats,
         duration: Beats,
-    ) -> Result<u32, Box<dyn std::error::Error>>;
+    ) -> Result<u32, Box<dyn TrackError>>;
 
     /// Removes the specified region from the track.
     fn remove_region(&mut self, id: u32);
@@ -113,7 +113,7 @@ pub trait Track: Send + Sync + Any + TrackClone {
         chunk_size: Beats,
         sample_rate: usize,
         tempo: Beats,
-    ) -> Result<(), Box<dyn Error>>;
+    ) -> Result<(), Box<dyn TrackError>>;
 
     /// Renders the specified area of the track.
     ///

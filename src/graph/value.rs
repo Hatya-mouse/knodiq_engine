@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-use crate::{AudioBuffer, Sample};
+use crate::{AudioBuffer, Sample, Type, error::TypeError};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -130,14 +130,24 @@ impl Value {
     }
 
     /// Converts the value into an audio buffer, if possible.
-    pub fn as_buffer(&self) -> Option<AudioBuffer> {
+    pub fn as_buffer(&self) -> Result<AudioBuffer, TypeError> {
         match self {
-            Value::Float(_) => None,
+            Value::Float(_) => Err(TypeError {
+                expected_type: Type::Array(Box::new(Type::Array(Box::new(Type::Float)))),
+                received_type: Type::Float,
+            }),
             Value::Array(vector) => {
                 let mut buffer = AudioBuffer::new();
                 for value in vector {
                     match value {
-                        Value::Float(_) => return None,
+                        Value::Float(_) => {
+                            return Err(TypeError {
+                                expected_type: Type::Array(Box::new(Type::Array(Box::new(
+                                    Type::Float,
+                                )))),
+                                received_type: Type::Array(Box::new(Type::Float)),
+                            });
+                        }
                         Value::Array(inner_vector) => {
                             // Recursively convert inner arrays to buffers
                             let inner_buffer = inner_vector
@@ -151,15 +161,18 @@ impl Value {
                         }
                     }
                 }
-                Some(buffer)
+                Ok(buffer)
             }
         }
     }
 
-    pub fn get_type(&self) -> String {
+    pub fn get_type(&self) -> Type {
         match self {
-            Value::Float(_) => "Float".to_string(),
-            Value::Array(_) => "Array".to_string(),
+            Value::Float(_) => Type::Float,
+            Value::Array(vec) => Type::Array(Box::new(match vec.first() {
+                Some(val) => val.get_type(),
+                None => Type::Float,
+            })),
         }
     }
 }

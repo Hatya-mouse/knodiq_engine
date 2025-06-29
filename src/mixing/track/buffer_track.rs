@@ -19,10 +19,11 @@
 use crate::{
     AudioResampler, AudioSource, Graph, Region, Track, Value,
     audio_utils::{self, Beats},
+    error::{TrackError, track::region::InvalidRegionTypeError},
     graph::built_in::BufferInputNode,
     mixing::region::BufferRegion,
 };
-use std::{any::Any, error::Error};
+use std::any::Any;
 
 pub struct BufferTrack {
     /// Unique identifier for the track.
@@ -136,7 +137,7 @@ impl Track for BufferTrack {
         region: Box<dyn Region>,
         at: Beats,
         duration: Beats,
-    ) -> Result<u32, Box<dyn Error>> {
+    ) -> Result<u32, Box<dyn TrackError>> {
         if let Some(buffer_region) = region.as_any().downcast_ref::<BufferRegion>() {
             let mut buffer_region = buffer_region.clone();
             let id = self.generate_region_id();
@@ -146,8 +147,10 @@ impl Track for BufferTrack {
             self.regions.push(buffer_region);
             return Ok(id);
         } else {
-            eprintln!("Failed to add region: not a BufferRegion");
-            return Err("Failed to add region: not a BufferRegion".into());
+            return Err(Box::new(InvalidRegionTypeError {
+                expected_type: "BufferRegion".to_string(),
+                received_type: region.region_type(),
+            }));
         }
     }
 
@@ -175,7 +178,7 @@ impl Track for BufferTrack {
         chunk_size: Beats,
         sample_rate: usize,
         tempo: Beats,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), Box<dyn TrackError>> {
         self.graph.prepare(chunk_size, sample_rate, tempo)?;
         self.resamplers.resize_with(self.regions.len(), || {
             AudioResampler::new(sample_rate / 100)

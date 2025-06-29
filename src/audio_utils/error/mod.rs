@@ -15,6 +15,9 @@
 // limitations under the License.
 //
 
-pub mod graph;
+pub mod track;
 
-pub use graph::{GraphError, NodeInputTypeError};
+pub use track::{
+    NodeCycleError, NodeInputTypeError, NodeNotFoundError, NodeOutputTypeError,
+    PropertyNotFoundError, TrackError, TypeError,
+};

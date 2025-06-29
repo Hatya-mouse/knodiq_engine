@@ -1,6 +1,4 @@
-// node_input_type_error.rs
-//
-// Copyright 2025 Shuntaro Kasatani
+// type_error.rs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,27 +13,25 @@
 // limitations under the License.
 //
 
-use crate::{NodeId, error::GraphError};
+use crate::{Type, error::TrackError};
 use std::fmt::Display;
 
 #[derive(Debug, Clone)]
-pub struct NodeInputTypeError {
-    pub node_id: NodeId,
-    pub input_name: String,
-    pub expected_type: String,
-    pub received_type: String,
+pub struct TypeError {
+    pub expected_type: Type,
+    pub received_type: Type,
 }
 
-impl GraphError for NodeInputTypeError {}
+impl TrackError for TypeError {}
 
-impl std::error::Error for NodeInputTypeError {}
+impl std::error::Error for TypeError {}
 
-impl Display for NodeInputTypeError {
+impl Display for TypeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Node {}: Input '{}' expected type '{}', but received type '{}'",
-            self.node_id, self.input_name, self.expected_type, self.received_type
+            "Expected type '{}', but received type '{}'",
+            self.expected_type, self.received_type
         )
     }
 }

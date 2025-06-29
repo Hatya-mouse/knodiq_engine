@@ -1,4 +1,4 @@
-// audio_utils/error/graph/mod.rs
+// audio_utils/error/track/region/mod.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //
@@ -15,10 +15,6 @@
 // limitations under the License.
 //
 
-pub mod node_input_type_error;
+pub mod invalid_region_type_error;
 
-pub use node_input_type_error::NodeInputTypeError;
-
-use std::fmt::{Debug, Display};
-
-pub trait GraphError: std::error::Error + Display + Debug + Send + Sync + 'static {}
+pub use invalid_region_type_error::InvalidRegionTypeError;

@@ -16,9 +16,7 @@
 // limitations under the License.
 //
 
-use std::error::Error;
-
-use crate::{AudioSource, Sample, Track, audio_utils};
+use crate::{AudioSource, Sample, Track, audio_utils, error::TrackError};
 use audio_utils::Beats;
 
 const CHUNK_BEATS: Beats = 2.0;
@@ -60,7 +58,7 @@ impl Mixer {
     }
 
     /// Prepares the mixer for rendering.
-    pub fn prepare(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn prepare(&mut self) -> Result<(), Box<dyn TrackError>> {
         for track in &mut self.tracks {
             track.prepare(CHUNK_BEATS, self.sample_rate, self.tempo)?;
         }

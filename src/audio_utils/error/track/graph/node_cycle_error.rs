@@ -1,4 +1,4 @@
-// mod.rs
+// node_cycle_error.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //
@@ -15,16 +15,18 @@
 // limitations under the License.
 //
 
-pub mod audio_utils;
-pub mod buffer;
-pub mod graph;
-pub mod mixing;
+use crate::audio_utils::error::TrackError;
+use std::{error::Error, fmt::Display};
 
-#[cfg(test)]
-mod test;
+#[derive(Debug, Clone)]
+pub struct NodeCycleError {}
 
-pub use audio_utils::{AudioPlayer, AudioResampler, Beats, error};
-pub use buffer::{AudioBuffer, AudioSource, Sample};
-pub use graph::{Connector, Graph, Node, NodeId, Type, Value};
-pub use mixing::{Mixer, Region, Track};
-pub use std::time::Duration;
+impl TrackError for NodeCycleError {}
+
+impl Error for NodeCycleError {}
+
+impl Display for NodeCycleError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Node cycle error")
+    }
+}

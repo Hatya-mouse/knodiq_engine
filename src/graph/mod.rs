@@ -20,8 +20,10 @@ pub mod connector;
 pub mod graph;
 pub mod node;
 pub mod value;
+pub mod value_type;
 
 pub use connector::Connector;
 pub use graph::{Graph, NodeId};
 pub use node::Node;
 pub use value::Value;
+pub use value_type::Type;
