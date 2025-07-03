@@ -133,13 +133,6 @@ impl Region for BufferRegion {
         self.duration
     }
 
-    fn set_samples_per_beat(&mut self, samples_per_beat: u32) {
-        self.samples_per_beat = samples_per_beat as f32;
-        if let Some(source) = &self.source {
-            self.duration = samples_as_beats(self.samples_per_beat, source.samples());
-        }
-    }
-
     fn region_type(&self) -> String {
         "BufferRegion".to_string()
     }
