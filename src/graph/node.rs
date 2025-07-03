@@ -96,6 +96,8 @@ pub trait Node: Send + Sync + Any + NodeClone {
     fn is_output(&self) -> bool;
 
     fn as_any(&self) -> &dyn Any;
+
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 // Helper trait to enable cloning of Box<dyn Node>

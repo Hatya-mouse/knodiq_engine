@@ -26,6 +26,8 @@ pub struct EmptyNode {
     name: String,
     input: Option<Value>,
     output: Option<Value>,
+    is_input: bool,
+    is_output: bool,
 }
 
 impl EmptyNode {
@@ -36,6 +38,32 @@ impl EmptyNode {
             name: "Empty Node".to_string(),
             input: None,
             output: None,
+            is_input: false,
+            is_output: false,
+        }
+    }
+
+    /// Creates a new instance of the EmptyNode as an input node.
+    pub fn new_input() -> Self {
+        EmptyNode {
+            id: NodeId::new_v4(),
+            name: "Empty Input Node".to_string(),
+            input: None,
+            output: None,
+            is_input: true,
+            is_output: false,
+        }
+    }
+
+    /// Creates a new instance of the EmptyNode as an output node.
+    pub fn new_output() -> Self {
+        EmptyNode {
+            id: NodeId::new_v4(),
+            name: "Empty Output Node".to_string(),
+            input: None,
+            output: None,
+            is_input: false,
+            is_output: true,
         }
     }
 }
@@ -130,14 +158,18 @@ impl Node for EmptyNode {
     }
 
     fn is_input(&self) -> bool {
-        false
+        self.is_input
     }
 
     fn is_output(&self) -> bool {
-        false
+        self.is_output
     }
 
     fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
 }
@@ -149,6 +181,8 @@ impl Clone for EmptyNode {
             name: self.name.clone(),
             input: self.input.clone(),
             output: self.output.clone(),
+            is_input: self.is_input,
+            is_output: self.is_output,
         }
     }
 }

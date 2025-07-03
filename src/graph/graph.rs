@@ -21,7 +21,7 @@ use crate::{
     error::{
         NodeCycleError, NodeNotFoundError, NodeOutputTypeError, PropertyNotFoundError, TrackError,
     },
-    graph::built_in::BufferOutputNode,
+    graph::built_in::EmptyNode,
 };
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
@@ -52,7 +52,7 @@ impl Graph {
     pub fn new(input_node: Box<dyn Node>) -> Self {
         // Create input and output nodes
         let input_id = input_node.get_id();
-        let output_node = Box::new(BufferOutputNode::new());
+        let output_node = Box::new(EmptyNode::new_output());
         let output_id = output_node.get_id();
 
         println!("Output Node ID: {:?}", output_id);

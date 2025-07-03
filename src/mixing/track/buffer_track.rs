@@ -20,7 +20,7 @@ use crate::{
     AudioResampler, AudioSource, Graph, Region, Track, Value,
     audio_utils::{self, Beats},
     error::{TrackError, track::region::InvalidRegionTypeError},
-    graph::built_in::BufferInputNode,
+    graph::built_in::EmptyNode,
     mixing::region::BufferRegion,
 };
 use std::any::Any;
@@ -53,7 +53,7 @@ impl BufferTrack {
             id: 0,
             name: name.to_string(),
             volume: 1.0,
-            graph: Graph::new(Box::new(BufferInputNode::new())),
+            graph: Graph::new(Box::new(EmptyNode::new_input())),
             channels,
             regions: Vec::new(),
             rendered_data: None,
