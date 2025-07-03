@@ -30,7 +30,7 @@ pub struct BufferRegion {
     pub start_time: Beats,
     /// Duration of the region in frames.
     pub duration: Beats,
-    /// Number of samples per beat.
+    /// Samples per beat of the region.
     pub samples_per_beat: f32,
     /// Audio source of the region.
     pub source: Option<AudioSource>,
@@ -116,6 +116,13 @@ impl Region for BufferRegion {
 
     fn duration(&self) -> f32 {
         self.duration
+    }
+
+    fn set_samples_per_beat(&mut self, samples_per_beat: u32) {
+        self.samples_per_beat = samples_per_beat as f32;
+        if let Some(source) = &self.source {
+            self.duration = samples_as_beats(self.samples_per_beat, source.samples());
+        }
     }
 
     fn region_type(&self) -> String {

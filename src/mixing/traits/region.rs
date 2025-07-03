@@ -42,6 +42,9 @@ pub trait Region: Send + Sync + Any {
     /// Sets the duration of the region in beats.
     fn set_duration(&mut self, duration: Beats);
 
+    /// Sets the samples per beat of the region.
+    fn set_samples_per_beat(&mut self, samples_per_beat: u32);
+
     /// Returns the end time of the region in beats.
     fn end_time(&self) -> Beats;
 
