@@ -86,14 +86,6 @@ impl BufferRegion {
             None => Beats::default(),
         };
     }
-
-    /// Scales the region so the samples per beat will be changed.
-    pub fn scale(&mut self, duration: Beats) {
-        self.duration = duration;
-        if let Some(source) = &self.source {
-            self.samples_per_beat = source.samples() as f32 / duration;
-        }
-    }
 }
 
 impl Region for BufferRegion {
@@ -131,6 +123,13 @@ impl Region for BufferRegion {
 
     fn duration(&self) -> f32 {
         self.duration
+    }
+
+    fn scale(&mut self, duration: f32) {
+        self.duration = duration;
+        if let Some(source) = &self.source {
+            self.samples_per_beat = source.samples() as f32 / duration;
+        }
     }
 
     fn region_type(&self) -> String {

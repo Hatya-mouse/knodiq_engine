@@ -48,6 +48,9 @@ pub trait Region: Send + Sync + Any {
     /// Returns the duration of the region in beats.
     fn duration(&self) -> Beats;
 
+    /// Scale the region to a new duration in beats.
+    fn scale(&mut self, duration: Beats);
+
     /// Returns whether the region overlaps with the given area.
     fn is_active_at(&self, start: Beats, end: Beats) -> bool {
         // Check if the chunk overlaps with the region.
