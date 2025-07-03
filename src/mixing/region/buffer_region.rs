@@ -38,7 +38,11 @@ pub struct BufferRegion {
 
 impl BufferRegion {
     /// Creates a new buffer region with the given audio source.
-    pub fn new(name: String, source: Option<AudioSource>, samples_per_beat: f32) -> Self {
+    pub fn new(name: String, source: Option<AudioSource>, tempo: Beats) -> Self {
+        let samples_per_beat = match &source {
+            Some(src) => src.sample_rate as f32 / (tempo as f32 / 60.0),
+            None => 0.0,
+        };
         let duration = match &source {
             Some(src) => samples_as_beats(samples_per_beat, src.samples()),
             None => Beats::default(),
@@ -54,14 +58,13 @@ impl BufferRegion {
     }
 
     /// Creates a new empty buffer region.
-    /// This is useful for representing a region that is not yet filled with audio data.
-    pub fn empty(name: String, samples_per_beat: f32, expected_duration: Beats) -> Self {
+    pub fn empty(name: String) -> Self {
         Self {
             id: 0,
             name,
             start_time: Beats::default(),
-            duration: expected_duration,
-            samples_per_beat,
+            duration: Beats::default(),
+            samples_per_beat: 0.0,
             source: None,
         }
     }
@@ -72,12 +75,24 @@ impl BufferRegion {
     }
 
     /// Sets the audio source of the region.
-    pub fn set_audio_source(&mut self, source: Option<AudioSource>) {
+    pub fn set_audio_source(&mut self, source: Option<AudioSource>, tempo: Beats) {
         self.source = source;
+        self.samples_per_beat = match &self.source {
+            Some(src) => src.sample_rate as f32 / (tempo as f32 / 60.0),
+            None => 0.0,
+        };
         self.duration = match &self.source {
             Some(src) => samples_as_beats(self.samples_per_beat, src.samples()),
             None => Beats::default(),
         };
+    }
+
+    /// Scales the region so the samples per beat will be changed.
+    pub fn scale(&mut self, duration: Beats) {
+        self.duration = duration;
+        if let Some(source) = &self.source {
+            self.samples_per_beat = source.samples() as f32 / duration;
+        }
     }
 }
 
