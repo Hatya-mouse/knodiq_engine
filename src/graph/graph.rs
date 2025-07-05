@@ -323,7 +323,7 @@ impl Graph {
 
         // 3. Get the output of the output node and return it
         match self.get_output_node() {
-            Some(node) => match node.get_output("output") {
+            Some(node) => match node.get_output("audio") {
                 Some(value) => match value.as_buffer() {
                     Ok(buffer) => {
                         // Convert the buffer to AudioSource
@@ -339,7 +339,7 @@ impl Graph {
                 },
                 None => Err(Box::new(PropertyNotFoundError {
                     node_id: self.get_output_node_id(),
-                    property_name: "output".to_string(),
+                    property_name: "audio".to_string(),
                     is_input: false,
                 })),
             },
