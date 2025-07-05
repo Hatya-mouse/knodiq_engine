@@ -276,6 +276,13 @@ impl Track for BufferTrack {
                 }
             };
 
+            println!(
+                "Processed region {}, starting at {}, ending at {}",
+                region.get_id(),
+                start_sample,
+                end_sample
+            );
+
             // Mix the resampled chunk into the mixed audio data
             mixed.mix_at(&resampled_region, 0);
         }
