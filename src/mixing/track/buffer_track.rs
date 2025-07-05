@@ -231,13 +231,13 @@ impl Track for BufferTrack {
             let actual_chunk_size = region.samples_per_beat as f32 * chunk_size;
             // Chunk size (in Region sample rate)
             let mut region_chunk_size =
-                audio_utils::beats_as_samples(region.samples_per_beat as f32, chunk_size);
+                audio_utils::beats_as_samples(region.samples_per_beat as f32, chunk_size) as isize;
             // Increment the residual samples
             self.residual_samples += actual_chunk_size - region_chunk_size as f32;
 
             // If the residual samples number is greater than zero, add it to the chunk size
             if self.residual_samples > 0.0 {
-                region_chunk_size += self.residual_samples.floor() as usize;
+                region_chunk_size += self.residual_samples.floor() as isize;
                 self.residual_samples -= self.residual_samples.floor();
             }
 
@@ -245,19 +245,22 @@ impl Track for BufferTrack {
             // ———————————————————————————————
             // Start sample index of the region (in Region samples per beat) (in global position)
             let region_start =
-                audio_utils::beats_as_samples(region.samples_per_beat as f32, region.start_time);
+                audio_utils::beats_as_samples(region.samples_per_beat as f32, region.start_time)
+                    as isize;
             // Playhead position (in Region samples per beat)
             let region_playhead =
-                audio_utils::beats_as_samples(region.samples_per_beat as f32, playhead);
+                audio_utils::beats_as_samples(region.samples_per_beat as f32, playhead) as isize;
 
             // Calculate the range to slice (in Region samples per beat) (in Region-based position)
-            let start_sample = region_playhead.saturating_sub(region_start);
+            let playhead_offset = region_playhead - region_start;
+            // Clamp the start sample to be non-negative and within the region's data length
+            let start_sample = playhead_offset.max(0) as usize;
             //  |    |    | [ R>E G |I O |N ] |    |    |    |    |    |    |
             // region_start ^  ^    ^ region_playhead + region_chunk_size
             //                 region_playhead
             //
             // >: Playhead, |: Chunk separation
-            let end_sample = (start_sample + region_chunk_size)
+            let end_sample = ((playhead_offset + region_chunk_size).max(0) as usize)
                 .clamp(0, clipped_samples.round() as usize)
                 .min(region_source.data[0].len());
 
