@@ -275,7 +275,7 @@ impl Track for BufferTrack {
 
         // Pass the resampled chunk to the graph input node
         if let Some(input_node) = self.graph.get_input_node_mut() {
-            input_node.set_input("input", Value::from_buffer(mixed.data));
+            input_node.set_input("audio", Value::from_buffer(mixed.data));
         }
 
         // Process the chunk through the graph

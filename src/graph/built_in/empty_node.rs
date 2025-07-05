@@ -47,7 +47,7 @@ impl EmptyNode {
     pub fn new_input() -> Self {
         EmptyNode {
             id: NodeId::new_v4(),
-            name: "Empty Input Node".to_string(),
+            name: "Input Node".to_string(),
             input: None,
             output: None,
             is_input: true,
@@ -59,7 +59,7 @@ impl EmptyNode {
     pub fn new_output() -> Self {
         EmptyNode {
             id: NodeId::new_v4(),
-            name: "Empty Output Node".to_string(),
+            name: "Output Node".to_string(),
             input: None,
             output: None,
             is_input: false,
@@ -83,7 +83,7 @@ impl Node for EmptyNode {
             _ => {
                 err = Some(crate::error::NodeInputTypeError {
                     node_id: self.id.clone(),
-                    input_name: "input".to_string(),
+                    input_name: "audio".to_string(),
                     expected_type: Type::Array(Box::new(Type::Array(Box::new(Type::Float)))),
                     received_type: self
                         .input
@@ -95,7 +95,7 @@ impl Node for EmptyNode {
         };
 
         let mut result = HashMap::new();
-        result.insert("buffer".to_string(), buffer.clone());
+        result.insert("audio".to_string(), buffer.clone());
         self.output = Some(buffer);
 
         if let Some(e) = err {
@@ -106,16 +106,16 @@ impl Node for EmptyNode {
     }
 
     fn get_input_list(&self) -> Vec<String> {
-        vec!["input".to_string()]
+        vec!["audio".to_string()]
     }
 
     fn get_output_list(&self) -> Vec<String> {
-        vec!["output".to_string()]
+        vec!["audio".to_string()]
     }
 
     fn get_input(&self, property: &str) -> Option<Value> {
         match property {
-            "input" => match self.input {
+            "audio" => match self.input {
                 Some(ref input) => Some(input.clone()),
                 None => None,
             },
@@ -125,14 +125,14 @@ impl Node for EmptyNode {
 
     fn set_input(&mut self, property: &str, value: Value) {
         match property {
-            "input" => self.input = Some(value),
+            "audio" => self.input = Some(value),
             _ => (),
         }
     }
 
     fn get_output(&self, output: &str) -> Option<Value> {
         match output {
-            "output" => self.output.clone(),
+            "audio" => self.output.clone(),
             _ => None,
         }
     }
