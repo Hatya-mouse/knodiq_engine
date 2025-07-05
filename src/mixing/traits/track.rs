@@ -122,10 +122,6 @@ pub trait Track: Send + Sync + Any + TrackClone {
     /// - `chunk_size` - The size of the chunk to render.
     /// - `sample_rate` - The sample rate of the audio track.
     /// - `samples_per_beat` - The number of samples per beat at the given sample rate.
-    ///
-    /// # Return
-    /// - `true` The track has finished rendering.
-    /// - `false` The track still has regions or the graph to render.
     fn render_chunk_at(
         &mut self,
         playhead: Beats,
@@ -135,7 +131,7 @@ pub trait Track: Send + Sync + Any + TrackClone {
     );
 
     /// Returns the rendered audio source.
-    fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>>;
+    fn rendered_data(&self) -> Result<&AudioSource, Box<dyn TrackError>>;
 
     fn as_any(&self) -> &dyn Any;
 

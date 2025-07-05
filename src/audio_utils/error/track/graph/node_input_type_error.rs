@@ -20,13 +20,18 @@ use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub struct NodeInputTypeError {
+    pub track_id: u32,
     pub node_id: NodeId,
     pub input_name: String,
     pub expected_type: Type,
     pub received_type: Type,
 }
 
-impl TrackError for NodeInputTypeError {}
+impl TrackError for NodeInputTypeError {
+    fn clone_box(&self) -> Box<dyn TrackError> {
+        Box::new(self.clone())
+    }
+}
 
 impl std::error::Error for NodeInputTypeError {}
 

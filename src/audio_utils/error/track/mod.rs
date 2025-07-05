@@ -17,16 +17,28 @@
 
 pub mod graph;
 pub mod region;
+pub mod unknown_track_error;
 
 pub use graph::{
     node_cycle_error::NodeCycleError, node_input_type_error::NodeInputTypeError,
     node_not_found_error::NodeNotFoundError, node_output_type_error::NodeOutputTypeError,
     property_not_found_error::PropertyNotFoundError, type_error::TypeError,
 };
+pub use region::InvalidRegionTypeError;
+pub use unknown_track_error::UnknownTrackError;
 
 use std::{
     error::Error,
     fmt::{Debug, Display},
 };
 
-pub trait TrackError: Error + Debug + Display + Send + Sync + 'static {}
+pub trait TrackError: Error + Debug + Display + Send + Sync + 'static {
+    fn clone_box(&self) -> Box<dyn TrackError>;
+}
+
+// Implement Clone for Box<dyn TrackError>
+impl Clone for Box<dyn TrackError> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
+}

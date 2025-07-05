@@ -19,9 +19,15 @@ use crate::audio_utils::error::TrackError;
 use std::{error::Error, fmt::Display};
 
 #[derive(Debug, Clone)]
-pub struct NodeCycleError {}
+pub struct NodeCycleError {
+    pub track_id: u32,
+}
 
-impl TrackError for NodeCycleError {}
+impl TrackError for NodeCycleError {
+    fn clone_box(&self) -> Box<dyn TrackError> {
+        Box::new(self.clone())
+    }
+}
 
 impl Error for NodeCycleError {}
 

@@ -18,12 +18,17 @@ use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub struct PropertyNotFoundError {
+    pub track_id: u32,
     pub node_id: NodeId,
     pub property_name: String,
     pub is_input: bool,
 }
 
-impl TrackError for PropertyNotFoundError {}
+impl TrackError for PropertyNotFoundError {
+    fn clone_box(&self) -> Box<dyn TrackError> {
+        Box::new(self.clone())
+    }
+}
 
 impl std::error::Error for PropertyNotFoundError {}
 

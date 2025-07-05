@@ -202,7 +202,7 @@ impl Graph {
     }
 
     /// Sort the node using tolopogical sort
-    pub fn topological_sort(&self) -> Result<Vec<NodeId>, Box<dyn TrackError>> {
+    pub fn topological_sort(&self, track_id: u32) -> Result<Vec<NodeId>, Box<dyn TrackError>> {
         let mut in_degree = HashMap::new();
         let mut adj_list = HashMap::new();
 
@@ -249,7 +249,7 @@ impl Graph {
 
         // Return the error when the cycle is detected
         if sorted.len() != self.nodes.len() {
-            return Err(Box::new(NodeCycleError {}));
+            return Err(Box::new(NodeCycleError { track_id }));
         }
 
         Ok(sorted)
@@ -260,11 +260,12 @@ impl Graph {
         chunk_size: Beats,
         sample_rate: usize,
         tempo: Beats,
+        track_id: u32,
     ) -> Result<(), Box<dyn TrackError>> {
         // Prepare the graph for processing
         // Call prepare() on each node
         for node in self.nodes.iter_mut() {
-            node.prepare(chunk_size, sample_rate, tempo)
+            node.prepare(chunk_size, sample_rate, tempo, track_id)
                 .map_err(|e| -> Box<dyn TrackError> { e })?;
         }
         Ok(())
@@ -283,9 +284,10 @@ impl Graph {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
+        track_id: u32,
     ) -> Result<AudioSource, Box<dyn TrackError>> {
         // 1. Decide the process order using topological sort
-        let sorted_nodes = self.topological_sort()?;
+        let sorted_nodes = self.topological_sort(track_id)?;
 
         // 2. Process nodes in order calculated
         for node_id in sorted_nodes {
@@ -316,7 +318,7 @@ impl Graph {
                     node.set_input(&to_param, value);
                 }
 
-                node.process(sample_rate, channels, chunk_start, chunk_end)
+                node.process(sample_rate, channels, chunk_start, chunk_end, track_id)
                     .map_err(|e| -> Box<dyn TrackError> { e })?;
             }
         }
@@ -331,19 +333,22 @@ impl Graph {
                         Ok(audio_source)
                     }
                     Err(e) => Err(Box::new(NodeOutputTypeError {
+                        track_id,
                         node_id: self.get_output_node_id(),
-                        output_name: "output".to_string(),
+                        output_name: "audio".to_string(),
                         expected_type: e.expected_type,
                         received_type: e.received_type,
                     })),
                 },
                 None => Err(Box::new(PropertyNotFoundError {
+                    track_id,
                     node_id: self.get_output_node_id(),
                     property_name: "audio".to_string(),
                     is_input: false,
                 })),
             },
             None => Err(Box::new(NodeNotFoundError {
+                track_id,
                 node_id: self.get_output_node_id(),
             })),
         }

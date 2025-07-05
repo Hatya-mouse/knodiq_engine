@@ -24,7 +24,11 @@ pub struct InvalidRegionTypeError {
     pub received_type: String,
 }
 
-impl TrackError for InvalidRegionTypeError {}
+impl TrackError for InvalidRegionTypeError {
+    fn clone_box(&self) -> Box<dyn TrackError> {
+        Box::new(self.clone())
+    }
+}
 
 impl Error for InvalidRegionTypeError {}
 

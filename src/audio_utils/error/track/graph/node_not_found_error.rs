@@ -18,12 +18,17 @@
 use crate::{NodeId, error::TrackError};
 use std::{error::Error, fmt::Display};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NodeNotFoundError {
+    pub track_id: u32,
     pub node_id: NodeId,
 }
 
-impl TrackError for NodeNotFoundError {}
+impl TrackError for NodeNotFoundError {
+    fn clone_box(&self) -> Box<dyn TrackError> {
+        Box::new(self.clone())
+    }
+}
 
 impl Error for NodeNotFoundError {}
 

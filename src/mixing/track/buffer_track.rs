@@ -19,7 +19,10 @@
 use crate::{
     AudioResampler, AudioSource, Graph, Region, Track, Value,
     audio_utils::{self, Beats},
-    error::{TrackError, track::region::InvalidRegionTypeError},
+    error::{
+        TrackError,
+        track::{UnknownTrackError, region::InvalidRegionTypeError},
+    },
     graph::built_in::EmptyNode,
     mixing::region::BufferRegion,
 };
@@ -45,6 +48,8 @@ pub struct BufferTrack {
     resamplers: Vec<AudioResampler>,
     /// Residual sample numbers while rendering.
     residual_samples: f32,
+    /// Error that occurred during rendering.
+    render_error: Option<Box<dyn TrackError>>,
 }
 
 impl BufferTrack {
@@ -59,6 +64,7 @@ impl BufferTrack {
             rendered_data: None,
             resamplers: Vec::new(),
             residual_samples: 0.0,
+            render_error: None,
         }
     }
 }
@@ -179,7 +185,8 @@ impl Track for BufferTrack {
         sample_rate: usize,
         tempo: Beats,
     ) -> Result<(), Box<dyn TrackError>> {
-        self.graph.prepare(chunk_size, sample_rate, tempo)?;
+        self.graph
+            .prepare(chunk_size, sample_rate, tempo, self.id)?;
         self.resamplers.resize_with(self.regions.len(), || {
             AudioResampler::new(sample_rate / 100)
         });
@@ -284,21 +291,29 @@ impl Track for BufferTrack {
             self.channels,
             playhead_samples,
             playhead_samples + chunk_size_samples,
+            self.id,
         ) {
             Ok(chunk) => chunk,
             Err(err) => {
-                eprintln!("Error processing chunk: {:?}", err);
-                return;
+                self.render_error = Some(err);
+                AudioSource::zeros(
+                    sample_rate,
+                    self.channels,
+                    playhead_samples + chunk_size_samples,
+                )
             }
         };
 
         self.rendered_data = Some(processed);
     }
 
-    fn rendered_data(&self) -> Result<&AudioSource, Box<dyn std::error::Error>> {
+    fn rendered_data(&self) -> Result<&AudioSource, Box<dyn TrackError>> {
         match self.rendered_data {
             Some(ref data) => Ok(data),
-            None => Err("No rendered data available".into()),
+            None => Err(match self.render_error {
+                Some(ref err) => err.clone(),
+                None => Box::new(UnknownTrackError { track_id: self.id }),
+            }),
         }
     }
 
@@ -323,6 +338,7 @@ impl Clone for BufferTrack {
             rendered_data: None, // Rendered data should be regenerated
             resamplers: Vec::new(),
             residual_samples: self.residual_samples,
+            render_error: self.render_error.clone(),
         }
     }
 }

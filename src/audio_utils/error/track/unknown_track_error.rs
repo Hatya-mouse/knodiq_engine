@@ -1,4 +1,5 @@
-// node_output_type_error.rs
+//
+// Copyright 2025 Shuntaro Kasatani
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,32 +14,25 @@
 // limitations under the License.
 //
 
-use crate::{NodeId, Type, error::TrackError};
-use std::fmt::Display;
+use std::{error::Error, fmt::Display};
+
+use crate::audio_utils::error::track::TrackError;
 
 #[derive(Debug, Clone)]
-pub struct NodeOutputTypeError {
+pub struct UnknownTrackError {
     pub track_id: u32,
-    pub node_id: NodeId,
-    pub output_name: String,
-    pub expected_type: Type,
-    pub received_type: Type,
 }
 
-impl TrackError for NodeOutputTypeError {
+impl TrackError for UnknownTrackError {
     fn clone_box(&self) -> Box<dyn TrackError> {
         Box::new(self.clone())
     }
 }
 
-impl std::error::Error for NodeOutputTypeError {}
+impl Error for UnknownTrackError {}
 
-impl Display for NodeOutputTypeError {
+impl Display for UnknownTrackError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Node {}: Output '{}' expected type '{}', but received type '{}'",
-            self.node_id, self.output_name, self.expected_type, self.received_type
-        )
+        write!(f, "Unknown track with ID: {}", self.track_id)
     }
 }

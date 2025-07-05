@@ -75,6 +75,7 @@ impl Node for EmptyNode {
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
+        track_id: u32,
     ) -> Result<(), Box<dyn crate::error::TrackError>> {
         let mut err = None;
 
@@ -82,6 +83,7 @@ impl Node for EmptyNode {
             Some(Value::Array(array)) => Value::Array(array.clone()),
             _ => {
                 err = Some(crate::error::NodeInputTypeError {
+                    track_id,
                     node_id: self.id.clone(),
                     input_name: "audio".to_string(),
                     expected_type: Type::Array(Box::new(Type::Array(Box::new(Type::Float)))),

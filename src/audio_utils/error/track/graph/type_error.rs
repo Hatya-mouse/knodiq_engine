@@ -22,7 +22,11 @@ pub struct TypeError {
     pub received_type: Type,
 }
 
-impl TrackError for TypeError {}
+impl TrackError for TypeError {
+    fn clone_box(&self) -> Box<dyn TrackError> {
+        Box::new(self.clone())
+    }
+}
 
 impl std::error::Error for TypeError {}
 
