@@ -168,7 +168,6 @@ impl Mixer {
     /// # Arguments
     /// - `output` - The output audio source to save the rendered data. Must be an mutable reference.
     /// - `chunk_duration` - Processing chunk duration in beats.
-    /// - `callback` - Called when the chunk has rendered.
     pub fn process_chunk(&mut self, output: &mut AudioSource, chunk_duration: Beats) {
         let samples_per_beat = self.samples_per_beat();
 
