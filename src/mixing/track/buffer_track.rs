@@ -279,15 +279,9 @@ impl Track for BufferTrack {
                 }
             };
 
-            println!(
-                "Processed region {}, starting at {}, ending at {}",
-                region.get_id(),
-                start_sample,
-                end_sample
-            );
-
             // Mix the resampled chunk into the mixed audio data
-            mixed.mix_at(&resampled_region, 0);
+            let mix_offset = playhead_offset.min(0).abs() as usize;
+            mixed.mix_at(&resampled_region, mix_offset);
         }
 
         // Pass the resampled chunk to the graph input node
