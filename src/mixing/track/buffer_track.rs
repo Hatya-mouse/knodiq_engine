@@ -284,6 +284,12 @@ impl Track for BufferTrack {
             mixed.mix_at(&resampled_region, mix_offset);
         }
 
+        println!(
+            "Rendered samples length: {}, chunk length: {}",
+            mixed.data[0].len(),
+            chunk_size_samples as usize
+        );
+
         // Pass the resampled chunk to the graph input node
         if let Some(input_node) = self.graph.get_input_node_mut() {
             input_node.set_input("audio", Value::from_buffer(mixed.data));
