@@ -225,47 +225,31 @@ impl Track for BufferTrack {
             }
 
             let region_source = region.audio_source().as_ref().unwrap();
-            let clipped_samples = region.duration() as f32 * region.samples_per_beat;
 
-            // Actual chunk size that isn't rounded
-            let actual_chunk_size = region.samples_per_beat as f32 * chunk_size;
-            // Chunk size (in Region sample rate)
-            let mut region_chunk_size =
-                audio_utils::beats_as_samples(region.samples_per_beat as f32, chunk_size) as isize;
-            // Increment the residual samples
-            self.residual_samples += actual_chunk_size - region_chunk_size as f32;
+            // Calculate the relative start and end beats of the region
+            let region_rel_start = playhead - region.start_time;
+            let region_rel_start_clipped = region_rel_start.max(0.0);
+            let region_rel_end = playhead - region.start_time + chunk_size;
 
-            // If the residual samples number is greater than zero, add it to the chunk size
-            if self.residual_samples > 0.0 {
-                region_chunk_size += self.residual_samples.floor() as isize;
-                self.residual_samples -= self.residual_samples.floor();
-            }
+            // Calculate the start and end samples for the region
+            let start_sample =
+                audio_utils::beats_as_samples(region.samples_per_beat, region_rel_start_clipped);
+            let end_sample = audio_utils::beats_as_samples(region.samples_per_beat, region_rel_end)
+                .min(region_source.samples());
 
-            // Calculate the area to be sliced
-            // ———————————————————————————————
-            // Start sample index of the region (in Region samples per beat) (in global position)
-            let region_start =
-                audio_utils::beats_as_samples(region.samples_per_beat as f32, region.start_time)
-                    as isize;
-            // Playhead position (in Region samples per beat)
-            let region_playhead =
-                audio_utils::beats_as_samples(region.samples_per_beat as f32, playhead) as isize;
-
-            // Calculate the range to slice (in Region samples per beat) (in Region-based position)
-            let playhead_offset = region_playhead - region_start;
-            // Clamp the start sample to be non-negative and within the region's data length
-            let start_sample = playhead_offset.max(0) as usize;
-            //  |    |    | [ R>E G |I O |N ] |    |    |    |    |    |    |
-            // region_start ^  ^    ^ region_playhead + region_chunk_size
-            //                 region_playhead
-            //
-            // >: Playhead, |: Chunk separation
-            let end_sample = ((playhead_offset + region_chunk_size).max(0) as usize)
-                .clamp(0, clipped_samples.round() as usize)
-                .min(region_source.data[0].len());
+            // Calculate the gap between the playhead and the region start
+            let playhead_offset = (-region_rel_start).max(0.0);
+            let playhead_offset_samples =
+                audio_utils::beats_as_samples(region.samples_per_beat, playhead_offset);
 
             // Slice the region to get the chunk
-            let mut chunk = AudioSource::new(region_source.sample_rate, self.channels);
+            // To fill the gap, we create a chunk of zeros
+            // and then fill the rest with the region data
+            let mut chunk = AudioSource::zeros(
+                region_source.sample_rate,
+                self.channels,
+                playhead_offset_samples,
+            );
             for ch in 0..self.channels {
                 chunk.data[ch].extend_from_slice(&region_source.data[ch][start_sample..end_sample]);
             }
@@ -280,15 +264,8 @@ impl Track for BufferTrack {
             };
 
             // Mix the resampled chunk into the mixed audio data
-            let mix_offset = playhead_offset.min(0).abs() as usize;
-            mixed.mix_at(&resampled_region, mix_offset);
+            mixed.mix_at(&resampled_region, 0);
         }
-
-        println!(
-            "Rendered samples length: {}, chunk length: {}",
-            mixed.data[0].len(),
-            chunk_size_samples as usize
-        );
 
         // Pass the resampled chunk to the graph input node
         if let Some(input_node) = self.graph.get_input_node_mut() {
