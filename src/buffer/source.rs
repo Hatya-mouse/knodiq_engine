@@ -244,7 +244,11 @@ impl AudioSource {
 
     /// Returns the number of samples in the audio buffer.
     pub fn samples(&self) -> usize {
-        self.data[0].len()
+        if self.data.is_empty() {
+            0
+        } else {
+            self.data[0].len()
+        }
     }
 
     /// Returns the copy of the buffer.
