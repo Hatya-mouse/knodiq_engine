@@ -237,6 +237,13 @@ impl Track for BufferTrack {
             let end_sample = audio_utils::beats_as_samples(region.samples_per_beat, region_rel_end)
                 .min(region_source.samples());
 
+            println!(
+                "Start sample: {}, End sample: {}, Actual chunk samples: {}",
+                start_sample,
+                end_sample,
+                end_sample - start_sample
+            );
+
             // Calculate the gap between the playhead and the region start
             let playhead_offset = (-region_rel_start).max(0.0);
             let playhead_offset_samples =
