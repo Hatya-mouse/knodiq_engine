@@ -46,8 +46,6 @@ pub struct BufferTrack {
     pub rendered_data: Option<AudioSource>,
     /// Resamplers for each regions.
     resamplers: Vec<AudioResampler>,
-    /// Residual sample numbers while rendering.
-    residual_samples: f32,
     /// Error that occurred during rendering.
     render_error: Option<Box<dyn TrackError>>,
 }
@@ -63,7 +61,6 @@ impl BufferTrack {
             regions: Vec::new(),
             rendered_data: None,
             resamplers: Vec::new(),
-            residual_samples: 0.0,
             render_error: None,
         }
     }
@@ -187,17 +184,16 @@ impl Track for BufferTrack {
     ) -> Result<(), Box<dyn TrackError>> {
         self.graph
             .prepare(chunk_size, sample_rate, tempo, self.id)?;
-        self.resamplers.resize_with(self.regions.len(), || {
-            AudioResampler::new(sample_rate / 100)
-        });
+
+        self.resamplers.clear();
         for region in &self.regions {
             self.resamplers
                 .push(AudioResampler::new(audio_utils::beats_as_samples(
                     region.samples_per_beat as f32,
-                    region.start_time,
+                    chunk_size,
                 )));
         }
-        self.residual_samples = 0.0;
+
         Ok(())
     }
 
@@ -241,8 +237,6 @@ impl Track for BufferTrack {
             let playhead_offset = (-region_rel_start).max(0.0);
             let playhead_offset_samples =
                 audio_utils::beats_as_samples(region.samples_per_beat, playhead_offset);
-
-            println!("Playhead offset: {}", playhead_offset);
 
             // Slice the region to get the chunk
             // To fill the gap, we create a chunk of zeros
@@ -335,7 +329,6 @@ impl Clone for BufferTrack {
             regions: self.regions.clone(),
             rendered_data: None, // Rendered data should be regenerated
             resamplers: Vec::new(),
-            residual_samples: self.residual_samples,
             render_error: self.render_error.clone(),
         }
     }
