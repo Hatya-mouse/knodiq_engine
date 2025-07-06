@@ -112,7 +112,7 @@ pub trait Track: Send + Sync + Any + TrackClone {
         &mut self,
         chunk_size: Beats,
         sample_rate: usize,
-        tempo: Beats,
+        samples_per_beat: f32,
     ) -> Result<(), Box<dyn TrackError>>;
 
     /// Renders the specified area of the track.

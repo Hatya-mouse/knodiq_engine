@@ -275,12 +275,14 @@ impl Graph {
     ///
     /// # Arguments
     /// - `sample_rate`: The sample rate of the audio source.
+    /// - `samples_per_beat`: The number of samples per beat at the given sample rate.
     /// - `channels`: The number of channels in the audio source.
     /// - `chunk_start`: The sample index of the first sample in the processing chunk.
     /// - `chunk_end`: The sample index of the last sample in the processing chunk.
     pub fn process(
         &mut self,
         sample_rate: usize,
+        samples_per_beat: f32,
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
@@ -318,8 +320,15 @@ impl Graph {
                     node.set_input(&to_param, value);
                 }
 
-                node.process(sample_rate, channels, chunk_start, chunk_end, track_id)
-                    .map_err(|e| -> Box<dyn TrackError> { e })?;
+                node.process(
+                    sample_rate,
+                    samples_per_beat,
+                    channels,
+                    chunk_start,
+                    chunk_end,
+                    track_id,
+                )
+                .map_err(|e| -> Box<dyn TrackError> { e })?;
             }
         }
 

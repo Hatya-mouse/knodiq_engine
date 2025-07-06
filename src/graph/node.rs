@@ -27,12 +27,15 @@ pub trait Node: Send + Sync + Any + NodeClone {
     ///
     /// # Arguments
     /// - `sample_rate`: The sample rate of the audio data
+    /// - `samples_per_beat`: The number of samples per beat at the given sample rate
     /// - `channels`: The number of audio channels
     /// - `chunk_start`: The start sample index of the chunk to process
     /// - `chunk_end`: The end sample index of the chunk to process
+    /// - `track_id`: The ID of the track this node belongs to
     fn process(
         &mut self,
         sample_rate: usize,
+        samples_per_beat: f32,
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,
@@ -47,12 +50,13 @@ pub trait Node: Send + Sync + Any + NodeClone {
     /// # Arguments
     /// - `chunk_size`: The size of the chunk to process, in beats.
     /// - `sample_rate`: The sample rate.
-    /// - `tempo`: The tempo of the audio data, in beats per minute.
+    /// - `samples_per_beat`: The number of samples per beat at the given sample rate.
+    /// - `track_id`: The ID of the track this node belongs to.
     fn prepare(
         &mut self,
         _chunk_size: Beats,
         _sample_rate: usize,
-        _tempo: Beats,
+        _samples_per_beat: f32,
         _track_id: u32,
     ) -> Result<(), Box<dyn crate::error::TrackError>> {
         Ok(())

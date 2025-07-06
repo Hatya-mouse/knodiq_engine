@@ -72,6 +72,7 @@ impl Node for EmptyNode {
     fn process(
         &mut self,
         _sample_rate: usize,
+        _samples_per_beat: f32,
         channels: usize,
         chunk_start: usize,
         chunk_end: usize,

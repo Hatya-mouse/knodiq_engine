@@ -292,6 +292,7 @@ impl Track for BufferTrack {
         // Process the chunk through the graph
         let processed = match self.graph.process(
             sample_rate,
+            samples_per_beat,
             self.channels,
             playhead_samples,
             playhead_samples + chunk_size_samples,
