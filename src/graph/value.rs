@@ -197,20 +197,11 @@ impl Add<Sample> for Value {
     }
 }
 
-impl Add<&Sample> for Value {
-    type Output = Value;
-
-    fn add(self, other: &f32) -> Self::Output {
-        self.apply_op(&Value::Float(*other), |a, b| a + b)
-            .unwrap_or(Value::Float(0.0))
-    }
-}
-
-impl Add<Value> for &Sample {
+impl Add<Value> for Sample {
     type Output = Value;
 
     fn add(self, other: Value) -> Self::Output {
-        Value::Float(*self)
+        Value::Float(self)
             .apply_op(&other, |a, b| a + b)
             .unwrap_or(Value::Float(0.0))
     }
@@ -234,20 +225,11 @@ impl Sub<Sample> for Value {
     }
 }
 
-impl Sub<&Sample> for Value {
-    type Output = Value;
-
-    fn sub(self, other: &f32) -> Self::Output {
-        self.apply_op(&Value::Float(*other), |a, b| a - b)
-            .unwrap_or(Value::Float(0.0))
-    }
-}
-
-impl Sub<Value> for &Sample {
+impl Sub<Value> for Sample {
     type Output = Value;
 
     fn sub(self, other: Value) -> Self::Output {
-        Value::Float(*self)
+        Value::Float(self)
             .apply_op(&other, |a, b| a - b)
             .unwrap_or(Value::Float(0.0))
     }
@@ -271,20 +253,11 @@ impl Mul<Sample> for Value {
     }
 }
 
-impl Mul<&Sample> for Value {
-    type Output = Value;
-
-    fn mul(self, other: &f32) -> Self::Output {
-        self.apply_op(&Value::Float(*other), |a, b| a * b)
-            .unwrap_or(Value::Float(0.0))
-    }
-}
-
-impl Mul<Value> for &Sample {
+impl Mul<Value> for Sample {
     type Output = Value;
 
     fn mul(self, other: Value) -> Self::Output {
-        Value::Float(*self)
+        Value::Float(self)
             .apply_op(&other, |a, b| a * b)
             .unwrap_or(Value::Float(0.0))
     }
@@ -317,19 +290,7 @@ impl Div<Sample> for Value {
     }
 }
 
-impl Div<&Sample> for Value {
-    type Output = Value;
-
-    fn div(self, other: &f32) -> Self::Output {
-        if *other == 0.0 {
-            return Value::Float(0.0); // Handle division by zero
-        }
-        self.apply_op(&Value::Float(*other), |a, b| a / b)
-            .unwrap_or(Value::Float(0.0))
-    }
-}
-
-impl Div<Value> for &Sample {
+impl Div<Value> for Sample {
     type Output = Value;
 
     fn div(self, other: Value) -> Self::Output {
@@ -338,7 +299,7 @@ impl Div<Value> for &Sample {
                 return Value::Float(0.0); // Handle division by zero
             }
         }
-        Value::Float(*self)
+        Value::Float(self)
             .apply_op(&other, |a, b| a / b)
             .unwrap_or(Value::Float(0.0))
     }
@@ -359,19 +320,19 @@ impl Rem for Value {
     }
 }
 
-impl Rem<&Sample> for Value {
+impl Rem<Sample> for Value {
     type Output = Value;
 
-    fn rem(self, other: &f32) -> Self::Output {
-        if *other == 0.0 {
+    fn rem(self, other: f32) -> Self::Output {
+        if other == 0.0 {
             return Value::Float(0.0); // Handle division by zero
         }
-        self.apply_op(&Value::Float(*other), |a, b| a % b)
+        self.apply_op(&Value::Float(other), |a, b| a % b)
             .unwrap_or(Value::Float(0.0))
     }
 }
 
-impl Rem<Value> for &Sample {
+impl Rem<Value> for Sample {
     type Output = Value;
 
     fn rem(self, other: Value) -> Self::Output {
@@ -380,7 +341,7 @@ impl Rem<Value> for &Sample {
                 return Value::Float(0.0); // Handle division by zero
             }
         }
-        Value::Float(*self)
+        Value::Float(self)
             .apply_op(&other, |a, b| a % b)
             .unwrap_or(Value::Float(0.0))
     }
