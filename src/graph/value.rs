@@ -16,6 +16,8 @@
 // limitations under the License.
 //
 
+use std::ops::{Add, Div, Mul, Sub};
+
 use crate::{AudioBuffer, Sample, Type, error::TypeError};
 use serde::{Deserialize, Serialize};
 
@@ -174,5 +176,47 @@ impl Value {
                 None => Type::Float,
             })),
         }
+    }
+}
+
+impl Mul for Value {
+    type Output = Value;
+
+    fn mul(self, other: Self) -> Self::Output {
+        self.apply_op(&other, |a, b| a * b)
+            .unwrap_or(Value::Float(0.0))
+    }
+}
+
+impl Sub for Value {
+    type Output = Value;
+
+    fn sub(self, other: Self) -> Self::Output {
+        self.apply_op(&other, |a, b| a - b)
+            .unwrap_or(Value::Float(0.0))
+    }
+}
+
+impl Add for Value {
+    type Output = Value;
+
+    fn add(self, other: Self) -> Self::Output {
+        self.apply_op(&other, |a, b| a + b)
+            .unwrap_or(Value::Float(0.0))
+    }
+}
+
+impl Div for Value {
+    type Output = Value;
+
+    fn div(self, other: Self) -> Self::Output {
+        self.apply_op(&other, |a, b| {
+            if b == 0.0 {
+                0.0 // Handle division by zero
+            } else {
+                a / b
+            }
+        })
+        .unwrap_or(Value::Float(0.0))
     }
 }
