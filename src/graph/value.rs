@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 
 use crate::{AudioBuffer, Sample, Type, error::TypeError};
 use serde::{Deserialize, Serialize};
@@ -301,6 +301,48 @@ impl Div<Value> for Sample {
         }
         Value::Float(self)
             .apply_op(&other, |a, b| a / b)
+            .unwrap_or(Value::Float(0.0))
+    }
+}
+
+impl Rem for Value {
+    type Output = Value;
+
+    fn rem(self, other: Self) -> Self::Output {
+        self.apply_op(&other, |a, b| {
+            if b == 0.0 {
+                0.0 // Handle division by zero
+            } else {
+                a % b
+            }
+        })
+        .unwrap_or(Value::Float(0.0))
+    }
+}
+
+impl Rem<Sample> for Value {
+    type Output = Value;
+
+    fn rem(self, other: f32) -> Self::Output {
+        if other == 0.0 {
+            return Value::Float(0.0); // Handle division by zero
+        }
+        self.apply_op(&Value::Float(other), |a, b| a % b)
+            .unwrap_or(Value::Float(0.0))
+    }
+}
+
+impl Rem<Value> for Sample {
+    type Output = Value;
+
+    fn rem(self, other: Value) -> Self::Output {
+        if let Value::Float(b) = other {
+            if b == 0.0 {
+                return Value::Float(0.0); // Handle division by zero
+            }
+        }
+        Value::Float(self)
+            .apply_op(&other, |a, b| a % b)
             .unwrap_or(Value::Float(0.0))
     }
 }
