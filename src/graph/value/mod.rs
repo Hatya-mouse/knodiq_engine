@@ -1,4 +1,3 @@
-// graph/mod.rs
 //
 // Copyright 2025 Shuntaro Kasatani
 //
@@ -15,13 +14,9 @@
 // limitations under the License.
 //
 
-pub mod built_in;
-pub mod connector;
-pub mod graph;
-pub mod node;
-pub mod value;
+mod value;
+mod value_impl;
+mod value_type;
 
-pub use connector::Connector;
-pub use graph::{Graph, NodeId};
-pub use node::Node;
-pub use value::{Type, Value};
+pub use value::Value;
+pub use value_type::Type;

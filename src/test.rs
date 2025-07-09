@@ -84,14 +84,86 @@ mod tests {
 
     #[test]
     fn test_value_apply_op() {
-        let a = Value::Float(10.0);
-        let b = Value::Float(3.0);
-        let result = a.apply_op(&b, |x, y| x + y).unwrap();
+        let a = Value::Array(vec![Value::Array(vec![
+            Value::Float(1.0),
+            Value::Float(2.0),
+        ])]);
+        let b = Value::Array(vec![
+            Value::Array(vec![Value::Float(3.0), Value::Float(4.0)]),
+            Value::Array(vec![Value::Float(5.0), Value::Float(6.0)]),
+            Value::Array(vec![Value::Float(7.0), Value::Float(8.0)]),
+        ]);
+        let expected = Value::Array(vec![
+            Value::Array(vec![Value::Float(4.0), Value::Float(6.0)]),
+            Value::Array(vec![Value::Float(6.0), Value::Float(8.0)]),
+            Value::Array(vec![Value::Float(8.0), Value::Float(10.0)]),
+        ]);
 
-        match result {
-            Value::Float(f) => assert_eq!(f, 13.0),
-            _ => panic!("Expected Value::Float"),
-        }
+        test_apply_op(a, b, expected);
+
+        let a = Value::Array(vec![Value::Float(2.0)]);
+        let b = Value::Array(vec![
+            Value::Array(vec![
+                Value::Float(3.0),
+                Value::Float(4.0),
+                Value::Float(5.0),
+            ]),
+            Value::Array(vec![
+                Value::Float(5.0),
+                Value::Float(6.0),
+                Value::Float(7.0),
+            ]),
+        ]);
+        let expected = Value::Array(vec![
+            Value::Array(vec![
+                Value::Float(5.0),
+                Value::Float(6.0),
+                Value::Float(7.0),
+            ]),
+            Value::Array(vec![
+                Value::Float(7.0),
+                Value::Float(8.0),
+                Value::Float(9.0),
+            ]),
+        ]);
+
+        test_apply_op(a, b, expected);
+
+        let a = Value::Array(vec![
+            Value::Array(vec![Value::Float(1.0)]),
+            Value::Array(vec![Value::Float(2.0)]),
+        ]);
+        let b = Value::Array(vec![
+            Value::Array(vec![
+                Value::Float(1.0),
+                Value::Float(2.0),
+                Value::Float(3.0),
+            ]),
+            Value::Array(vec![
+                Value::Float(1.0),
+                Value::Float(2.0),
+                Value::Float(5.0),
+            ]),
+        ]);
+        let expected = Value::Array(vec![
+            Value::Array(vec![
+                Value::Float(2.0),
+                Value::Float(3.0),
+                Value::Float(4.0),
+            ]),
+            Value::Array(vec![
+                Value::Float(3.0),
+                Value::Float(4.0),
+                Value::Float(7.0),
+            ]),
+        ]);
+
+        test_apply_op(a, b, expected);
+    }
+
+    fn test_apply_op(a: Value, b: Value, expected: Value) {
+        let result = Value::apply_op(&[&a, &b], |s| s[0] + s[1]).unwrap();
+        assert_eq!(result, expected);
     }
 
     #[test]

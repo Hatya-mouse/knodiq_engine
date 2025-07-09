@@ -273,9 +273,6 @@ impl Clone for AudioSource {
 }
 
 /// Merge the output buffer with the decoded audio buffer ref.
-/// ```
-/// | ** Output Buffer ** | <-Merge-- | ** Decoded AudioBufferRef ** |
-/// ```
 fn merge_buffer(
     output_buffer: &mut Vec<Vec<Sample>>,
     decoded: AudioBufferRef,
