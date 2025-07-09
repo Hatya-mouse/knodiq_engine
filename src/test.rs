@@ -159,6 +159,34 @@ mod tests {
         ]);
 
         test_apply_op(a, b, expected);
+
+        let a = Value::Float(2.0);
+        let b = Value::Array(vec![
+            Value::Array(vec![
+                Value::Float(1.0),
+                Value::Float(2.0),
+                Value::Float(3.0),
+            ]),
+            Value::Array(vec![
+                Value::Float(1.0),
+                Value::Float(2.0),
+                Value::Float(5.0),
+            ]),
+        ]);
+        let expected = Value::Array(vec![
+            Value::Array(vec![
+                Value::Float(3.0),
+                Value::Float(4.0),
+                Value::Float(5.0),
+            ]),
+            Value::Array(vec![
+                Value::Float(3.0),
+                Value::Float(4.0),
+                Value::Float(7.0),
+            ]),
+        ]);
+
+        test_apply_op(a, b, expected);
     }
 
     fn test_apply_op(a: Value, b: Value, expected: Value) {

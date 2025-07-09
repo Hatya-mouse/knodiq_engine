@@ -191,9 +191,9 @@ impl Value {
                 // If the value is a single float, we create an array of the specified shape filled with that float
                 if !shape.is_empty() {
                     let mut shape_iter = shape.iter();
-                    let mut array = vec![Value::Float(*sample); *shape_iter.next().unwrap()];
+                    let mut array = vec![Value::Float(*sample); *shape_iter.next_back().unwrap()];
                     // If the shape is not empty, we wrap the array in another array to match the shape
-                    while let Some(dim) = shape_iter.next() {
+                    while let Some(dim) = shape_iter.next_back() {
                         array = vec![Value::Array(array); *dim];
                     }
                     Some(Value::Array(array))
