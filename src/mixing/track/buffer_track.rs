@@ -204,6 +204,8 @@ impl Track for BufferTrack {
         sample_rate: usize,
         samples_per_beat: f32,
     ) {
+        self.render_error = None;
+
         // Mixed audio data for the chunk
         let playhead_samples = audio_utils::beats_as_samples(samples_per_beat, playhead);
         let chunk_size_samples = audio_utils::beats_as_samples(samples_per_beat, chunk_size);
@@ -292,12 +294,11 @@ impl Track for BufferTrack {
     }
 
     fn rendered_data(&self) -> Result<&AudioSource, Box<dyn TrackError>> {
-        match self.rendered_data {
-            Some(ref data) => Ok(data),
-            None => Err(match self.render_error {
-                Some(ref err) => err.clone(),
-                None => Box::new(UnknownTrackError { track_id: self.id }),
-            }),
+        match self.render_error {
+            Some(ref error) => Err(error.clone()),
+            None => Ok(self.rendered_data.as_ref().ok_or_else(|| {
+                Box::new(UnknownTrackError { track_id: self.id }) as Box<dyn TrackError>
+            })?),
         }
     }
 
