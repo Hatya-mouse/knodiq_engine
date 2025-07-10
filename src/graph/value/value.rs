@@ -87,9 +87,9 @@ impl Value {
 
         // Calculate the target shape by taking the maximum dimensions from all shapes
         let mut target_shape = vec![];
-        for shape in shapes {
+        for shape in shapes.iter().rev() {
             if shape.len() > target_shape.len() {
-                target_shape = shape;
+                target_shape = shape.clone();
             } else if shape.len() == target_shape.len() {
                 for (i, dim) in shape.iter().enumerate() {
                     if *dim > target_shape[i] {
