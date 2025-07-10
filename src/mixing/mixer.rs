@@ -149,7 +149,10 @@ impl Mixer {
 
             for sample in start_sample..end_sample {
                 for channel in 0..self.channels {
-                    if !callback(output.data[channel][sample], self.playhead_beats) {
+                    let callback_result =
+                        callback(output.data[channel][sample], self.playhead_beats);
+                    println!("Callback result: {}", callback_result);
+                    if !callback_result {
                         return output;
                     }
                 }
