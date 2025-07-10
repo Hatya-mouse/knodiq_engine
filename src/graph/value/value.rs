@@ -16,6 +16,8 @@
 // limitations under the License.
 //
 
+use std::sync::Arc;
+
 use crate::{AudioBuffer, Sample, Type, error::TypeError};
 use serde::{Deserialize, Serialize};
 
@@ -217,22 +219,22 @@ impl Value {
                     }
                 }
 
-                let resized = Value::Array(new_vec).resize_val(shape);
+                let resized = Value::resize_val(Value::Array(new_vec), shape);
 
                 return resized;
             }
         }
     }
 
-    pub fn resize_val(&self, shape: Vec<usize>) -> Option<Value> {
-        Some(match self {
-            Value::Float(_) => self.clone(),
+    pub fn resize_val(value: Value, shape: Vec<usize>) -> Option<Value> {
+        Some(match value {
+            Value::Float(_) => value,
             Value::Array(vec) => {
                 let mut result = vec![];
                 let mut resized = vec![];
 
                 if vec.len() == shape[0] {
-                    resized.extend(vec.clone());
+                    resized.extend(vec);
                 } else if vec.len() == 1 {
                     resized.resize(shape[0], vec[0].clone());
                 } else {
@@ -242,7 +244,7 @@ impl Value {
                 let rest = shape[1..].to_vec();
 
                 for value in resized {
-                    match value.resize_val(rest.clone()) {
+                    match Value::resize_val(value, rest.clone()) {
                         Some(resized_inner) => result.push(resized_inner),
                         None => return None,
                     }
