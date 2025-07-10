@@ -222,6 +222,28 @@ impl AudioSource {
         }
     }
 
+    pub fn set_data(&mut self, data: AudioBuffer) {
+        self.channels = data.len();
+        self.data = data;
+    }
+
+    /// Slice the audio buffer to keep only the samples between `start` and `end`.
+    pub fn slice(&mut self, start: usize, end: usize) {
+        // Ensure the slice is within bounds
+        if start < end && end <= self.samples() {
+            for channel in self.data.iter_mut() {
+                *channel = channel[start..end].to_vec();
+            }
+        }
+    }
+
+    /// Pad the audio buffer with zeros to the specified length.
+    pub fn pad(&mut self, length: usize) {
+        for channel in &mut self.data {
+            channel.resize(length, 0.0);
+        }
+    }
+
     /// Normalize the audio buffer to maximize sample value.
     pub fn normalize(&mut self) {
         // Find the maximum absolute value across all channels

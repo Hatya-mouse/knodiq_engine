@@ -265,6 +265,13 @@ impl Track for BufferTrack {
             mixed.mix_at(&resampled_region, 0);
         }
 
+        if mixed.samples() > chunk_size_samples {
+            mixed.slice(0, chunk_size_samples);
+        } else if mixed.samples() < chunk_size_samples {
+            // If the mixed data is shorter than the chunk size, pad it with zeros
+            mixed.pad(chunk_size_samples - mixed.samples());
+        }
+
         // Pass the resampled chunk to the graph input node
         if let Some(input_node) = self.graph.get_input_node_mut() {
             input_node.set_input("audio", Value::from_buffer(mixed.data));

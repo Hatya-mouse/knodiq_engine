@@ -16,8 +16,6 @@
 // limitations under the License.
 //
 
-use std::sync::Arc;
-
 use crate::{AudioBuffer, Sample, Type, error::TypeError};
 use serde::{Deserialize, Serialize};
 
