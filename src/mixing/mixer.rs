@@ -151,7 +151,6 @@ impl Mixer {
                 for channel in 0..self.channels {
                     let callback_result =
                         callback(output.data[channel][sample], self.playhead_beats);
-                    println!("Callback result: {}", callback_result);
                     if !callback_result {
                         return output;
                     }
