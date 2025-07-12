@@ -48,6 +48,8 @@ pub struct BufferTrack {
     resamplers: Vec<AudioResampler>,
     /// Error that occurred during rendering.
     render_error: Option<Box<dyn TrackError>>,
+    /// Original mixed data before processing.
+    original_mixed_data: Option<AudioSource>,
 }
 
 impl BufferTrack {
@@ -62,6 +64,7 @@ impl BufferTrack {
             rendered_data: None,
             resamplers: Vec::new(),
             render_error: None,
+            original_mixed_data: None,
         }
     }
 }
@@ -265,20 +268,23 @@ impl Track for BufferTrack {
             mixed.mix_at(&resampled_region, 0);
         }
 
-        if mixed.samples() > chunk_size_samples {
-            mixed.slice(0, chunk_size_samples);
-        } else if mixed.samples() < chunk_size_samples {
-            // If the mixed data is shorter than the chunk size, pad it with zeros
-            mixed.pad(chunk_size_samples - mixed.samples());
+        match self.original_mixed_data.as_mut() {
+            Some(original) => original.mix_at(&mixed, playhead_samples),
+            None => self.original_mixed_data = Some(mixed.clone()),
         }
+
+        let original_mixed_data = self.original_mixed_data.as_ref().expect("IMPOSSIBLE");
 
         // Pass the resampled chunk to the graph input node
         if let Some(input_node) = self.graph.get_input_node_mut() {
-            input_node.set_input("audio", Value::from_buffer(mixed.data));
+            input_node.set_input(
+                "audio",
+                Value::from_buffer(original_mixed_data.data.clone()),
+            );
         }
 
         // Process the chunk through the graph
-        let processed = match self.graph.process(
+        let mut processed = match self.graph.process(
             sample_rate,
             samples_per_beat,
             self.channels,
@@ -296,6 +302,13 @@ impl Track for BufferTrack {
                 )
             }
         };
+
+        if processed.samples() > chunk_size_samples {
+            processed.slice(0, chunk_size_samples);
+        } else if processed.samples() < chunk_size_samples {
+            // If the mixed data is shorter than the chunk size, pad it with zeros
+            processed.pad(chunk_size_samples - processed.samples());
+        }
 
         self.rendered_data = Some(processed);
     }
@@ -330,6 +343,7 @@ impl Clone for BufferTrack {
             rendered_data: None, // Rendered data should be regenerated
             resamplers: Vec::new(),
             render_error: self.render_error.clone(),
+            original_mixed_data: self.original_mixed_data.clone(),
         }
     }
 }

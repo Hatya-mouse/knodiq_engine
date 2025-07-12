@@ -202,7 +202,7 @@ impl AudioSource {
     ///
     /// # Arguments
     /// - `other` - The other audio source to mix with.
-    /// - `at` - The duration at which to mix the audio buffers.
+    /// - `at` - The duration at which to mix the audio buffers in samples.
     pub fn mix_at(&mut self, other: &AudioSource, offset: usize) {
         // Instead of cloning the entire audio source, we'll mix directly
         for (channel_index, other_channel) in other.data.iter().enumerate() {

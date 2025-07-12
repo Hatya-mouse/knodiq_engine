@@ -19,7 +19,7 @@
 use crate::{AudioSource, Sample, Track, audio_utils, error::TrackError};
 use audio_utils::Beats;
 
-const CHUNK_BEATS: Beats = 2.0;
+const CHUNK_BEATS: Beats = 1.0;
 
 pub struct Mixer {
     /// Tracks to be mixed.
