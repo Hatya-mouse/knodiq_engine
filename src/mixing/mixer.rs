@@ -16,7 +16,11 @@
 // limitations under the License.
 //
 
-use crate::{AudioSource, Sample, Track, audio_utils, error::TrackError};
+use crate::{
+    AudioSource, Sample, Track,
+    audio_utils::{self, samples_as_beats},
+    error::TrackError,
+};
 use audio_utils::Beats;
 
 const CHUNK_BEATS: Beats = 1.0;
@@ -145,12 +149,13 @@ impl Mixer {
             // Call the callback function for only the newly rendered chunk
             let start_sample =
                 audio_utils::beats_as_samples(self.samples_per_beat(), self.playhead_beats);
-            let end_sample = (start_sample + chunk_size).min(output.data[0].len());
+            let end_sample = (start_sample + chunk_size).min(output.samples());
 
             for sample in start_sample..end_sample {
+                let current_playhead = samples_as_beats(self.samples_per_beat(), sample);
+
                 for channel in 0..self.channels {
-                    let callback_result =
-                        callback(output.data[channel][sample], self.playhead_beats);
+                    let callback_result = callback(output.data[channel][sample], current_playhead);
                     if !callback_result {
                         return output;
                     }
