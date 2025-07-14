@@ -25,6 +25,15 @@ pub enum Type {
     None,
 }
 
+impl Type {
+    pub fn get_depth(&self) -> usize {
+        match self {
+            Type::Int | Type::Float | Type::None => 0,
+            Type::Array(t) => 1 + t.get_depth(),
+        }
+    }
+}
+
 impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -37,5 +46,24 @@ impl Display for Type {
                 Type::None => "None".to_string(),
             }
         )
+    }
+}
+
+pub fn type_of(left: &Type, right: &Type) -> Type {
+    if left == right {
+        return left.clone();
+    }
+
+    if left.get_depth() > right.get_depth() {
+        return left.clone();
+    } else if right.get_depth() > left.get_depth() {
+        return right.clone();
+    } else {
+        match (left, right) {
+            (Type::Int, Type::Float) => Type::Float,
+            (Type::Float, Type::Int) => Type::Float,
+            (Type::Array(l), Type::Array(r)) => Type::Array(Box::new(type_of(l, r))),
+            _ => Type::None,
+        }
     }
 }

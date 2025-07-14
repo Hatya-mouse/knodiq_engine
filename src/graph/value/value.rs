@@ -45,7 +45,7 @@ impl Value {
         F: Fn(Sample) -> Sample + Clone,
     {
         match self {
-            Value::Int(_) => None,
+            Value::Int(v) => Some(Value::Int(f(*v as Sample) as i32)),
             Value::Float(sample) => Some(Value::Float(f(*sample))),
             Value::Array(vector) => {
                 // let processed_samples: Vec<Vec<Sample>> = buffer

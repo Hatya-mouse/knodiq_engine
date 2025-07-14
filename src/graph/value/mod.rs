@@ -19,4 +19,4 @@ mod value_impl;
 mod value_type;
 
 pub use value::Value;
-pub use value_type::Type;
+pub use value_type::{Type, type_of};
