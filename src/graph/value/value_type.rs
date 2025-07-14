@@ -54,16 +54,17 @@ pub fn type_of(left: &Type, right: &Type) -> Type {
         return left.clone();
     }
 
-    if left.get_depth() > right.get_depth() {
-        return left.clone();
-    } else if right.get_depth() > left.get_depth() {
-        return right.clone();
-    } else {
-        match (left, right) {
-            (Type::Int, Type::Float) => Type::Float,
-            (Type::Float, Type::Int) => Type::Float,
-            (Type::Array(l), Type::Array(r)) => Type::Array(Box::new(type_of(l, r))),
-            _ => Type::None,
+    match (left, right) {
+        (Type::Int, Type::Float) | (Type::Float, Type::Int) => Type::Float,
+        (Type::Array(l), Type::Array(r)) => Type::Array(Box::new(type_of(l, r))),
+        _ => {
+            if left.get_depth() > right.get_depth() {
+                left.clone()
+            } else if right.get_depth() > left.get_depth() {
+                right.clone()
+            } else {
+                Type::None
+            }
         }
     }
 }
