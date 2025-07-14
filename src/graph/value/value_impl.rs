@@ -20,6 +20,7 @@ use std::{fmt::Display, ops::Add, ops::Div, ops::Mul, ops::Rem, ops::Sub};
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Value::Int(i) => write!(f, "{}", i),
             Value::Float(sample) => write!(f, "{}", sample),
             Value::Array(vec) => {
                 let inner = vec

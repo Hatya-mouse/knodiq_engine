@@ -19,6 +19,7 @@ use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Type {
+    Int,
     Float,
     Array(Box<Type>),
     None,
@@ -30,6 +31,7 @@ impl Display for Type {
             f,
             "{}",
             match self {
+                Type::Int => "Int".to_string(),
                 Type::Float => "Float".to_string(),
                 Type::Array(t) => format!("[{}]", t),
                 Type::None => "None".to_string(),

@@ -21,6 +21,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Value {
+    /// Represents an integer value.
+    Int(i32),
     /// Represents a floating-point value.
     Float(Sample),
     /// Represents an array of floating-point values.
@@ -43,6 +45,7 @@ impl Value {
         F: Fn(Sample) -> Sample + Clone,
     {
         match self {
+            Value::Int(_) => None,
             Value::Float(sample) => Some(Value::Float(f(*sample))),
             Value::Array(vector) => {
                 // let processed_samples: Vec<Vec<Sample>> = buffer
@@ -53,6 +56,7 @@ impl Value {
                 let processed_array: Vec<Value> = vector
                     .iter()
                     .map(|value| match value {
+                        Value::Int(_) => value.clone(),
                         Value::Float(sample) => Value::Float(f(*sample)),
                         Value::Array(vec) => {
                             // Recursively call apply_fn to inner arrays
@@ -132,6 +136,20 @@ impl Value {
 
         // If all values are of the same type and shape, we can apply the operation
         match first_type {
+            Type::Int => {
+                // If the type is Int, we can apply the operation directly
+                let samples: Vec<Sample> = args
+                    .iter()
+                    .filter_map(|arg| match arg {
+                        Value::Int(sample) => Some(*sample as Sample),
+                        _ => None,
+                    })
+                    .collect();
+                if samples.is_empty() {
+                    return None;
+                }
+                Some(Value::Float(f(&samples)))
+            }
             Type::Float => {
                 // If the type is Float, we can apply the operation directly
                 let samples: Vec<Sample> = args
@@ -187,6 +205,20 @@ impl Value {
 
     pub fn reshape(v: &Value, shape: Vec<usize>) -> Option<Value> {
         match v {
+            Value::Int(sample) => {
+                // If the value is an integer, we create an array of the specified shape filled with that integer
+                if !shape.is_empty() {
+                    let mut shape_iter = shape.iter();
+                    let mut array = vec![Value::Int(*sample); *shape_iter.next_back().unwrap()];
+                    // If the shape is not empty, we wrap the array in another array to match the shape
+                    while let Some(dim) = shape_iter.next_back() {
+                        array = vec![Value::Array(array); *dim];
+                    }
+                    Some(Value::Array(array))
+                } else {
+                    Some(Value::Int(*sample))
+                }
+            }
             Value::Float(sample) => {
                 // If the value is a single float, we create an array of the specified shape filled with that float
                 if !shape.is_empty() {
@@ -226,6 +258,18 @@ impl Value {
 
     pub fn resize_val(value: Value, shape: Vec<usize>) -> Option<Value> {
         Some(match value {
+            Value::Int(_) => {
+                // If the value is an integer, we create an array of the specified shape filled with that integer
+                if shape.is_empty() {
+                    value
+                } else {
+                    let mut array = vec![value; shape[0]];
+                    for dim in &shape[1..] {
+                        array = vec![Value::Array(array); *dim];
+                    }
+                    Value::Array(array)
+                }
+            }
             Value::Float(_) => value,
             Value::Array(vec) => {
                 let mut result = vec![];
@@ -265,6 +309,10 @@ impl Value {
     /// Converts the value into an audio buffer, if possible.
     pub fn as_buffer(&self) -> Result<AudioBuffer, TypeError> {
         match self {
+            Value::Int(_) => Err(TypeError {
+                expected_type: Type::Array(Box::new(Type::Array(Box::new(Type::Float)))),
+                received_type: Type::Int,
+            }),
             Value::Float(_) => Err(TypeError {
                 expected_type: Type::Array(Box::new(Type::Array(Box::new(Type::Float)))),
                 received_type: Type::Float,
@@ -273,6 +321,14 @@ impl Value {
                 let mut buffer = AudioBuffer::new();
                 for value in vector {
                     match value {
+                        Value::Int(_) => {
+                            return Err(TypeError {
+                                expected_type: Type::Array(Box::new(Type::Array(Box::new(
+                                    Type::Float,
+                                )))),
+                                received_type: Type::Int,
+                            });
+                        }
                         Value::Float(_) => {
                             return Err(TypeError {
                                 expected_type: Type::Array(Box::new(Type::Array(Box::new(
@@ -301,6 +357,7 @@ impl Value {
 
     pub fn get_type(&self) -> Type {
         match self {
+            Value::Int(_) => Type::Int,
             Value::Float(_) => Type::Float,
             Value::Array(vec) => Type::Array(Box::new(match vec.first() {
                 Some(val) => val.get_type(),
@@ -311,6 +368,7 @@ impl Value {
 
     pub fn get_shape(&self) -> Vec<usize> {
         match self {
+            Value::Int(_) => vec![],
             Value::Float(_) => vec![],
             Value::Array(vec) => {
                 let mut shape = vec![vec.len()];
