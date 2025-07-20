@@ -75,10 +75,10 @@ impl Value {
         }
     }
 
-    /// Applies a operation which takes more than one `Sample`s and returns a processed `Value`.
+    /// Applies a operation which takes more than one `Value`s and returns a processed `Value`.
     ///
     /// ## Arguments
-    /// - `other`: Another `Value` to apply the operation with.
+    /// - `args`: A slice of `Value`s to apply the operation.
     /// - `f`: A function that takes two `Sample`s and returns a processed `Sample`.
     pub fn apply_op<F>(args: &[&Value], f: F) -> Option<Value>
     where
