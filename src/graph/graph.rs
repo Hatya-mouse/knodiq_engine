@@ -309,7 +309,7 @@ impl Graph {
                     self.get_node_mut(connector.from).and_then(|origin_node| {
                         origin_node
                             .get_output(&connector.from_param)
-                            .map(|value| (connector.to_param.clone(), value))
+                            .map(|value| (connector.to_param.clone(), value.clone()))
                     })
                 })
                 .collect();
@@ -317,7 +317,7 @@ impl Graph {
             if let Some(node) = self.get_node_mut(node_id) {
                 // Pass each input
                 for (to_param, value) in input_values {
-                    node.set_input(&to_param, value);
+                    node.set_input(&to_param, value.clone());
                 }
 
                 node.process(

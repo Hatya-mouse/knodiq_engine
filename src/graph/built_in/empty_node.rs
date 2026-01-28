@@ -18,7 +18,6 @@
 
 use crate::{Node, NodeId, Type, Value};
 use std::any::Any;
-use std::collections::HashMap;
 
 /// A node that does nothing.
 pub struct EmptyNode {
@@ -73,38 +72,25 @@ impl Node for EmptyNode {
         &mut self,
         _sample_rate: usize,
         _samples_per_beat: f32,
-        channels: usize,
-        chunk_start: usize,
-        chunk_end: usize,
+        _channels: usize,
+        _chunk_start: usize,
+        _chunk_end: usize,
         track_id: u32,
     ) -> Result<(), Box<dyn crate::error::TrackError>> {
-        let mut err = None;
-
-        let buffer = match self.input.as_ref() {
-            Some(Value::Array(array)) => Value::Array(array.clone()),
-            _ => {
-                err = Some(crate::error::NodeInputTypeError {
-                    track_id,
-                    node_id: self.id.clone(),
-                    input_name: "audio".to_string(),
-                    expected_type: Type::Array(Box::new(Type::Array(Box::new(Type::Float)))),
-                    received_type: self
-                        .input
-                        .as_ref()
-                        .map_or(Type::None, |input| input.get_type()),
-                });
-                Value::from_buffer(vec![vec![0.0; chunk_end - chunk_start]; channels])
-            }
-        };
-
-        let mut result = HashMap::new();
-        result.insert("audio".to_string(), buffer.clone());
-        self.output = Some(buffer);
-
-        if let Some(e) = err {
-            Err(Box::new(e))
-        } else {
+        if let Some(Value::Array(array)) = self.input.take() {
+            self.output = Some(Value::Array(array));
             Ok(())
+        } else {
+            Err(Box::new(crate::error::NodeInputTypeError {
+                track_id,
+                node_id: self.id.clone(),
+                input_name: "audio".to_string(),
+                expected_type: Type::Array(Box::new(Type::Array(Box::new(Type::Float)))),
+                received_type: self
+                    .input
+                    .as_ref()
+                    .map_or(Type::None, |input| input.get_type()),
+            }))
         }
     }
 
@@ -116,12 +102,9 @@ impl Node for EmptyNode {
         vec!["audio".to_string()]
     }
 
-    fn get_input(&self, property: &str) -> Option<Value> {
+    fn get_input(&self, property: &str) -> Option<&Value> {
         match property {
-            "audio" => match self.input {
-                Some(ref input) => Some(input.clone()),
-                None => None,
-            },
+            "audio" => self.input.as_ref(),
             _ => None,
         }
     }
@@ -133,9 +116,9 @@ impl Node for EmptyNode {
         }
     }
 
-    fn get_output(&self, output: &str) -> Option<Value> {
+    fn get_output(&self, output: &str) -> Option<&Value> {
         match output {
-            "audio" => self.output.clone(),
+            "audio" => self.output.as_ref(),
             _ => None,
         }
     }

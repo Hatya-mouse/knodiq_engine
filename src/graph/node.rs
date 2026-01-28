@@ -69,13 +69,13 @@ pub trait Node: Send + Sync + Any + NodeClone {
     fn get_output_list(&self) -> Vec<String>;
 
     /// Get the node property. Returns `None` if the property does not exist.
-    fn get_input(&self, key: &str) -> Option<Value>;
+    fn get_input(&self, key: &str) -> Option<&Value>;
 
     /// Set the node property.
     fn set_input(&mut self, key: &str, value: Value);
 
     /// Get the output with given name. Returns `None` if the property does not exist, or has not processed yet.
-    fn get_output(&self, key: &str) -> Option<Value>;
+    fn get_output(&self, key: &str) -> Option<&Value>;
 
     /// Get the node type.
     /// This is used to identify the type of the node, such as "BufferInputNode", "BufferOutputNode", etc.
