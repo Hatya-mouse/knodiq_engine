@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-use crate::{AudioBuffer, Sample, Value};
+use crate::{AudioBuffer, Sample};
 
 use serde::{Deserialize, Serialize};
 use std::f32;
@@ -273,15 +273,15 @@ impl AudioSource {
         }
     }
 
-    /// Returns the copy of the buffer.
-    pub fn clone_buffer(&self) -> Vec<Vec<Sample>> {
-        self.data.clone()
-    }
+    // Returns the copy of the buffer.
+    // pub fn clone_buffer(&self) -> Vec<Vec<Sample>> {
+    //     self.data.clone()
+    // }
 
-    /// Returns the copy of the buffer, but as Value.
-    pub fn clone_buffer_as_value(&self) -> Value {
-        Value::from_buffer(self.clone_buffer())
-    }
+    // Returns the copy of the buffer, but as Value.
+    // pub fn clone_buffer_as_value(&self) -> Value {
+    //     Value::from_buffer(self.clone_buffer())
+    // }
 }
 
 impl Clone for AudioSource {

@@ -67,7 +67,7 @@ impl AudioResampler {
 
         // If the source sample rate is the same as the output sample rate, return the source as is
         if input_sample_rate == output_sample_rate {
-            return Ok(input.clone());
+            return Ok(input);
         }
 
         // Create a resampler from the data
@@ -96,8 +96,7 @@ impl AudioResampler {
             }
 
             // Get the next chunk of data from the iterator
-            let (input_buffer, next_index) =
-                read_frames(input.clone_buffer(), frame_index, self.chunk_size);
+            let (input_buffer, next_index) = read_frames(&input.data, frame_index, self.chunk_size);
             frame_index = next_index;
 
             // Resample the data
@@ -119,7 +118,7 @@ impl AudioResampler {
         // Check if any samples are left to resample
         if frame_index < original_length {
             // Then reasample the remaining samples
-            let (input_buffer, _) = read_frames(input.clone_buffer(), frame_index, self.chunk_size);
+            let (input_buffer, _) = read_frames(&input.data, frame_index, self.chunk_size);
             let output_buffer = match <FftFixedIn<f32> as Resampler<f32>>::process_partial(
                 &mut resampler,
                 Some(&input_buffer),
@@ -144,11 +143,7 @@ impl AudioResampler {
     }
 }
 
-fn read_frames(
-    from: Vec<Vec<f32>>,
-    frame_index: usize,
-    chunk_size: usize,
-) -> (Vec<Vec<f32>>, usize) {
+fn read_frames(from: &[Vec<f32>], frame_index: usize, chunk_size: usize) -> (Vec<Vec<f32>>, usize) {
     // Number of channels in the input data
     let channels = from.len();
     // Calculate the end index for the next chunk

@@ -270,7 +270,7 @@ impl Track for BufferTrack {
 
         match self.original_mixed_data.as_mut() {
             Some(original) => original.mix_at(&mixed, playhead_samples),
-            None => self.original_mixed_data = Some(mixed.clone()),
+            None => self.original_mixed_data = Some(mixed),
         }
 
         let original_mixed_data = self.original_mixed_data.as_ref().expect("IMPOSSIBLE");
