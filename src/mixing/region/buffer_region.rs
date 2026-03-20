@@ -61,8 +61,8 @@ impl BufferRegion {
     }
 
     /// Returns the audio source of the region.
-    pub fn audio_source(&self) -> &Option<AudioSource> {
-        &self.source
+    pub fn audio_source(&self) -> Option<&AudioSource> {
+        self.source.as_ref()
     }
 
     /// Sets the audio source of the region.

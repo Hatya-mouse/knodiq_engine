@@ -194,7 +194,7 @@ impl AudioSource {
     /// # Arguments
     /// - `other` - The other audio source to mix with.
     /// - `at` - The duration at which to mix the audio buffers in samples.
-    pub fn mix_at(&mut self, other: &[Vec<f32>], offset: usize) {
+    pub fn mix_at(&mut self, other: &[&[f32]], offset: usize) {
         // Instead of cloning the entire audio source, we'll mix directly
         for (channel_index, other_channel) in other.data.iter().enumerate() {
             // If the other source has more channels than this one, add a new channel
@@ -217,14 +217,17 @@ impl AudioSource {
         self.data = data;
     }
 
-    /// Slice the audio buffer to keep only the samples between `start` and `end`.
-    pub fn slice(&mut self, start: usize, end: usize) {
-        // Ensure the slice is within bounds
-        if start < end && end <= self.samples() {
-            for channel in self.data.iter_mut() {
-                *channel = channel[start..end].to_vec();
-            }
+    /// Returns the slice of the specific range of the data.
+    pub fn sliced(&self, start: usize, end: usize) -> Vec<&[f32]> {
+        // Limit the end to bounds
+        let end = end.min(self.samples());
+        let start = start.min(end);
+        // Return the slice
+        let mut result = Vec::new();
+        for channel in self.data.iter() {
+            result.push(&channel[start..end]);
         }
+        result
     }
 
     /// Pad the audio buffer with zeros to the specified length.

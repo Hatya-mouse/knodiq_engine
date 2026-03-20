@@ -16,8 +16,6 @@
 // limitations under the License.
 //
 
-use symphonia::core::audio;
-
 use crate::{
     AudioResampler, AudioSource, Graph, Region, Track, Value,
     audio_context::AudioContext,
@@ -162,25 +160,17 @@ impl Track for BufferTrack {
             let rel_playhead = playhead_index - self.region_start_indices[region_id];
 
             // 2. Get a reference to the region
+            let source_ref = region.audio_source().unwrap_or_default();
+
+            // 3. Slice the region at the playhead position
+            let source_sliced = source_ref.sliced(rel_playhead, source_ref.samples());
 
             // Mix the sliced chunk into the mixed audio data
-            mixed.mix_at(&resampled_region, 0);
+            mixed.mix_at(&source_sliced, 0);
         }
 
-        match self.original_mixed_data.as_mut() {
-            Some(original) => original.mix_at(&mixed, playhead_samples),
-            None => self.original_mixed_data = Some(mixed),
-        }
-
-        let original_mixed_data = self.original_mixed_data.as_ref().expect("IMPOSSIBLE");
-
-        // Pass the resampled chunk to the graph input node
-        if let Some(input_node) = self.graph.get_input_node_mut() {
-            input_node.set_input(
-                "audio",
-                Value::from_buffer(original_mixed_data.data.clone()),
-            );
-        }
+        // Get pointers for each mixed channels
+        let mut ptrs = mixed.data.iter().map(||);
 
         // Process the chunk through the graph
         let mut processed = match self.graph.process(audio_ctx) {
