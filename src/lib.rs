@@ -15,6 +15,7 @@
 // limitations under the License.
 //
 
+pub mod audio_context;
 pub mod audio_utils;
 pub mod buffer;
 pub mod graph;
@@ -24,7 +25,7 @@ pub mod mixing;
 mod test;
 
 pub use audio_utils::{AudioPlayer, AudioResampler, Beats, error};
-pub use buffer::{AudioBuffer, AudioSource, Sample};
-pub use graph::{Connector, Graph, Node, NodeId, Type, Value};
+pub use buffer::{AudioSource, Sample};
+pub use graph::{Connector, Graph, Node, NodeID, TypeID, Value};
 pub use mixing::{Mixer, Region, Track};
 pub use std::time::Duration;

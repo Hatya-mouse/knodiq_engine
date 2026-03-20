@@ -1,6 +1,5 @@
-// audio_utils/error/track/region/mod.rs
 //
-// Copyright 2025 Shuntaro Kasatani
+// © 2025-2026 Shuntaro Kasatani
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +14,10 @@
 // limitations under the License.
 //
 
-pub mod invalid_region_type_error;
-
-pub use invalid_region_type_error::InvalidRegionTypeError;
+pub struct AudioContext {
+    pub sample_rate: usize,
+    pub buffer_samples: usize,
+    pub channels: usize,
+    pub tempo: f32,
+    pub samples_per_beat: f32,
+}

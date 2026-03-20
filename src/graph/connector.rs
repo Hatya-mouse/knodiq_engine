@@ -16,17 +16,37 @@
 // limitations under the License.
 //
 
-use crate::NodeId;
+use std::fmt::Display;
+
+use crate::graph::{NodeID, TypeID};
 
 #[derive(Clone, Debug)]
 /// Represents the connection between nodes in the graph.
 pub struct Connector {
     /// The ID of the node that provides the input signal.
-    pub from: NodeId,
+    pub from: NodeID,
     /// The name of the parameter on the source node that provides the input signal.
-    pub from_param: String,
+    pub from_param: usize,
     /// The ID of the node that receives the input signal.
-    pub to: NodeId,
+    pub to: NodeID,
     /// The name of the parameter on the destination node that receives the input signal.
-    pub to_param: String,
+    pub to_param: usize,
+    /// The type of the signal being passed through this connector.
+    pub value_type: TypeID,
+}
+
+/// An ID used to identify a node in the graph.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default, serde::Serialize)]
+pub struct ConnectorID(usize);
+
+impl ConnectorID {
+    pub fn new(val: usize) -> Self {
+        Self(val)
+    }
+}
+
+impl Display for ConnectorID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }

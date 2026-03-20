@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-use crate::{AudioBuffer, Sample};
+use crate::Sample;
 
 use serde::{Deserialize, Serialize};
 use std::f32;
@@ -32,10 +32,8 @@ use symphonia::core::meta::MetadataOptions;
 pub struct AudioSource {
     /// Sample rate of the audio buffer.
     pub sample_rate: usize,
-    /// Number of channels in the audio buffer.
-    pub channels: usize,
     /// Buffer data.
-    pub data: AudioBuffer,
+    pub data: Vec<Vec<f32>>,
 }
 
 impl AudioSource {
@@ -43,7 +41,6 @@ impl AudioSource {
     pub fn new(sample_rate: usize, channels: usize) -> Self {
         Self {
             sample_rate,
-            channels,
             data: vec![vec![]; channels],
         }
     }
@@ -51,18 +48,13 @@ impl AudioSource {
     /// Create a empty audio source with the specified sample rate and number of channels, filled with zeros.
     pub fn zeros(sample_rate: usize, channels: usize, length: usize) -> Self {
         let data = vec![vec![0.0; length]; channels];
-        Self {
-            sample_rate,
-            channels,
-            data,
-        }
+        Self { sample_rate, data }
     }
 
     /// Create a new audio source instance from the audio buffer.
-    pub fn from_buffer(buffer: AudioBuffer, sample_rate: usize, channels: usize) -> Self {
+    pub fn from_buffer(buffer: Vec<Vec<f32>>, sample_rate: usize) -> Self {
         Self {
             sample_rate,
-            channels,
             data: buffer,
         }
     }
@@ -147,7 +139,6 @@ impl AudioSource {
 
         Ok(Self {
             sample_rate,
-            channels,
             data: output_buffer,
         })
     }
@@ -203,7 +194,7 @@ impl AudioSource {
     /// # Arguments
     /// - `other` - The other audio source to mix with.
     /// - `at` - The duration at which to mix the audio buffers in samples.
-    pub fn mix_at(&mut self, other: &AudioSource, offset: usize) {
+    pub fn mix_at(&mut self, other: &[Vec<f32>], offset: usize) {
         // Instead of cloning the entire audio source, we'll mix directly
         for (channel_index, other_channel) in other.data.iter().enumerate() {
             // If the other source has more channels than this one, add a new channel
@@ -222,8 +213,7 @@ impl AudioSource {
         }
     }
 
-    pub fn set_data(&mut self, data: AudioBuffer) {
-        self.channels = data.len();
+    pub fn set_data(&mut self, data: Vec<Vec<f32>>) {
         self.data = data;
     }
 
@@ -288,7 +278,6 @@ impl Clone for AudioSource {
     fn clone(&self) -> Self {
         Self {
             data: self.data.clone(),
-            channels: self.channels,
             sample_rate: self.sample_rate,
         }
     }

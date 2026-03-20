@@ -18,3 +18,21 @@
 mod buffer_region;
 
 pub use buffer_region::BufferRegion;
+
+use std::fmt::Display;
+
+/// An ID used to identify a node in the graph.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default, serde::Serialize)]
+pub struct RegionID(usize);
+
+impl RegionID {
+    pub fn new(val: usize) -> Self {
+        Self(val)
+    }
+}
+
+impl Display for RegionID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}

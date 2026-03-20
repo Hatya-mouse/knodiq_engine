@@ -20,16 +20,14 @@ use crate::audio_utils::{Beats, samples_as_beats};
 use crate::{AudioSource, Region};
 use std::any::Any;
 
+#[derive(Clone)]
 pub struct BufferRegion {
-    /// ID of the region.
-    /// This will be set by adding the region to a track, so you don't need to set it manually.
-    pub id: u32,
-    /// Name of the region.
-    pub name: String,
-    /// Start time of the region in frames.
+    /// Start time of the region in beats.
     pub start_time: Beats,
-    /// Duration of the region in frames.
+    /// Duration of the region in beats.
     pub duration: Beats,
+    /// Sample rate of the region.
+    pub sample_rate: usize,
     /// Samples per beat of the region.
     pub samples_per_beat: f32,
     /// Audio source of the region.
@@ -38,32 +36,25 @@ pub struct BufferRegion {
 
 impl BufferRegion {
     /// Creates a new buffer region with the given audio source.
-    pub fn new(name: String, source: Option<AudioSource>, tempo: Beats) -> Self {
-        let samples_per_beat = match &source {
-            Some(src) => src.sample_rate as f32 / (tempo as f32 / 60.0),
-            None => 0.0,
-        };
-        let duration = match &source {
-            Some(src) => samples_as_beats(samples_per_beat, src.samples()),
-            None => Beats::default(),
-        };
+    pub fn new(name: String, source: AudioSource, tempo: Beats) -> Self {
+        let samples_per_beat = source.sample_rate as f32 / (tempo / 60.0);
+        let duration = samples_as_beats(samples_per_beat, source.samples());
+
         Self {
-            id: 0,
-            name,
             start_time: Beats::default(),
             duration,
+            sample_rate: source.sample_rate,
             samples_per_beat,
-            source,
+            source: Some(source),
         }
     }
 
     /// Creates a new empty buffer region.
-    pub fn empty(name: String) -> Self {
+    pub fn empty(name: String, sample_rate: usize) -> Self {
         Self {
-            id: 0,
-            name,
             start_time: Beats::default(),
             duration: Beats::default(),
+            sample_rate,
             samples_per_beat: 0.0,
             source: None,
         }
@@ -78,7 +69,7 @@ impl BufferRegion {
     pub fn set_audio_source(&mut self, source: Option<AudioSource>, tempo: Beats) {
         self.source = source;
         self.samples_per_beat = match &self.source {
-            Some(src) => src.sample_rate as f32 / (tempo as f32 / 60.0),
+            Some(src) => src.sample_rate as f32 / (tempo / 60.0),
             None => 0.0,
         };
         self.duration = match &self.source {
@@ -142,18 +133,5 @@ impl Region for BufferRegion {
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
-    }
-}
-
-impl Clone for BufferRegion {
-    fn clone(&self) -> Self {
-        Self {
-            id: self.id,
-            name: self.name.clone(),
-            start_time: self.start_time,
-            duration: self.duration,
-            samples_per_beat: self.samples_per_beat,
-            source: self.source.clone(),
-        }
     }
 }

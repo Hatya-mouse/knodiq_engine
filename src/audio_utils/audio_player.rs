@@ -23,13 +23,10 @@ use std::thread;
 pub struct AudioPlayer {
     /// Currently playing stream.
     current_stream: Option<cpal::Stream>,
-
     /// Sample rate of the audio player.
     pub sample_rate: usize,
-
     /// Channels of the audio player.
     pub channels: usize,
-
     /// Volume of the playback.
     pub volume: f32,
 }
@@ -147,5 +144,3 @@ impl AudioPlayer {
         Ok(())
     }
 }
-
-unsafe impl Send for AudioPlayer {}

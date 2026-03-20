@@ -16,31 +16,23 @@
 // limitations under the License.
 //
 
-use crate::{Beats, NodeId, Value};
-use std::any::Any;
+use crate::{audio_context::AudioContext, graph::TypeInfo};
 
 /// Represents a audio processing node.
-/// In Knodiq we process audio data using "Node", instead of "Effects".
-pub trait Node: Send + Sync + Any + NodeClone {
+pub trait Node {
     /// Process the audio source.
     /// This method is called when the node is ready to process audio data.
     ///
     /// # Arguments
-    /// - `sample_rate`: The sample rate of the audio data
-    /// - `samples_per_beat`: The number of samples per beat at the given sample rate
-    /// - `channels`: The number of audio channels
-    /// - `chunk_start`: The start sample index of the chunk to process
-    /// - `chunk_end`: The end sample index of the chunk to process
-    /// - `track_id`: The ID of the track this node belongs to
+    /// - `inputs`: A map of input buffer pointers by name.
+    /// - `outputs`: A map of output buffer pointers by name.
+    /// - `audio_ctx`: The current audio context.
     fn process(
         &mut self,
-        sample_rate: usize,
-        samples_per_beat: f32,
-        channels: usize,
-        chunk_start: usize,
-        chunk_end: usize,
-        track_id: u32,
-    ) -> Result<(), Box<dyn crate::error::TrackError>>;
+        inputs: &[Option<*const u8>],
+        outputs: &[Option<*mut u8>],
+        audio_ctx: &AudioContext,
+    );
 
     /// Prepare the node for processing. Called before processing.
     /// Chunk size is passed to the node to prepare for processing.
@@ -48,19 +40,8 @@ pub trait Node: Send + Sync + Any + NodeClone {
     /// This method is called after the all input properties are set.
     ///
     /// # Arguments
-    /// - `chunk_size`: The size of the chunk to process, in beats.
-    /// - `sample_rate`: The sample rate.
-    /// - `samples_per_beat`: The number of samples per beat at the given sample rate.
-    /// - `track_id`: The ID of the track this node belongs to.
-    fn prepare(
-        &mut self,
-        _chunk_size: Beats,
-        _sample_rate: usize,
-        _samples_per_beat: f32,
-        _track_id: u32,
-    ) -> Result<(), Box<dyn crate::error::TrackError>> {
-        Ok(())
-    }
+    /// `audio_ctx`: The current audio context.
+    fn prepare(&mut self, audio_ctx: &AudioContext);
 
     /// Get the list of properties that can be set on this node.
     fn get_input_list(&self) -> Vec<String>;
@@ -68,60 +49,13 @@ pub trait Node: Send + Sync + Any + NodeClone {
     /// Get the list of output properties that can be retrieved from this node.
     fn get_output_list(&self) -> Vec<String>;
 
-    /// Get the node property. Returns `None` if the property does not exist.
-    fn get_input(&self, key: &str) -> Option<&Value>;
+    /// Returns the input value type.
+    fn get_input_type(&self, index: usize) -> Option<TypeInfo>;
 
-    /// Set the node property.
-    fn set_input(&mut self, key: &str, value: Value);
-
-    /// Get the output with given name. Returns `None` if the property does not exist, or has not processed yet.
-    fn get_output(&self, key: &str) -> Option<&Value>;
+    /// Returns the output value type.
+    fn get_output_type(&self, index: usize) -> Option<TypeInfo>;
 
     /// Get the node type.
     /// This is used to identify the type of the node, such as "BufferInputNode", "BufferOutputNode", etc.
-    fn get_type(&self) -> String;
-
-    /// Set the node id.
-    fn set_id(&mut self, id: NodeId);
-
-    /// Get the node id.
-    fn get_id(&self) -> NodeId;
-
-    /// Set the node name.
-    /// This is used to label the node in the UI.
-    fn set_name(&mut self, name: String);
-
-    /// Get the node name.
-    /// This is used to label the node in the UI.
-    fn get_name(&self) -> String;
-
-    /// Get whether the node is an input node.
-    fn is_input(&self) -> bool;
-
-    /// Get whether the node is an output node.
-    fn is_output(&self) -> bool;
-
-    fn as_any(&self) -> &dyn Any;
-
-    fn as_any_mut(&mut self) -> &mut dyn Any;
-}
-
-// Helper trait to enable cloning of Box<dyn Node>
-pub trait NodeClone {
-    fn clone_box(&self) -> Box<dyn Node>;
-}
-
-impl<T> NodeClone for T
-where
-    T: 'static + Node + Clone,
-{
-    fn clone_box(&self) -> Box<dyn Node> {
-        Box::new(self.clone())
-    }
-}
-
-impl Clone for Box<dyn Node> {
-    fn clone(&self) -> Box<dyn Node> {
-        self.clone_box()
-    }
+    fn get_node_type(&self) -> String;
 }

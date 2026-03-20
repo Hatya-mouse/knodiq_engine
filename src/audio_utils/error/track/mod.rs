@@ -15,30 +15,25 @@
 // limitations under the License.
 //
 
-pub mod graph;
-pub mod region;
-pub mod unknown_track_error;
+use crate::NodeID;
+use rubato::ResamplerConstructionError;
 
-pub use graph::{
-    node_cycle_error::NodeCycleError, node_input_type_error::NodeInputTypeError,
-    node_not_found_error::NodeNotFoundError, node_output_type_error::NodeOutputTypeError,
-    property_not_found_error::PropertyNotFoundError, type_error::TypeError,
-};
-pub use region::InvalidRegionTypeError;
-pub use unknown_track_error::UnknownTrackError;
-
-use std::{
-    error::Error,
-    fmt::{Debug, Display},
-};
-
-pub trait TrackError: Error + Debug + Display + Send + Sync + 'static {
-    fn clone_box(&self) -> Box<dyn TrackError>;
+pub struct TrackError {
+    pub kind: TrackErrorKind,
 }
 
-// Implement Clone for Box<dyn TrackError>
-impl Clone for Box<dyn TrackError> {
-    fn clone(&self) -> Self {
-        self.clone_box()
+impl TrackError {
+    pub fn new(kind: TrackErrorKind) -> Self {
+        Self { kind }
     }
+}
+
+pub enum TrackErrorKind {
+    NodeCycle,
+    NodeNotFoundError(NodeID),
+    InvalidRegionTypeError {
+        expected_type: String,
+        received_type: String,
+    },
+    ResamplerConstructionError(ResamplerConstructionError),
 }

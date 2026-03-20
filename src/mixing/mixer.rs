@@ -71,7 +71,7 @@ impl Mixer {
 
     /// Returns the current playhead position in beats.
     pub fn samples_per_beat(&self) -> f32 {
-        (self.sample_rate as f32) / (self.tempo as f32 / 60.0)
+        (self.sample_rate as f32) / (self.tempo / 60.0)
     }
 
     /// Returns the current playhead position in beats.
@@ -90,13 +90,19 @@ impl Mixer {
     }
 
     /// Returns a reference to a track by its ID.
-    pub fn get_track_by_id(&self, id: u32) -> Option<&Box<dyn Track>> {
-        self.tracks.iter().filter(|t| t.get_id() == id).next()
+    pub fn get_track_by_id(&self, id: u32) -> Option<&dyn Track> {
+        self.tracks
+            .iter()
+            .find(|t| t.get_id() == id)
+            .map(|t| t.as_ref())
     }
 
     /// Returns a mutable reference to a track by its ID.
-    pub fn get_track_by_id_mut(&mut self, id: u32) -> Option<&mut Box<dyn Track>> {
-        self.tracks.iter_mut().filter(|t| t.get_id() == id).next()
+    pub fn get_track_by_id_mut(&mut self, id: u32) -> Option<&mut dyn Track> {
+        self.tracks
+            .iter_mut()
+            .find(|t| t.get_id() == id)
+            .map(|t| t.as_mut())
     }
 
     /// Removes a track from the mixer by its ID.
@@ -125,7 +131,9 @@ impl Mixer {
     ///
     /// # Arguments
     /// - `at` - The position in beats to start mixing from.
-    /// - `callback` - Called when the chunk has rendered. Rendered sample and the current playhead time (is Beats) is passed. Sample will be passed in this way:
+    /// - `callback` - Called when the chunk has rendered. Rendered sample and the current playhead time (is Beats) is passed.
+    ///
+    /// Samples will be passed in this way:
     /// `Sample 0` from `Channel 0`, `Sample 0` from `Channel 1`, `Sample 1` from `Channel 0`, `Sample 1` from `Channel 1`...
     /// The callback should return `true` to continue rendering, or `false` to stop rendering.
     pub fn mix(

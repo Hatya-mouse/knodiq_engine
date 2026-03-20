@@ -1,6 +1,5 @@
-// invalid_region_type_error.rs
 //
-// Copyright 2025 Shuntaro Kasatani
+// © 2025-2026 Shuntaro Kasatani
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,29 +14,20 @@
 // limitations under the License.
 //
 
-use crate::audio_utils::error::TrackError;
-use std::{error::Error, fmt::Display};
+use std::fmt::Display;
 
-#[derive(Debug, Clone)]
-pub struct InvalidRegionTypeError {
-    pub expected_type: String,
-    pub received_type: String,
-}
+/// An ID used to identify a node in the graph.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default, serde::Serialize)]
+pub struct NodeID(usize);
 
-impl TrackError for InvalidRegionTypeError {
-    fn clone_box(&self) -> Box<dyn TrackError> {
-        Box::new(self.clone())
+impl NodeID {
+    pub fn new(val: usize) -> Self {
+        Self(val)
     }
 }
 
-impl Error for InvalidRegionTypeError {}
-
-impl Display for InvalidRegionTypeError {
+impl Display for NodeID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Invalid region type: expected {}, received {}",
-            self.expected_type, self.received_type
-        )
+        write!(f, "{}", self.0)
     }
 }

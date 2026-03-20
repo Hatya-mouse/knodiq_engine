@@ -1,7 +1,5 @@
-// graph.rs
-// Represents a graph of audio nodes that includes nodes, and connections between them.
 //
-// Copyright 2025 Shuntaro Kasatani
+// © 2025-2026 Shuntaro Kasatani
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,16 +15,15 @@
 //
 
 use crate::{
-    AudioSource, Beats, Connector, Node, Value,
-    error::{
-        NodeCycleError, NodeNotFoundError, NodeOutputTypeError, PropertyNotFoundError, TrackError,
+    Connector, Node,
+    audio_context::AudioContext,
+    error::track::{TrackError, TrackErrorKind},
+    graph::{
+        EdgeBuffer, NodeID, TypeRegistry, built_in::OutputNode, connector::ConnectorID,
+        graph_process_data::GraphProcessData,
     },
-    graph::built_in::EmptyNode,
 };
 use std::collections::{HashMap, VecDeque};
-use uuid::Uuid;
-
-pub type NodeId = Uuid;
 
 /// Represents a graph of audio nodes.
 /// Processes the input audio by applying a series of audio nodes.
@@ -34,186 +31,161 @@ pub type NodeId = Uuid;
 /// # What is `Graph`?
 ///
 /// In Knodiq Audio Engine, `Graph` is a fundamental component that represents a network of audio processing nodes.
-/// It allows the creation of complex audio processing chains by connecting various nodes together!
+/// It allows the creation of complex audio processing chains by connecting various nodes together.
+#[derive(Default)]
 pub struct Graph {
-    /// Vector of node instances in the graph.
-    nodes: Vec<Box<dyn Node>>,
-    /// Represents the connections between nodes in the graph.
-    connections: Vec<Connector>,
+    /// Stores the type information for each registered type.
+    type_registry: TypeRegistry,
 
-    /// UUID of the input node.
-    input_node: NodeId,
-    /// UUID of the output node.
-    output_node: NodeId,
+    /// Vector of node instances in the graph.
+    nodes: HashMap<NodeID, Box<dyn Node>>,
+    /// Represents the connections between nodes in the graph.
+    connections: HashMap<ConnectorID, Connector>,
+    /// Cache of graph process data.
+    process_data: GraphProcessData,
+
+    /// NodeID of the input node.
+    input_id: NodeID,
+    /// NodeID of the output node.
+    output_id: NodeID,
+
+    /// The next available NodeID for new nodes.
+    next_node_id: usize,
+    /// The next available ConnectorID for new connections.
+    next_connector_id: usize,
 }
 
 impl Graph {
     /// Creates a new instance of `Graph`.
     pub fn new(input_node: Box<dyn Node>) -> Self {
+        let mut graph = Graph::default();
+
         // Create input and output nodes
-        let input_id = input_node.get_id();
-        let output_node = Box::new(EmptyNode::new_output());
-        let output_id = output_node.get_id();
+        let output_node = Box::new(OutputNode::default());
+        let input_id = graph.add_node(input_node);
+        let output_id = graph.add_node(output_node);
 
-        println!("Output Node ID: {:?}", output_id);
+        graph.input_id = input_id;
+        graph.output_id = output_id;
 
-        Graph {
-            nodes: vec![input_node, output_node],
-            connections: Vec::new(),
-            input_node: input_id,
-            output_node: output_id,
-        }
+        graph
     }
 
-    /// Gets the uuid of the input node of the graph.
-    pub fn get_input_node_id(&self) -> NodeId {
-        self.input_node
+    pub fn generate_node_id(&mut self) -> NodeID {
+        let id = NodeID::new(self.next_node_id);
+        self.next_node_id += 1;
+        id
     }
 
-    /// Gets the input node of the graph.
-    pub fn get_input_node(&self) -> Option<&Box<dyn Node>> {
-        self.nodes
-            .iter()
-            .find(|node| node.get_id() == self.input_node)
+    pub fn generate_connector_id(&mut self) -> ConnectorID {
+        let id = ConnectorID::new(self.next_connector_id);
+        self.next_connector_id += 1;
+        id
     }
 
-    /// Gets the mutable input node of the graph.
-    pub fn get_input_node_mut(&mut self) -> Option<&mut Box<dyn Node>> {
-        self.nodes
-            .iter_mut()
-            .find(|node| node.get_id() == self.input_node)
+    /// Returns the NodeID of the input node of the graph.
+    pub fn get_input_node_id(&self) -> NodeID {
+        self.input_id
     }
 
-    /// Gets the uuid of the output node of the graph.
-    pub fn get_output_node_id(&self) -> NodeId {
-        self.output_node
-    }
-
-    /// Gets the output node of the graph.
-    pub fn get_output_node(&self) -> Option<&Box<dyn Node>> {
-        self.nodes
-            .iter()
-            .find(|node| node.get_id() == self.output_node)
-    }
-
-    /// Gets the mutable output node of the graph.
-    pub fn get_output_node_mut(&mut self) -> Option<&mut Box<dyn Node>> {
-        self.nodes
-            .iter_mut()
-            .find(|node| node.get_id() == self.output_node)
-    }
-
-    /// Returns all nodes in the graph.
-    pub fn get_nodes(&self) -> &Vec<Box<dyn Node>> {
-        &self.nodes
-    }
-
-    /// Returns all mutable nodes in the graph.
-    pub fn get_nodes_mut(&mut self) -> &mut Vec<Box<dyn Node>> {
-        &mut self.nodes
-    }
-
-    /// Returns all connections in the graph.
-    pub fn get_connections(&self) -> &Vec<Connector> {
-        &self.connections
-    }
-
-    /// Returns all mutable connections in the graph.
-    pub fn get_connections_mut(&mut self) -> &mut Vec<Connector> {
-        &mut self.connections
+    /// Returns the NodeID of the output node of the graph.
+    pub fn get_output_node_id(&self) -> NodeID {
+        self.output_id
     }
 
     /// Returns the node with the given id.
-    pub fn get_node(&self, id: NodeId) -> Option<&Box<dyn Node>> {
-        self.nodes.iter().find(|node| node.get_id() == id)
+    pub fn get_node(&self, id: &NodeID) -> Option<&Box<dyn Node>> {
+        self.nodes.get(id)
     }
 
     /// Returns the mutable node with the given id.
-    pub fn get_node_mut(&mut self, id: NodeId) -> Option<&mut Box<dyn Node>> {
-        self.nodes.iter_mut().find(|node| node.get_id() == id)
+    pub fn get_node_mut(&mut self, id: &NodeID) -> Option<&mut Box<dyn Node>> {
+        self.nodes.get_mut(id)
     }
 
-    /// Adds a new node to the graph and return the id.
-    pub fn add_node(&mut self, node: Box<dyn Node>) -> NodeId {
-        let id = node.get_id();
-        self.nodes.push(node);
+    /// Adds a new node to the graph and returns the id.
+    pub fn add_node(&mut self, node: Box<dyn Node>) -> NodeID {
+        let id = self.generate_node_id();
+        self.nodes.insert(id, node);
         id
     }
 
     /// Removes a node from the graph.
-    pub fn remove_node(&mut self, id: NodeId) {
+    pub fn remove_node(&mut self, id: NodeID) {
         // Check if the node is not the input or output node
-        if id == self.input_node || id == self.output_node {
+        if id == self.input_id || id == self.output_id {
             return;
         }
-        // Remove the node from the Vec
-        self.nodes.retain(|node| node.get_id() != id);
+        // Remove the node from the HashMap
+        self.nodes.remove(&id);
         // Remove all connections from or to the node
         self.connections
-            .retain(|connector| connector.from != id && connector.to != id);
+            .retain(|_, connector| connector.from != id && connector.to != id);
     }
 
-    /// Connect the node to one another.
+    /// Connect the node to another.
     /// Doesn't add a connection to the node if it already exists.
-    pub fn connect(&mut self, from: NodeId, from_param: String, to: NodeId, to_param: String) {
+    pub fn connect(
+        &mut self,
+        from: NodeID,
+        from_param: usize,
+        to: NodeID,
+        to_param: usize,
+    ) -> Option<ConnectorID> {
         // Check if the exact connection already exists
-        if self.connections.iter().any(|c| {
-            c.to == to && c.from == from && c.to_param == to_param && c.from_param == from_param
+        if self.connections.iter().any(|(_, connector)| {
+            connector.to == to
+                && connector.from == from
+                && connector.to_param == to_param
+                && connector.from_param == from_param
         }) {
-            return;
+            return None;
         }
 
-        // Check if the node is valid
-        if self.get_node(from).is_none() || self.get_node(to).is_none() {
-            return;
+        let from_node = self.get_node(&from)?;
+        let to_node = self.get_node(&to)?;
+
+        let from_type_info = from_node.get_output_type(from_param)?;
+        let to_type_info = to_node.get_input_type(to_param)?;
+        if from_type_info != to_type_info {
+            return None;
         }
 
-        // Check if the parameters are valid
-        if !self
-            .get_node(from)
-            .unwrap()
-            .get_output_list()
-            .contains(&from_param)
-            && !self
-                .get_node(to)
-                .unwrap()
-                .get_input_list()
-                .contains(&to_param)
-        {
-            return;
-        }
+        let value_type = self.type_registry.register_or_get(from_type_info)?;
 
-        self.connections.push(Connector {
-            from,
-            from_param,
-            to,
-            to_param,
-        });
+        let connector_id = self.generate_connector_id();
+        self.connections.insert(
+            connector_id,
+            Connector {
+                from,
+                from_param,
+                to,
+                to_param,
+                value_type,
+            },
+        );
+
+        Some(connector_id)
     }
 
     /// Disconnect the node from one another.
-    pub fn disconnect(&mut self, from: NodeId, from_param: String, to: NodeId, to_param: String) {
-        self.connections.retain(|connector| {
-            connector.from != from
-                || connector.from_param != from_param
-                || connector.to != to
-                || connector.to_param != to_param
-        });
+    pub fn disconnect(&mut self, connector_id: ConnectorID) {
+        self.connections.remove(&connector_id);
     }
 
     /// Sort the node using tolopogical sort
-    pub fn topological_sort(&self, track_id: u32) -> Result<Vec<NodeId>, Box<dyn TrackError>> {
+    pub fn topological_sort(&mut self) -> Result<(), TrackError> {
         let mut in_degree = HashMap::new();
         let mut adj_list = HashMap::new();
 
         // Initialize all the nodes with 0 degree
-        for node_id in self.nodes.iter().map(|node| node.get_id()) {
-            in_degree.insert(node_id, 0);
-            adj_list.insert(node_id, vec![]);
+        for node_id in self.nodes.keys() {
+            in_degree.insert(*node_id, 0);
+            adj_list.insert(*node_id, vec![]);
         }
 
         // Register connections
-        for connection in &self.connections {
+        for connection in self.connections.values() {
             *in_degree.entry(connection.to).or_insert(0) += 1;
             adj_list
                 .entry(connection.from)
@@ -249,128 +221,102 @@ impl Graph {
 
         // Return the error when the cycle is detected
         if sorted.len() != self.nodes.len() {
-            return Err(Box::new(NodeCycleError { track_id }));
+            return Err(TrackError::NodeCycle);
         }
 
-        Ok(sorted)
+        self.process_data.sorted_nodes = sorted;
+        Ok(())
     }
 
-    pub fn prepare(
-        &mut self,
-        chunk_size: Beats,
-        sample_rate: usize,
-        tempo: Beats,
-        track_id: u32,
-    ) -> Result<(), Box<dyn TrackError>> {
+    pub fn prepare(&mut self, audio_ctx: &AudioContext) -> Result<(), TrackError> {
         // Prepare the graph for processing
         // Call prepare() on each node
-        for node in self.nodes.iter_mut() {
-            node.prepare(chunk_size, sample_rate, tempo, track_id)
-                .map_err(|e| -> Box<dyn TrackError> { e })?;
+        for node in self.nodes.values_mut() {
+            node.prepare(audio_ctx)?;
         }
+
+        // Create EdgeBuffers for each connector
+        for connector_id in self.connections.keys() {
+            let connector = self.connections.get(connector_id).unwrap();
+            let type_info = self.type_registry.get_info(&connector.value_type).unwrap();
+            let buffer_size = audio_ctx.buffer_samples * type_info.size;
+            self.process_data.edge_buffers.insert(
+                *connector_id,
+                EdgeBuffer::new(connector.value_type, buffer_size),
+            );
+        }
+
+        self.topological_sort()?;
+
+        self.process_data.buffer_samples = audio_ctx.buffer_samples;
+
         Ok(())
     }
 
     /// Processes the input audio source and returns the output.
     ///
     /// # Arguments
-    /// - `sample_rate`: The sample rate of the audio source.
-    /// - `samples_per_beat`: The number of samples per beat at the given sample rate.
-    /// - `channels`: The number of channels in the audio source.
-    /// - `chunk_start`: The sample index of the first sample in the processing chunk.
-    /// - `chunk_end`: The sample index of the last sample in the processing chunk.
+    /// - `audio_ctx`: Current audio context.
+    /// - `input`: The value to pass to the input node.
     pub fn process(
         &mut self,
-        sample_rate: usize,
-        samples_per_beat: f32,
-        channels: usize,
-        chunk_start: usize,
-        chunk_end: usize,
-        track_id: u32,
-    ) -> Result<AudioSource, Box<dyn TrackError>> {
-        // 1. Decide the process order using topological sort
-        let sorted_nodes = self.topological_sort(track_id)?;
-
-        // 2. Process nodes in order calculated
+        audio_ctx: &AudioContext,
+        input: &[u8],
+    ) -> Result<*const u8, TrackError> {
+        // 1. Process nodes in the sorted order
+        let sorted_nodes = self.process_data.sorted_nodes.clone();
         for node_id in sorted_nodes {
-            // Collect the connectors first to avoid borrowing issues
-            let connected_connectors: Vec<Connector> = self
+            // Get the incoming connectors
+            let in_connectors: Vec<ConnectorID> = self
                 .connections
                 .iter()
-                .filter(|connector| connector.to == node_id)
-                .cloned()
+                .filter(|(_, connector)| connector.to == node_id)
+                .map(|(id, _)| *id)
                 .collect();
 
-            // Collect the input values before mutably borrowing self.nodes
-            let input_values: Vec<(String, Value)> = connected_connectors
-                .into_iter()
-                .filter_map(|connector| {
-                    // Get the output from the origin node
-                    self.get_node_mut(connector.from).and_then(|origin_node| {
-                        origin_node
-                            .get_output(&connector.from_param)
-                            .map(|value| (connector.to_param.clone(), value.clone()))
-                    })
+            // Collect the input buffers before mutably borrowing self.nodes
+            let input_buffers: Vec<Option<*const u8>> = self.process_data.input_indices[&node_id]
+                .iter()
+                .map(|connector_id| {
+                    connector_id
+                        .and_then(|id| self.process_data.edge_buffers.get(&id))
+                        .map(|buf| buf.data.as_ptr())
                 })
                 .collect();
 
-            if let Some(node) = self.get_node_mut(node_id) {
-                // Pass each input
-                for (to_param, value) in input_values {
-                    node.set_input(&to_param, value.clone());
-                }
+            // Collect output buffers
+            let output_buffers: Vec<Option<*mut u8>> = self.process_data.output_indices[&node_id]
+                .iter()
+                .map(|connector_id| {
+                    connector_id
+                        .and_then(|id| self.process_data.edge_buffers.get_mut(&id))
+                        .map(|buf| buf.data.as_mut_ptr())
+                })
+                .collect();
 
-                node.process(
-                    sample_rate,
-                    samples_per_beat,
-                    channels,
-                    chunk_start,
-                    chunk_end,
-                    track_id,
-                )
-                .map_err(|e| -> Box<dyn TrackError> { e })?;
+            let buffer_samples = self.process_data.buffer_samples;
+
+            if let Some(node) = self.get_node_mut(&node_id) {
+                // Pass the input and process
+                node.process(&input_buffers, &output_buffers, audio_ctx)?;
             }
         }
 
         // 3. Get the output of the output node and return it
-        match self.get_output_node() {
-            Some(node) => match node.get_output("audio") {
-                Some(value) => match value.as_buffer() {
-                    Ok(buffer) => {
-                        // Convert the buffer to AudioSource
-                        let audio_source = AudioSource::from_buffer(buffer, sample_rate, channels);
-                        Ok(audio_source)
-                    }
-                    Err(e) => Err(Box::new(NodeOutputTypeError {
-                        track_id,
-                        node_id: self.get_output_node_id(),
-                        output_name: "audio".to_string(),
-                        expected_type: e.expected_type,
-                        received_type: e.received_type,
-                    })),
-                },
-                None => Err(Box::new(PropertyNotFoundError {
-                    track_id,
-                    node_id: self.get_output_node_id(),
-                    property_name: "audio".to_string(),
-                    is_input: false,
-                })),
-            },
-            None => Err(Box::new(NodeNotFoundError {
-                track_id,
-                node_id: self.get_output_node_id(),
-            })),
-        }
-    }
-}
+        let output_connector_id = self
+            .connections
+            .iter()
+            .find(|(_, c)| c.to == self.output_node)
+            .map(|(id, _)| *id)
+            .ok_or_else(|| TrackError::new(TrackErrorKind::NodeNotFoundError(self.output_id)))?;
 
-impl Clone for Graph {
-    fn clone(&self) -> Self {
-        Graph {
-            nodes: self.nodes.clone(),
-            connections: self.connections.clone(),
-            input_node: self.input_node,
-            output_node: self.output_node,
-        }
+        let edge_buffer = self
+            .process_data
+            .edge_buffers
+            .get(&output_connector_id)
+            .map(|buf| buf.data.as_ptr())
+            .ok_or_else(|| TrackError::new(TrackErrorKind::NodeNotFoundError(self.output_id)))?;
+
+        Ok(edge_buffer)
     }
 }

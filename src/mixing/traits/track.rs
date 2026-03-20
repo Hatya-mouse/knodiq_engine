@@ -16,70 +16,13 @@
 // limitations under the License.
 //
 
+use crate::Region;
+use crate::audio_context::AudioContext;
 use crate::audio_utils::Beats;
-use crate::error::TrackError;
-use crate::{AudioSource, Graph, Region};
-use std::any::Any;
+use crate::error::track::TrackError;
+use crate::mixing::region::RegionID;
 
-pub trait TrackClone {
-    fn clone_box(&self) -> Box<dyn Track>;
-}
-
-impl<T> TrackClone for T
-where
-    T: 'static + Track + Clone,
-{
-    fn clone_box(&self) -> Box<dyn Track> {
-        Box::new(self.clone())
-    }
-}
-
-impl Clone for Box<dyn Track> {
-    fn clone(&self) -> Box<dyn Track> {
-        self.clone_box()
-    }
-}
-
-pub trait Track: Send + Sync + Any + TrackClone {
-    /// Returns the unique identifier of the track.
-    fn get_id(&self) -> u32;
-
-    /// Sets the unique identifier of the track.
-    fn set_id(&mut self, id: u32);
-
-    /// Returns the name of the track.
-    fn get_name(&self) -> &str;
-
-    /// Sets the name of the track.
-    fn set_name(&mut self, name: &str);
-
-    /// Get the graph of the track.
-    fn graph(&self) -> &Graph;
-
-    /// Get the graph of the track as a mutable reference.
-    fn graph_mut(&mut self) -> &mut Graph;
-
-    /// Returns the current volume of the track.
-    fn volume(&self) -> f32;
-
-    /// Sets the volume of the track.
-    fn set_volume(&mut self, volume: f32);
-
-    /// Returns the number of channels of the track.
-    fn channels(&self) -> usize;
-
-    /// Returns the regions of the track.
-    fn regions(&self) -> Vec<&dyn Region>;
-
-    /// Returns the regions of the track as mutable references.
-    fn regions_mut(&mut self) -> Vec<&mut dyn Region>;
-
-    /// Returns the specific region of the track by its identifier.
-    fn get_region(&mut self, id: u32) -> Option<&dyn Region>;
-
-    /// Returns the specific region of the track by its identifier as a mutable reference.
-    fn get_region_mut(&mut self, id: u32) -> Option<&mut dyn Region>;
-
+pub trait Track {
     /// Adds a new region to the track.
     /// # Arguments
     /// - `region` - The region to add.
@@ -93,13 +36,10 @@ pub trait Track: Send + Sync + Any + TrackClone {
         region: Box<dyn Region>,
         at: Beats,
         duration: Beats,
-    ) -> Result<u32, Box<dyn TrackError>>;
+    ) -> Result<RegionID, TrackError>;
 
     /// Removes the specified region from the track.
-    fn remove_region(&mut self, id: u32);
-
-    /// Gets the next available region ID.
-    fn generate_region_id(&self) -> u32;
+    fn remove_region(&mut self, id: &RegionID);
 
     /// Returns the type of the track in the form of a string.
     fn track_type(&self) -> String;
@@ -108,32 +48,11 @@ pub trait Track: Send + Sync + Any + TrackClone {
     fn duration(&self) -> Beats;
 
     /// Prepare the track for rendering.
-    fn prepare(
-        &mut self,
-        chunk_size: Beats,
-        sample_rate: usize,
-        samples_per_beat: f32,
-    ) -> Result<(), Box<dyn TrackError>>;
+    fn prepare(&mut self, audio_ctx: &AudioContext) -> Result<(), TrackError>;
 
     /// Renders the specified area of the track.
     ///
     /// # Arguments
-    /// - `playhead` - The currently rendering duration of the audio track in beats.
-    /// - `chunk_size` - The size of the chunk to render.
-    /// - `sample_rate` - The sample rate of the audio track.
-    /// - `samples_per_beat` - The number of samples per beat at the given sample rate.
-    fn render_chunk_at(
-        &mut self,
-        playhead: Beats,
-        chunk_size: Beats,
-        sample_rate: usize,
-        samples_per_beat: f32,
-    );
-
-    /// Returns the rendered audio source.
-    fn rendered_data(&self) -> Result<&AudioSource, Box<dyn TrackError>>;
-
-    fn as_any(&self) -> &dyn Any;
-
-    fn as_any_mut(&mut self) -> &mut dyn Any;
+    /// - `audio_ctx` - The current audio context.
+    fn process(&mut self, playhead: Beats, audio_ctx: &AudioContext);
 }

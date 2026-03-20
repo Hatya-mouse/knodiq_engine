@@ -18,3 +18,21 @@
 pub mod buffer_track;
 
 pub use buffer_track::BufferTrack;
+
+use std::fmt::Display;
+
+/// An ID used to identify a node in the graph.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default, serde::Serialize)]
+pub struct TrackID(usize);
+
+impl TrackID {
+    pub fn new(val: usize) -> Self {
+        Self(val)
+    }
+}
+
+impl Display for TrackID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}

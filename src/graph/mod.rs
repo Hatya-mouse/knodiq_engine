@@ -18,10 +18,15 @@
 pub mod built_in;
 pub mod connector;
 pub mod graph;
+pub mod graph_process_data;
 pub mod node;
+pub mod node_id;
+pub mod type_registry;
 pub mod value;
 
 pub use connector::Connector;
-pub use graph::{Graph, NodeId};
+pub use graph::Graph;
 pub use node::Node;
-pub use value::{Type, Value};
+pub use node_id::NodeID;
+pub use type_registry::{TypeID, TypeInfo, TypeRegistry};
+pub use value::{EdgeBuffer, Value};
