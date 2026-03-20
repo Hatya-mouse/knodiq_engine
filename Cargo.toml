@@ -10,7 +10,3 @@ name = "knodiq_engine"
 path = "src/lib.rs"
 
 [dependencies]
-cpal = "0.15.3"
-rubato = "0.16.1"
-serde = { "version" = "1.0.219", features = ["derive"] }
-symphonia = { version = "0.5.4", features = ["all-codecs"] }
