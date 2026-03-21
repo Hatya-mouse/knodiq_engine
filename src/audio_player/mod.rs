@@ -28,11 +28,16 @@ impl AudioPlayer {
         N: Node + 'static,
     {
         // Create a config
-        let config = StreamConfig {
-            channels: audio_ctx.channels,
-            sample_rate: audio_ctx.sample_rate,
-            buffer_size: BufferSize::Default,
-        };
+        // let config = StreamConfig {
+        //     channels: audio_ctx.channels,
+        //     sample_rate: audio_ctx.sample_rate,
+        //     buffer_size: BufferSize::Default,
+        // };
+        let config = self
+            .device
+            .default_output_config()
+            .expect("Failed to get the default output configuration")
+            .config();
 
         // Prepare the node
         node.prepare(&audio_ctx);
