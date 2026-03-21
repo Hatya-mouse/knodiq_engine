@@ -38,6 +38,7 @@ impl AudioPlayer {
             .default_output_config()
             .expect("Failed to get the default output configuration")
             .config();
+        println!("{:?}", config);
 
         // Prepare the node
         node.prepare(&audio_ctx);
