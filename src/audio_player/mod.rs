@@ -31,7 +31,7 @@ impl AudioPlayer {
         let config = StreamConfig {
             channels: audio_ctx.channels,
             sample_rate: audio_ctx.sample_rate,
-            buffer_size: BufferSize::Fixed(audio_ctx.buffer_size),
+            buffer_size: BufferSize::Default,
         };
 
         // Prepare the node
