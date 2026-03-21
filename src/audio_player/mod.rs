@@ -33,11 +33,12 @@ impl AudioPlayer {
         //     sample_rate: audio_ctx.sample_rate,
         //     buffer_size: BufferSize::Default,
         // };
-        let config = self
-            .device
-            .default_output_config()
-            .expect("Failed to get the default output configuration");
-        println!("{:?}", config);
+        let supported_config = self.device.default_output_config().unwrap();
+        let config = StreamConfig {
+            channels: supported_config.channels(),
+            sample_rate: supported_config.sample_rate(),
+            buffer_size: BufferSize::Default,
+        };
 
         // Prepare the node
         node.prepare(&audio_ctx);
@@ -46,7 +47,7 @@ impl AudioPlayer {
         let stream = self
             .device
             .build_output_stream(
-                &config.config(),
+                &config,
                 move |data, _| {
                     node.process(&[], &[data.as_mut_ptr()], &audio_ctx);
                 },
