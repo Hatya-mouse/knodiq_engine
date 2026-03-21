@@ -25,7 +25,7 @@ impl AudioPlayer {
 
     pub fn play_audio<N>(&self, audio_ctx: AudioContext, mut node: N, duration: u64)
     where
-        N: Node + Send + 'static,
+        N: Node + 'static,
     {
         // Create a config
         let config = StreamConfig {
