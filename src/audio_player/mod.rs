@@ -11,11 +11,13 @@ pub struct AudioPlayer {
 }
 
 impl AudioPlayer {
-    pub fn new(device_id: String) -> Self {
+    pub fn new(device_id: Option<String>) -> Self {
         let host = cpal::default_host();
-        let id = &device_id.parse().expect("Failed to parse the device ID");
-        let device = host
-            .device_by_id(id)
+        let id: Option<cpal::DeviceId> =
+            device_id.map(|id| id.parse().expect("Failed to parse the device ID"));
+        let device = id
+            .as_ref()
+            .map_or_else(|| host.default_output_device(), |id| host.device_by_id(id))
             .expect("Failed to find the output device");
 
         Self { device }
