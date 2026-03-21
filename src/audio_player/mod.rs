@@ -28,15 +28,9 @@ impl AudioPlayer {
         N: Node + 'static,
     {
         // Create a config
-        // let config = StreamConfig {
-        //     channels: audio_ctx.channels,
-        //     sample_rate: audio_ctx.sample_rate,
-        //     buffer_size: BufferSize::Default,
-        // };
-        let supported_config = self.device.default_output_config().unwrap();
         let config = StreamConfig {
-            channels: supported_config.channels(),
-            sample_rate: supported_config.sample_rate(),
+            channels: audio_ctx.channels,
+            sample_rate: audio_ctx.sample_rate,
             buffer_size: BufferSize::Default,
         };
 
@@ -48,8 +42,8 @@ impl AudioPlayer {
             .device
             .build_output_stream(
                 &config,
-                move |data, _| {
-                    node.process(&[], &[data.as_mut_ptr()], &audio_ctx);
+                move |data: &mut [f32], _| {
+                    node.process(&[], &[data.as_mut_ptr() as *mut u8], &audio_ctx);
                 },
                 |err| {
                     eprintln!("An error occured on stream: {}", err);
