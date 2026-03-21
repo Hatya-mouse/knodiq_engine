@@ -10,3 +10,4 @@ name = "knodiq_engine"
 path = "src/lib.rs"
 
 [dependencies]
+cpal = "0.17.3"
