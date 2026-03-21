@@ -36,8 +36,7 @@ impl AudioPlayer {
         let config = self
             .device
             .default_output_config()
-            .expect("Failed to get the default output configuration")
-            .config();
+            .expect("Failed to get the default output configuration");
         println!("{:?}", config);
 
         // Prepare the node
@@ -47,7 +46,7 @@ impl AudioPlayer {
         let stream = self
             .device
             .build_output_stream(
-                &config,
+                &config.config(),
                 move |data, _| {
                     node.process(&[], &[data.as_mut_ptr()], &audio_ctx);
                 },
