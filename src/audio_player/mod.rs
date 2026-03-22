@@ -98,7 +98,7 @@ impl AudioPlayer {
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 72, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 74, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 77, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 73, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 72, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 74, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 79, 1.0, true, 250);
