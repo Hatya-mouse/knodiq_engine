@@ -109,9 +109,17 @@ impl AudioPlayer {
         }
         *notes.lock().unwrap() = on_notes;
         thread::sleep(Duration::from_millis(duration));
-        *notes.lock().unwrap() = vec![off_note; 32 * audio_ctx.buffer_size as usize];
+        *notes.lock().unwrap() = vec![off_note.clone(); 32 * audio_ctx.buffer_size as usize];
         thread::sleep(Duration::from_millis(duration));
-        *notes.lock().unwrap() = vec![on_note_low; 32 * audio_ctx.buffer_size as usize];
+        let mut on_notes = vec![off_note; 32 * audio_ctx.buffer_size as usize];
+        for i in (0..32 * audio_ctx.buffer_size as usize).step_by(32) {
+            on_notes[i] = KaslNote {
+                frequency: 440.0,
+                velocity: 0.05,
+                is_active: true,
+            };
+        }
+        *notes.lock().unwrap() = on_notes;
         thread::sleep(Duration::from_millis(duration));
     }
 }
