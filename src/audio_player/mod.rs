@@ -78,12 +78,12 @@ impl AudioPlayer {
 
         // Wait for the passed milliseconds
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 86, 1.0, true, 950);
-        thread::sleep(Duration::from_millis(50));
+        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 0, 0.0, false, 50);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 86, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 84, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 79, 1.0, true, 1200);
-        thread::sleep(Duration::from_millis(50));
+        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 0, 0.0, false, 50);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 79, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 77, 1.0, true, 250);
@@ -94,7 +94,7 @@ impl AudioPlayer {
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 72, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 74, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 700);
-        thread::sleep(Duration::from_millis(50));
+        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 0, 0.0, false, 50);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 72, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 74, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 77, 1.0, true, 250);
