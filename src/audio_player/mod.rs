@@ -107,6 +107,7 @@ impl AudioPlayer {
                 is_active: true,
             };
         }
+        println!("{:#?}", &on_notes[0..32]);
         *notes.lock().unwrap() = on_notes;
         thread::sleep(Duration::from_millis(duration));
         *notes.lock().unwrap() = vec![off_note; 32 * audio_ctx.buffer_size as usize];
