@@ -53,8 +53,14 @@ impl AudioPlayer {
             is_active: false,
         };
 
-        let notes = Arc::new(Mutex::new(vec![off_note.clone(); 32]));
+        let notes = Arc::new(Mutex::new(vec![
+            off_note.clone();
+            32 * audio_ctx.buffer_size as usize
+        ]));
         let notes_clone = Arc::clone(&notes);
+
+        // Clone the audio_ctx
+        let moved_ctx = audio_ctx.clone();
 
         // Play the sound
         let stream = self
@@ -66,7 +72,7 @@ impl AudioPlayer {
                     node.process(
                         &[notes.as_ptr() as *const u8],
                         &[data.as_mut_ptr() as *mut u8],
-                        &audio_ctx,
+                        &moved_ctx,
                     );
                 },
                 |err| {
@@ -78,10 +84,10 @@ impl AudioPlayer {
         stream.play().expect("Failed to play the stream");
 
         // Wait for the passed milliseconds
-        *notes.lock().unwrap() = vec![on_note.clone(); 32];
+        *notes.lock().unwrap() = vec![on_note.clone(); 32 * audio_ctx.buffer_size as usize];
         thread::sleep(Duration::from_millis(duration));
-        *notes.lock().unwrap() = vec![off_note; 32];
+        *notes.lock().unwrap() = vec![off_note; 32 * audio_ctx.buffer_size as usize];
         thread::sleep(Duration::from_millis(duration));
-        *notes.lock().unwrap() = vec![on_note; 32];
+        *notes.lock().unwrap() = vec![on_note; 32 * audio_ctx.buffer_size as usize];
     }
 }
