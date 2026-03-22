@@ -41,13 +41,6 @@ impl AudioPlayer {
         // Prepare the node
         node.prepare(&audio_ctx);
 
-        // Create a kasl note
-        let off_note = KaslNote {
-            frequency: 880.0,
-            velocity: 1.0,
-            is_active: false,
-        };
-
         // Calculate the note array size
         let note_array_size = (audio_ctx.max_voices * audio_ctx.buffer_size) as usize;
 
@@ -79,34 +72,59 @@ impl AudioPlayer {
         stream.play().expect("Failed to play the stream");
 
         // Wait for the passed milliseconds
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 86, 1.0, true, 990);
+        thread::sleep(Duration::from_millis(10));
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 86, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 84, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 81, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 79, 1.0, true, 1240);
+        thread::sleep(Duration::from_millis(10));
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 81, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 79, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 77, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 74, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 73, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 74, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 77, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 73, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 74, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 77, 1.0, true, 740);
+        thread::sleep(Duration::from_millis(10));
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 73, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 74, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 77, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 73, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 74, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 77, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 75, 1.0, true, 250);
+        AudioPlayer::play_key(&audio_ctx, note_array_size, notes, 77, 1.0, true, 250);
+    }
+
+    fn play_key(
+        audio_ctx: &AudioContext,
+        note_array_size: usize,
+        notes: Arc<Mutex<Vec<KaslNote>>>,
+        note_number: u8,
+        velocity: f32,
+        is_active: bool,
+        duration: u64,
+    ) {
+        // Create a kasl note
+        let off_note = KaslNote {
+            frequency: 0.0,
+            velocity: 1.0,
+            is_active: false,
+        };
+
+        // Calculate the frequency
+        let frequency = 440.0 * 2.0f32.powf((f32::from(note_number) - 69.0) / 12.0);
+
         let mut on_notes = vec![off_note.clone(); note_array_size];
         for i in (0..note_array_size).step_by(audio_ctx.max_voices as usize) {
             on_notes[i] = KaslNote {
-                frequency: 880.0,
-                velocity: 0.3,
-                is_active: true,
-            };
-            on_notes[i + 1] = KaslNote {
-                frequency: 1100.0,
-                velocity: 0.3,
-                is_active: true,
-            };
-            on_notes[i + 2] = KaslNote {
-                frequency: 1320.0,
-                velocity: 0.3,
-                is_active: true,
-            };
-        }
-        *notes.lock().unwrap() = on_notes;
-        thread::sleep(Duration::from_millis(duration));
-        *notes.lock().unwrap() = vec![off_note.clone(); note_array_size];
-        thread::sleep(Duration::from_millis(duration));
-        let mut on_notes = vec![off_note.clone(); note_array_size];
-        for i in (0..note_array_size).step_by(audio_ctx.max_voices as usize) {
-            on_notes[i] = KaslNote {
-                frequency: 880.0,
-                velocity: 1.0,
-                is_active: true,
+                frequency,
+                velocity,
+                is_active,
             };
         }
         *notes.lock().unwrap() = on_notes;
