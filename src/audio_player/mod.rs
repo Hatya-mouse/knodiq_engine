@@ -111,7 +111,7 @@ impl AudioPlayer {
         thread::sleep(Duration::from_millis(duration));
         *notes.lock().unwrap() = vec![off_note.clone(); 32 * audio_ctx.buffer_size as usize];
         thread::sleep(Duration::from_millis(duration));
-        let mut on_notes = vec![off_note; 32 * audio_ctx.buffer_size as usize];
+        let mut on_notes = vec![off_note.clone(); 32 * audio_ctx.buffer_size as usize];
         for i in (0..32 * audio_ctx.buffer_size as usize).step_by(32) {
             on_notes[i] = KaslNote {
                 frequency: 440.0,
