@@ -79,6 +79,11 @@ impl AudioPlayer {
                         &[data.as_mut_ptr() as *mut u8],
                         &moved_ctx,
                     );
+                    let first_note = unsafe { &*(notes.as_ptr()) };
+                    println!(
+                        "frequency: {}, velocity: {}, is_active: {}",
+                        first_note.frequency, first_note.velocity, first_note.is_active
+                    );
                 },
                 |err| {
                     eprintln!("An error occured on stream: {}", err);
