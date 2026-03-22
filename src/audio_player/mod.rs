@@ -1,6 +1,10 @@
-use std::{thread, time};
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+};
 
-use crate::{audio_context::AudioContext, node::Node};
+use crate::{audio_context::AudioContext, node::Node, note::KaslNote};
 use cpal::{
     BufferSize, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
@@ -31,11 +35,26 @@ impl AudioPlayer {
         let config = StreamConfig {
             channels: audio_ctx.channels,
             sample_rate: audio_ctx.sample_rate,
-            buffer_size: BufferSize::Default,
+            buffer_size: BufferSize::Fixed(audio_ctx.buffer_size),
         };
 
         // Prepare the node
         node.prepare(&audio_ctx);
+
+        // Create a kasl note
+        let on_note = KaslNote {
+            frequency: 440.0,
+            velocity: 1.0,
+            is_active: true,
+        };
+        let off_note = KaslNote {
+            frequency: 440.0,
+            velocity: 1.0,
+            is_active: false,
+        };
+
+        let notes = Arc::new(Mutex::new(vec![off_note.clone(); 32]));
+        let notes_clone = Arc::clone(&notes);
 
         // Play the sound
         let stream = self
@@ -43,7 +62,12 @@ impl AudioPlayer {
             .build_output_stream(
                 &config,
                 move |data: &mut [f32], _| {
-                    node.process(&[], &[data.as_mut_ptr() as *mut u8], &audio_ctx);
+                    let notes = notes_clone.lock().unwrap();
+                    node.process(
+                        &[notes.as_ptr() as *const u8],
+                        &[data.as_mut_ptr() as *mut u8],
+                        &audio_ctx,
+                    );
                 },
                 |err| {
                     eprintln!("An error occured on stream: {}", err);
@@ -54,6 +78,10 @@ impl AudioPlayer {
         stream.play().expect("Failed to play the stream");
 
         // Wait for the passed milliseconds
-        thread::sleep(time::Duration::from_millis(duration));
+        *notes.lock().unwrap() = vec![on_note.clone(); 32];
+        thread::sleep(Duration::from_millis(duration));
+        *notes.lock().unwrap() = vec![off_note; 32];
+        thread::sleep(Duration::from_millis(duration));
+        *notes.lock().unwrap() = vec![on_note; 32];
     }
 }
