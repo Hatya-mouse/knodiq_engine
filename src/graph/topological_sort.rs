@@ -1,0 +1,62 @@
+use crate::graph::{Graph, error::GraphError, node_id::NodeID};
+use std::collections::HashMap;
+
+#[derive(PartialEq)]
+enum SortState {
+    Unvisited,
+    Visiting,
+    Visited,
+}
+
+impl Graph {
+    pub fn sort_graph(&mut self) -> Result<(), GraphError> {
+        // Create visited and sorted array
+        let mut states: HashMap<NodeID, SortState> = self
+            .nodes
+            .keys()
+            .map(|k| (*k, SortState::Unvisited))
+            .collect();
+        let mut sorted: Vec<NodeID> = Vec::new();
+
+        // Sort the graph recursively
+        for node in self.nodes.keys().copied().collect::<Vec<NodeID>>() {
+            let state = states.get(&node);
+            if state.is_none_or(|s| s == &SortState::Unvisited) {
+                self.search_recursively(node, &mut states, &mut sorted)?;
+            } else if state.is_some_and(|s| s == &SortState::Visiting) {
+                return Err(GraphError::NodeCycle(node));
+            }
+        }
+
+        // Reverse the sorted array
+        sorted.reverse();
+        self.sorted_nodes = sorted;
+
+        Ok(())
+    }
+
+    fn search_recursively(
+        &mut self,
+        node: NodeID,
+        states: &mut HashMap<NodeID, SortState>,
+        sorted: &mut Vec<NodeID>,
+    ) -> Result<(), GraphError> {
+        // Mark the node as visiting
+        states.insert(node, SortState::Visiting);
+        // Check the neighboring nodes
+        let neighbors = self.adjacency.get(&node).cloned().unwrap_or_default();
+        for neighbor in neighbors {
+            let state = states.get(&neighbor);
+            if state.is_none_or(|s| s == &SortState::Unvisited) {
+                self.search_recursively(neighbor, states, sorted)?;
+            } else if state.is_some_and(|s| s == &SortState::Visiting) {
+                return Err(GraphError::NodeCycle(neighbor));
+            }
+        }
+        // Mark the node as visited
+        states.insert(node, SortState::Visited);
+        // Add the current node after searching all of its neighboring nodes
+        sorted.push(node);
+        Ok(())
+    }
+}
