@@ -48,10 +48,10 @@ impl AudioPlayer {
             is_active: false,
         };
 
-        let notes = Arc::new(Mutex::new(vec![
-            off_note.clone();
-            32 * audio_ctx.buffer_size as usize
-        ]));
+        // Calculate the note array size
+        let note_array_size = (audio_ctx.max_voices * audio_ctx.buffer_size) as usize;
+
+        let notes = Arc::new(Mutex::new(vec![off_note.clone(); note_array_size]));
         let notes_clone = Arc::clone(&notes);
 
         // Clone the audio_ctx
@@ -79,8 +79,8 @@ impl AudioPlayer {
         stream.play().expect("Failed to play the stream");
 
         // Wait for the passed milliseconds
-        let mut on_notes = vec![off_note.clone(); 32 * audio_ctx.buffer_size as usize];
-        for i in (0..32 * audio_ctx.buffer_size as usize).step_by(32) {
+        let mut on_notes = vec![off_note.clone(); note_array_size];
+        for i in (0..note_array_size).step_by(audio_ctx.max_voices as usize) {
             on_notes[i] = KaslNote {
                 frequency: 440.0,
                 velocity: 0.3,
@@ -99,10 +99,10 @@ impl AudioPlayer {
         }
         *notes.lock().unwrap() = on_notes;
         thread::sleep(Duration::from_millis(duration));
-        *notes.lock().unwrap() = vec![off_note.clone(); 32 * audio_ctx.buffer_size as usize];
+        *notes.lock().unwrap() = vec![off_note.clone(); note_array_size];
         thread::sleep(Duration::from_millis(duration));
-        let mut on_notes = vec![off_note.clone(); 32 * audio_ctx.buffer_size as usize];
-        for i in (0..32 * audio_ctx.buffer_size as usize).step_by(32) {
+        let mut on_notes = vec![off_note.clone(); note_array_size];
+        for i in (0..note_array_size).step_by(audio_ctx.max_voices as usize) {
             on_notes[i] = KaslNote {
                 frequency: 440.0,
                 velocity: 0.5,
