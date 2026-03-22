@@ -44,7 +44,7 @@ impl AudioPlayer {
         // Create a kasl note
         let off_note = KaslNote {
             frequency: 440.0,
-            velocity: 0.01,
+            velocity: 0.1,
             is_active: false,
         };
 
