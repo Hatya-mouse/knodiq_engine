@@ -92,17 +92,17 @@ impl AudioPlayer {
         let mut on_notes = vec![off_note.clone(); 32 * audio_ctx.buffer_size as usize];
         for i in (0..32 * audio_ctx.buffer_size as usize).step_by(32) {
             on_notes[i] = KaslNote {
-                frequency: 261.63,
+                frequency: 440.0,
                 velocity: 0.3,
                 is_active: true,
             };
             on_notes[i + 1] = KaslNote {
-                frequency: 329.63,
+                frequency: 660.0,
                 velocity: 0.3,
                 is_active: true,
             };
             on_notes[i + 2] = KaslNote {
-                frequency: 392.00,
+                frequency: 550.0,
                 velocity: 0.3,
                 is_active: true,
             };
