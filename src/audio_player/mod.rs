@@ -87,12 +87,12 @@ impl AudioPlayer {
                 is_active: true,
             };
             on_notes[i + 1] = KaslNote {
-                frequency: 770.0,
+                frequency: 660.0,
                 velocity: 0.3,
                 is_active: true,
             };
             on_notes[i + 2] = KaslNote {
-                frequency: 990.0,
+                frequency: 880.0,
                 velocity: 0.3,
                 is_active: true,
             };
