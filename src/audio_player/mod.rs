@@ -89,7 +89,25 @@ impl AudioPlayer {
         stream.play().expect("Failed to play the stream");
 
         // Wait for the passed milliseconds
-        *notes.lock().unwrap() = vec![on_note_high; 32 * audio_ctx.buffer_size as usize];
+        let mut on_notes = vec![off_note.clone(); 32 * audio_ctx.buffer_size as usize];
+        for i in (0..32 * audio_ctx.buffer_size as usize).step_by(32) {
+            on_notes[i] = KaslNote {
+                frequency: 261.63,
+                velocity: 0.3,
+                is_active: true,
+            };
+            on_notes[i + 1] = KaslNote {
+                frequency: 329.63,
+                velocity: 0.3,
+                is_active: true,
+            };
+            on_notes[i + 2] = KaslNote {
+                frequency: 392.00,
+                velocity: 0.3,
+                is_active: true,
+            };
+        }
+        *notes.lock().unwrap() = on_notes;
         thread::sleep(Duration::from_millis(duration));
         *notes.lock().unwrap() = vec![off_note; 32 * audio_ctx.buffer_size as usize];
         thread::sleep(Duration::from_millis(duration));
