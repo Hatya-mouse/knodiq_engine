@@ -103,6 +103,7 @@ impl AudioPlayer {
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 79, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
+        thread::sleep(Duration::from_millis(1000));
     }
 
     fn play_key(
