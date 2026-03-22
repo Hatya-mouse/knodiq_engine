@@ -44,7 +44,7 @@ impl AudioPlayer {
         // Create a kasl note
         let off_note = KaslNote {
             frequency: 440.0,
-            velocity: 0.1,
+            velocity: 1.0,
             is_active: false,
         };
 
@@ -105,7 +105,7 @@ impl AudioPlayer {
         for i in (0..note_array_size).step_by(audio_ctx.max_voices as usize) {
             on_notes[i] = KaslNote {
                 frequency: 440.0,
-                velocity: 0.5,
+                velocity: 1.0,
                 is_active: true,
             };
         }
