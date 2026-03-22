@@ -42,7 +42,12 @@ impl AudioPlayer {
         node.prepare(&audio_ctx);
 
         // Create a kasl note
-        let on_note = KaslNote {
+        let on_note_high = KaslNote {
+            frequency: 660.0,
+            velocity: 1.0,
+            is_active: true,
+        };
+        let on_note_low = KaslNote {
             frequency: 440.0,
             velocity: 1.0,
             is_active: true,
@@ -84,10 +89,11 @@ impl AudioPlayer {
         stream.play().expect("Failed to play the stream");
 
         // Wait for the passed milliseconds
-        *notes.lock().unwrap() = vec![on_note.clone(); 32 * audio_ctx.buffer_size as usize];
+        *notes.lock().unwrap() = vec![on_note_high; 32 * audio_ctx.buffer_size as usize];
         thread::sleep(Duration::from_millis(duration));
         *notes.lock().unwrap() = vec![off_note; 32 * audio_ctx.buffer_size as usize];
         thread::sleep(Duration::from_millis(duration));
-        *notes.lock().unwrap() = vec![on_note; 32 * audio_ctx.buffer_size as usize];
+        *notes.lock().unwrap() = vec![on_note_low; 32 * audio_ctx.buffer_size as usize];
+        thread::sleep(Duration::from_millis(duration));
     }
 }
