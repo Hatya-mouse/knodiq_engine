@@ -121,5 +121,7 @@ impl AudioPlayer {
         }
         *notes.lock().unwrap() = on_notes;
         thread::sleep(Duration::from_millis(duration));
+
+        println!("off_note is_active: {}", off_note.is_active);
     }
 }
