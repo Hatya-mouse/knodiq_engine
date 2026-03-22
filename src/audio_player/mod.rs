@@ -42,16 +42,6 @@ impl AudioPlayer {
         node.prepare(&audio_ctx);
 
         // Create a kasl note
-        let on_note_high = KaslNote {
-            frequency: 660.0,
-            velocity: 0.01,
-            is_active: true,
-        };
-        let on_note_low = KaslNote {
-            frequency: 440.0,
-            velocity: 0.01,
-            is_active: true,
-        };
         let off_note = KaslNote {
             frequency: 440.0,
             velocity: 0.01,
@@ -93,17 +83,17 @@ impl AudioPlayer {
         for i in (0..32 * audio_ctx.buffer_size as usize).step_by(32) {
             on_notes[i] = KaslNote {
                 frequency: 440.0,
-                velocity: 0.05,
+                velocity: 0.3,
                 is_active: true,
             };
             on_notes[i + 1] = KaslNote {
                 frequency: 770.0,
-                velocity: 0.05,
+                velocity: 0.3,
                 is_active: true,
             };
             on_notes[i + 2] = KaslNote {
                 frequency: 990.0,
-                velocity: 0.05,
+                velocity: 0.3,
                 is_active: true,
             };
         }
@@ -115,13 +105,11 @@ impl AudioPlayer {
         for i in (0..32 * audio_ctx.buffer_size as usize).step_by(32) {
             on_notes[i] = KaslNote {
                 frequency: 440.0,
-                velocity: 0.05,
+                velocity: 0.5,
                 is_active: true,
             };
         }
         *notes.lock().unwrap() = on_notes;
         thread::sleep(Duration::from_millis(duration));
-
-        println!("off_note is_active: {}", off_note.is_active);
     }
 }
