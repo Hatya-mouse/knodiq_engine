@@ -1,19 +1,19 @@
 use crate::{
-    data_types::{AudioContext, Voice},
-    graph::{Graph, error::GraphError},
-    node::{
-        Node,
-        builtin::{AudioOutputNode, NoteInputNode},
+    data_types::{AudioContext, Beats},
+    graph::error::GraphError,
+    node::Node,
+    track::{
+        Track,
+        note_track::{Note, NoteRegion, NoteTrack},
     },
 };
 use cpal::{
     BufferSize, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
 };
-use std::{
-    sync::{Arc, Mutex},
-    thread,
-    time::Duration,
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
 };
 
 pub struct AudioPlayer {
@@ -50,15 +50,43 @@ impl AudioPlayer {
             buffer_size: BufferSize::Fixed(audio_ctx.buffer_size),
         };
 
-        // Create a graph
-        let input_node = NoteInputNode::default();
-        let output_node = AudioOutputNode::default();
-        let mut graph = Graph::new(
-            Box::new(input_node),
-            Box::new(output_node),
-            audio_ctx.clone(),
-        );
+        // Create a track
+        let mut note_track = NoteTrack::new(audio_ctx.clone());
 
+        // Add notes to the track
+        let mut note_region = NoteRegion::new(Beats(0.0), Beats(17.0), Vec::new());
+        note_region.add_note(Note::new(Beats(0.0), Beats(1.9), 1174.65, 1.0));
+        note_region.add_note(Note::new(Beats(2.0), Beats(0.5), 1174.65, 1.0));
+        note_region.add_note(Note::new(Beats(2.5), Beats(0.5), 1046.50, 1.0));
+        note_region.add_note(Note::new(Beats(3.0), Beats(0.5), 880.00, 1.0));
+        note_region.add_note(Note::new(Beats(3.5), Beats(2.4), 783.99, 1.0));
+
+        note_region.add_note(Note::new(Beats(6.0), Beats(0.5), 880.00, 1.0));
+        note_region.add_note(Note::new(Beats(6.5), Beats(0.5), 783.99, 1.0));
+        note_region.add_note(Note::new(Beats(7.0), Beats(0.5), 698.45, 1.0));
+        note_region.add_note(Note::new(Beats(7.5), Beats(0.5), 587.32, 1.0));
+
+        note_region.add_note(Note::new(Beats(8.0), Beats(0.5), 523.25, 1.0));
+        note_region.add_note(Note::new(Beats(8.5), Beats(0.5), 587.32, 1.0));
+        note_region.add_note(Note::new(Beats(9.0), Beats(0.5), 698.45, 1.0));
+        note_region.add_note(Note::new(Beats(9.5), Beats(0.5), 523.25, 1.0));
+        note_region.add_note(Note::new(Beats(10.0), Beats(0.5), 587.32, 1.0));
+        note_region.add_note(Note::new(Beats(10.5), Beats(0.5), 880.00, 1.0));
+
+        note_region.add_note(Note::new(Beats(12.0), Beats(0.5), 523.25, 1.0));
+        note_region.add_note(Note::new(Beats(12.5), Beats(0.5), 587.32, 1.0));
+        note_region.add_note(Note::new(Beats(13.0), Beats(0.5), 698.45, 1.0));
+        note_region.add_note(Note::new(Beats(13.5), Beats(0.5), 523.25, 1.0));
+        note_region.add_note(Note::new(Beats(14.0), Beats(0.5), 587.32, 1.0));
+        note_region.add_note(Note::new(Beats(14.5), Beats(0.5), 880.00, 1.0));
+        note_region.add_note(Note::new(Beats(15.0), Beats(0.5), 783.99, 1.0));
+        note_region.add_note(Note::new(Beats(15.5), Beats(0.5), 880.00, 1.0));
+
+        // Add the region to the track
+        note_track.add_region(note_region);
+
+        // Get the graph from the track
+        let graph = note_track.get_graph_mut();
         // Add the node to the graph
         let node_id = graph.add_node(Box::new(node));
         // Connect the node
@@ -69,32 +97,22 @@ impl AudioPlayer {
         // Prepare the graph
         graph.prepare()?;
 
-        // Calculate the note array size
-        let note_array_size = (audio_ctx.max_voices * audio_ctx.buffer_size) as usize;
-
-        let off_note = Voice {
-            frequency: 0.0,
-            velocity: 1.0,
-            is_active: false,
-        };
-        let notes = Arc::new(Mutex::new(vec![off_note.clone(); note_array_size]));
-        let notes_clone = Arc::clone(&notes);
-
-        // Clone the audio_ctx
-        let moved_ctx = audio_ctx.clone();
-
         // Play the sound
+        let playhead_samples = Arc::new(AtomicU64::new(0));
+        let playhead_clone = playhead_samples.clone();
+
         let stream = self
             .device
             .build_output_stream(
                 &config,
                 move |data: &mut [f32], _| {
-                    let notes = notes_clone.lock().unwrap();
-                    graph.process(
-                        &[notes.as_ptr() as *const u8],
-                        &[data.as_mut_ptr() as *mut u8],
-                        &moved_ctx,
+                    let sample = playhead_clone.load(Ordering::Relaxed);
+                    let beats = Beats(
+                        sample as f64 / audio_ctx.sample_rate as f64 / 60.0
+                            * audio_ctx.tempo as f64,
                     );
+                    note_track.process(beats, data.as_mut_ptr() as *mut u8, &audio_ctx);
+                    playhead_clone.fetch_add(audio_ctx.buffer_size as u64, Ordering::Relaxed);
                 },
                 |err| {
                     eprintln!("An error occured on stream: {}", err);
@@ -104,66 +122,6 @@ impl AudioPlayer {
             .expect("Failed to create a new stream");
         stream.play().expect("Failed to play the stream");
 
-        // Wait for the passed milliseconds
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 86, 1.0, true, 950);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 0, 0.0, false, 50);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 86, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 84, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 79, 1.0, true, 1200);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 0, 0.0, false, 50);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 79, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 77, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 74, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 72, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 74, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 77, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 72, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 74, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 700);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 0, 0.0, false, 50);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 72, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 74, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 77, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 72, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 74, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 79, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
-        AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 0, 0.0, false, 1000);
-
         Ok(())
-    }
-
-    fn play_key(
-        audio_ctx: &AudioContext,
-        note_array_size: usize,
-        notes: &Arc<Mutex<Vec<Voice>>>,
-        note_number: u8,
-        velocity: f32,
-        is_active: bool,
-        duration: u64,
-    ) {
-        // Create a kasl note
-        let off_note = Voice {
-            frequency: 0.0,
-            velocity: 1.0,
-            is_active: false,
-        };
-
-        // Calculate the frequency
-        let frequency = 440.0 * 2.0f32.powf((f32::from(note_number) - 69.0) / 12.0);
-
-        let mut on_notes = vec![off_note.clone(); note_array_size];
-        for i in (0..note_array_size).step_by(audio_ctx.max_voices as usize) {
-            on_notes[i] = Voice {
-                frequency,
-                velocity,
-                is_active,
-            };
-        }
-        *notes.lock().unwrap() = on_notes;
-        thread::sleep(Duration::from_millis(duration));
     }
 }

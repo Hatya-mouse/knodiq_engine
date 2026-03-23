@@ -5,11 +5,13 @@ pub use audio_region::AudioRegion;
 use crate::{
     data_types::{AudioContext, Beats},
     graph::{Graph, error::GraphError},
+    node::builtin::{AudioInputNode, AudioOutputNode},
     resampler::resample_channels,
     track::{RegionID, Track},
 };
 use std::collections::HashMap;
 
+#[derive(Default)]
 pub struct AudioTrack {
     // --- GRAPH ---
     graph: Graph,
@@ -26,6 +28,23 @@ pub struct AudioTrack {
 }
 
 impl AudioTrack {
+    pub fn new(audio_ctx: AudioContext) -> Self {
+        // Create a graph with the input and output nodes
+        let input_node = AudioInputNode::default();
+        let output_node = AudioOutputNode::default();
+        let graph = Graph::new(
+            Box::new(input_node),
+            Box::new(output_node),
+            audio_ctx.clone(),
+        );
+
+        Self {
+            graph,
+            audio_ctx,
+            ..Default::default()
+        }
+    }
+
     // --- NUMBER CONVERSION ---
 
     fn beats_to_index(&self, beats: Beats) -> usize {
@@ -41,13 +60,19 @@ impl AudioTrack {
         id
     }
 
-    fn add_region(&mut self, region: AudioRegion) {
+    pub fn add_region(&mut self, region: AudioRegion) {
         let id = self.generate_region_id();
         self.regions.insert(id, region);
     }
 }
 
 impl Track for AudioTrack {
+    // --- GRAPH GETTING ---
+
+    fn get_graph_mut(&mut self) -> &mut Graph {
+        &mut self.graph
+    }
+
     // --- AUDIO CONTEXT UPDARING ---
 
     fn set_audio_ctx(&mut self, audio_ctx: &AudioContext) {

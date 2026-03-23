@@ -6,11 +6,13 @@ pub use note_region::{Note, NoteRegion};
 use crate::{
     data_types::{AudioContext, Beats, Voice},
     graph::{Graph, error::GraphError},
+    node::builtin::{AudioOutputNode, NoteInputNode},
     track::{RegionID, Track},
 };
 use std::collections::{HashMap, VecDeque};
 use voice_event::VoiceEvent;
 
+#[derive(Default)]
 pub struct NoteTrack {
     // --- GRAPH ---
     graph: Graph,
@@ -33,6 +35,23 @@ pub struct NoteTrack {
 }
 
 impl NoteTrack {
+    pub fn new(audio_ctx: AudioContext) -> Self {
+        // Create a graph with the input and output nodes
+        let input_node = NoteInputNode::default();
+        let output_node = AudioOutputNode::default();
+        let graph = Graph::new(
+            Box::new(input_node),
+            Box::new(output_node),
+            audio_ctx.clone(),
+        );
+
+        Self {
+            graph,
+            audio_ctx,
+            ..Default::default()
+        }
+    }
+
     // --- NUMBER CONVERSION ---
 
     fn beats_to_samples(&self, beats: Beats) -> usize {
@@ -48,7 +67,7 @@ impl NoteTrack {
         id
     }
 
-    fn add_region(&mut self, region: NoteRegion) {
+    pub fn add_region(&mut self, region: NoteRegion) {
         let id = self.generate_region_id();
         self.regions.insert(id, region);
     }
@@ -68,6 +87,12 @@ impl NoteTrack {
 }
 
 impl Track for NoteTrack {
+    // --- GRAPH GETTING ---
+
+    fn get_graph_mut(&mut self) -> &mut Graph {
+        &mut self.graph
+    }
+
     // --- AUDIO CONTEXT UPDARING ---
 
     fn set_audio_ctx(&mut self, audio_ctx: &AudioContext) {
@@ -135,7 +160,7 @@ impl Track for NoteTrack {
         if self
             .events
             .get(self.event_cursor)
-            .map_or(false, |e| e.sample_index > buffer_start)
+            .is_some_and(|e| e.sample_index > buffer_start)
             || (self.event_cursor > 0
                 && self.events[self.event_cursor - 1].sample_index > buffer_start)
         {

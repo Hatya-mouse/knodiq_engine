@@ -6,10 +6,13 @@ pub use region_id::RegionID;
 
 use crate::{
     data_types::{AudioContext, Beats},
-    graph::error::GraphError,
+    graph::{Graph, error::GraphError},
 };
 
 pub trait Track {
+    /// Returns a mutable pointer to the Graph.
+    fn get_graph_mut(&mut self) -> &mut Graph;
+
     /// Sets the audio context to the new one.
     fn set_audio_ctx(&mut self, audio_ctx: &AudioContext);
 
