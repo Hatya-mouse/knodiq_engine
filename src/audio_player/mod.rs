@@ -6,12 +6,12 @@ use std::{
 
 use crate::{
     audio_context::AudioContext,
-    data_type::KaslNote,
     graph::{Graph, error::GraphError},
     node::{
         Node,
         builtin::{AudioOutputNode, NoteInputNode},
     },
+    note::Voice,
 };
 use cpal::{
     BufferSize, StreamConfig,
@@ -74,7 +74,7 @@ impl AudioPlayer {
         // Calculate the note array size
         let note_array_size = (audio_ctx.max_voices * audio_ctx.buffer_size) as usize;
 
-        let off_note = KaslNote {
+        let off_note = Voice {
             frequency: 0.0,
             velocity: 1.0,
             is_active: false,
@@ -141,14 +141,14 @@ impl AudioPlayer {
     fn play_key(
         audio_ctx: &AudioContext,
         note_array_size: usize,
-        notes: &Arc<Mutex<Vec<KaslNote>>>,
+        notes: &Arc<Mutex<Vec<Voice>>>,
         note_number: u8,
         velocity: f32,
         is_active: bool,
         duration: u64,
     ) {
         // Create a kasl note
-        let off_note = KaslNote {
+        let off_note = Voice {
             frequency: 0.0,
             velocity: 1.0,
             is_active: false,
@@ -159,7 +159,7 @@ impl AudioPlayer {
 
         let mut on_notes = vec![off_note.clone(); note_array_size];
         for i in (0..note_array_size).step_by(audio_ctx.max_voices as usize) {
-            on_notes[i] = KaslNote {
+            on_notes[i] = Voice {
                 frequency,
                 velocity,
                 is_active,

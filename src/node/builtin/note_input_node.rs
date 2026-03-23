@@ -1,6 +1,4 @@
-use crate::{
-    audio_context::AudioContext, data_type::KaslNote, node::Node, type_registry::TypeInfo,
-};
+use crate::{audio_context::AudioContext, node::Node, note::Voice, type_info::TypeInfo};
 use std::ptr::copy_nonoverlapping;
 
 /// An empty node that just writes the `process` input to the node output.
@@ -40,7 +38,7 @@ impl Node for NoteInputNode {
 
     fn update(&mut self, audio_ctx: &AudioContext) {
         self.data_type = TypeInfo::new(
-            size_of::<KaslNote>() * audio_ctx.max_voices as usize * audio_ctx.buffer_size as usize,
+            size_of::<Voice>() * audio_ctx.max_voices as usize * audio_ctx.buffer_size as usize,
             4,
         );
     }

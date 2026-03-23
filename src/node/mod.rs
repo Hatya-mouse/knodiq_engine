@@ -1,6 +1,6 @@
 pub mod builtin;
 
-use crate::{audio_context::AudioContext, type_registry::TypeInfo};
+use crate::{audio_context::AudioContext, type_info::TypeInfo};
 
 pub trait Node: Send {
     /// Returns a vector of the names of all inputs.

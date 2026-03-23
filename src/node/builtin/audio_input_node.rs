@@ -1,6 +1,5 @@
+use crate::{audio_context::AudioContext, node::Node, type_info::TypeInfo};
 use std::ptr::copy_nonoverlapping;
-
-use crate::{audio_context::AudioContext, node::Node, type_registry::TypeInfo};
 
 /// An empty node that just writes the `process` input to the node output.
 #[derive(Default)]
