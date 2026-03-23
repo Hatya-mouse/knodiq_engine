@@ -21,6 +21,8 @@ pub struct Graph {
     node_inputs: HashMap<NodeID, Vec<*const u8>>,
     node_outputs: HashMap<NodeID, Vec<*mut u8>>,
 
+    zero_buffer: Vec<u8>,
+
     input_id: NodeID,
     output_id: NodeID,
 
@@ -119,34 +121,62 @@ impl Graph {
         Ok(())
     }
 
+    fn allocate_output_buffer(
+        node_id: &NodeID,
+        node: &dyn Node,
+        output_buffers: &mut HashMap<(NodeID, usize), Vec<u8>>,
+        node_outputs: &mut HashMap<NodeID, Vec<*mut u8>>,
+        audio_ctx: &AudioContext,
+    ) -> Result<(), GraphError> {
+        // Create a buffer for all outputs
+        for output_index in 0..node.get_output_len() {
+            let output_type = node
+                .get_output_type(output_index)
+                .ok_or(GraphError::OutputTypeUnavailable(*node_id, output_index))?;
+            let buffer = vec![0u8; output_type.size * audio_ctx.buffer_size as usize];
+
+            // Insert the output buffer to the output_buffers
+            output_buffers.insert((*node_id, output_index), buffer);
+
+            // Register the pointer to the buffer in the node_outputs map
+            let ptr = output_buffers
+                .get_mut(&(*node_id, output_index))
+                .unwrap()
+                .as_mut_ptr();
+            node_outputs.entry(*node_id).or_default().push(ptr);
+        }
+
+        Ok(())
+    }
+
     /// Prepares the graph for processing. The host must call this function before start processing, or it may lead to undefined behavior.
     pub fn prepare(&mut self, audio_ctx: &AudioContext) -> Result<(), GraphError> {
         // First sort the graph
         self.sort_graph()?;
+
+        // Allocate output buffer for the input node
+        if let Some(input_node) = self.nodes.get_mut(&self.input_id) {
+            Self::allocate_output_buffer(
+                &self.input_id,
+                input_node.as_ref(),
+                &mut self.output_buffers,
+                &mut self.node_outputs,
+                &self.audio_ctx,
+            )?;
+        }
 
         for node_id in &self.sorted_nodes {
             if let Some(node) = self.nodes.get_mut(node_id) {
                 // Call prepare function for every nodes
                 node.prepare(audio_ctx);
 
-                // Create a buffer for all outputs
-                for output_index in 0..node.get_output_len() {
-                    let output_type = node
-                        .get_output_type(output_index)
-                        .ok_or(GraphError::OutputTypeUnavailable(*node_id, output_index))?;
-                    let buffer = vec![0u8; output_type.size * self.audio_ctx.buffer_size as usize];
-
-                    // Insert the output buffer to the output_buffers
-                    self.output_buffers.insert((*node_id, output_index), buffer);
-
-                    // Register the pointer to the buffer in the node_outputs map
-                    let ptr = self
-                        .output_buffers
-                        .get_mut(&(*node_id, output_index))
-                        .unwrap()
-                        .as_mut_ptr();
-                    self.node_outputs.entry(*node_id).or_default().push(ptr);
-                }
+                Self::allocate_output_buffer(
+                    node_id,
+                    node.as_ref(),
+                    &mut self.output_buffers,
+                    &mut self.node_outputs,
+                    &self.audio_ctx,
+                )?;
             }
         }
 
@@ -160,13 +190,13 @@ impl Graph {
                 max_size = max_size.max(type_info.size);
             }
         }
-        let zero_buffer = vec![0u8; max_size * self.audio_ctx.buffer_size as usize];
+        self.zero_buffer = vec![0u8; max_size * self.audio_ctx.buffer_size as usize];
 
         // Build node_inputs from edges
         for edge in &self.edges {
             let ptr = self.output_buffers.get(&(edge.0, edge.1)).unwrap().as_ptr();
             self.node_inputs.entry(edge.2).or_insert_with(|| {
-                vec![zero_buffer.as_ptr(); self.nodes[&edge.2].get_input_len()]
+                vec![self.zero_buffer.as_ptr(); self.nodes[&edge.2].get_input_len()]
             })[edge.3] = ptr;
         }
 
