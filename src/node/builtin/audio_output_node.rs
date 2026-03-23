@@ -46,7 +46,7 @@ impl Node for AudioOutputNode {
         );
     }
 
-    fn prepare(&mut self, _audio_ctx: &AudioContext) {}
+    fn prepare(&mut self) {}
 
     fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], _audio_ctx: &AudioContext) {
         for (input, output) in inputs.iter().zip(outputs.iter()) {

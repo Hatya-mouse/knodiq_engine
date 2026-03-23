@@ -67,7 +67,7 @@ impl AudioPlayer {
         graph.connect(&graph_input_id, "notes", &node_id, node_input_name)?;
         graph.connect(&node_id, node_output_name, &graph_output_id, "audio")?;
         // Prepare the graph
-        graph.prepare(&audio_ctx)?;
+        graph.prepare()?;
 
         // Calculate the note array size
         let note_array_size = (audio_ctx.max_voices * audio_ctx.buffer_size) as usize;

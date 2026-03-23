@@ -4,4 +4,6 @@ pub struct AudioContext {
     pub sample_rate: u32,
     pub buffer_size: u32,
     pub max_voices: u32,
+
+    pub tempo: u32,
 }

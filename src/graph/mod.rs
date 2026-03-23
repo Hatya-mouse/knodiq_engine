@@ -109,20 +109,19 @@ impl Graph {
         Ok(())
     }
 
-    // --- GRAPH PROCESSING ---
+    // --- AUDIO CONTEXT UPDATING ---
 
-    /// Updates the graph with the given audio context.
-    pub fn update_graph(&mut self, audio_ctx: AudioContext) -> Result<(), GraphError> {
-        self.audio_ctx = audio_ctx;
+    /// Sets the audio context to the new one.
+    pub fn set_audio_ctx(&mut self, audio_ctx: &AudioContext) {
+        self.audio_ctx = audio_ctx.clone();
 
-        // Call update function for every nodes
+        // Call update functions for every nodes
         for node in self.nodes.values_mut() {
-            // Call prepare function for every nodes
-            node.update(&self.audio_ctx);
+            node.update(audio_ctx);
         }
-
-        Ok(())
     }
+
+    // --- GRAPH PROCESSING ---
 
     fn allocate_output_buffer(
         node_id: &NodeID,
@@ -153,7 +152,7 @@ impl Graph {
     }
 
     /// Prepares the graph for processing. The host must call this function before start processing, or it may lead to undefined behavior.
-    pub fn prepare(&mut self, audio_ctx: &AudioContext) -> Result<(), GraphError> {
+    pub fn prepare(&mut self) -> Result<(), GraphError> {
         // First sort the graph
         self.sort_graph()?;
 
@@ -171,7 +170,7 @@ impl Graph {
         for node_id in &self.sorted_nodes {
             if let Some(node) = self.nodes.get_mut(node_id) {
                 // Call prepare function for every nodes
-                node.prepare(audio_ctx);
+                node.prepare();
 
                 Self::allocate_output_buffer(
                     node_id,
@@ -207,6 +206,7 @@ impl Graph {
     }
 
     /// Processes the graph in the sorted order and writes the result in the output pointer.
+    /// The host must pass the audio context which is as the same as the one given in the `set_audio_ctx` function.
     pub fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], audio_ctx: &AudioContext) {
         // Get the pointer to the output buffer of the input node
         let output_buffers = self.get_output_ptr(&self.input_id);
