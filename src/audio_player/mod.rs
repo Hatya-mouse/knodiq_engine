@@ -11,9 +11,13 @@ use cpal::{
     BufferSize, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
 };
-use std::sync::{
-    Arc,
-    atomic::{AtomicU64, Ordering},
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
+    thread,
+    time::Duration,
 };
 
 pub struct AudioPlayer {
@@ -39,6 +43,7 @@ impl AudioPlayer {
         node: N,
         node_input_name: &str,
         node_output_name: &str,
+        duration: u64,
     ) -> Result<(), GraphError>
     where
         N: Node + 'static,
@@ -121,6 +126,8 @@ impl AudioPlayer {
             )
             .expect("Failed to create a new stream");
         stream.play().expect("Failed to play the stream");
+
+        thread::sleep(Duration::from_millis(duration));
 
         Ok(())
     }
