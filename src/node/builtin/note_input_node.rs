@@ -15,7 +15,7 @@ impl Node for NoteInputNode {
     }
 
     fn get_output_names(&self) -> Vec<String> {
-        vec!["input".to_string()]
+        vec!["output".to_string()]
     }
 
     fn get_input_len(&self) -> usize {
