@@ -66,7 +66,7 @@ impl AudioPlayer {
         // Connect the node
         let graph_input_id = graph.get_input_id();
         let graph_output_id = graph.get_output_id();
-        graph.connect(&graph_input_id, "note", &node_id, node_input_name)?;
+        graph.connect(&graph_input_id, "notes", &node_id, node_input_name)?;
         graph.connect(&node_id, node_output_name, &graph_output_id, "audio")?;
         // Prepare the graph
         graph.prepare(&audio_ctx)?;

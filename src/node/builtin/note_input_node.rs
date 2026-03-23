@@ -15,7 +15,7 @@ impl Node for NoteInputNode {
     }
 
     fn get_output_names(&self) -> Vec<String> {
-        vec!["audio".to_string()]
+        vec!["notes".to_string()]
     }
 
     fn get_input_len(&self) -> usize {
