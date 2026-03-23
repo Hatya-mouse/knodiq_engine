@@ -214,14 +214,11 @@ impl Track for NoteTrack {
                         .iter()
                         .position(|(_, freq)| *freq == event.frequency)
                     {
-                        println!("  → voice found at active_voices[{}]", remove_index);
                         // Remove the index from the active_voices and get the voice index
                         let (voice_index, _) = self.active_voices.remove(remove_index).unwrap();
                         // Mark the voice index as free
                         self.free_voices.push(voice_index);
                         self.voice_buffer[current + voice_index].is_active = false;
-                    } else {
-                        println!("  → voice NOT found!");
                     }
                 }
                 // Increment the event cursor
