@@ -9,6 +9,8 @@ enum SortState {
 }
 
 impl Graph {
+    /// Sorts the processing graph in a topological order. Returns error if a cycle is found.
+    /// Omits the input and output node.
     pub fn sort_graph(&mut self) -> Result<(), GraphError> {
         // Create visited and sorted array
         let mut states: HashMap<NodeID, SortState> = self
@@ -28,13 +30,16 @@ impl Graph {
             }
         }
 
-        // Reverse the sorted array
+        // Remove the input node and the output node from the sorted vector
+        sorted.retain(|n| n != &self.input_id && n != &self.output_id);
+        // Reverse the sorted vector
         sorted.reverse();
         self.sorted_nodes = sorted;
 
         Ok(())
     }
 
+    /// Sorts the graph recursively using depth-first search algorithm.
     fn search_recursively(
         &mut self,
         node: NodeID,

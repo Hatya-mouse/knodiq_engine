@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use crate::{audio_context::AudioContext, node::Node, note::KaslNote};
+use crate::{audio_context::AudioContext, data_type::KaslNote, node::Node};
 use cpal::{
     BufferSize, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
