@@ -43,14 +43,15 @@ impl Graph {
         output_node: Box<dyn Node>,
         audio_ctx: AudioContext,
     ) -> Self {
-        let mut graph = Graph::default();
+        let mut graph = Graph {
+            audio_ctx,
+            ..Default::default()
+        };
         // Register the input and output nodes
         let input_id = graph.add_node(input_node);
         let output_id = graph.add_node(output_node);
         graph.input_id = input_id;
         graph.output_id = output_id;
-        // Set the audio context
-        graph.audio_ctx = audio_ctx;
         // Return the newly created graph
         graph
     }
