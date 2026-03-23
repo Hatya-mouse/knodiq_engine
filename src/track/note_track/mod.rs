@@ -159,7 +159,7 @@ impl Track for NoteTrack {
         if buffer_start < audio_ctx.buffer_size as usize * 5 {
             println!("buffer_start: {}", buffer_start);
             for i in 0..audio_ctx.max_voices as usize {
-                let v = &self.voice_buffer[i]; // local_sample=0のVoice
+                let v = &self.voice_buffer[i];
                 if v.is_active {
                     println!(
                         "  voice[{}]: freq={}, active={}",
