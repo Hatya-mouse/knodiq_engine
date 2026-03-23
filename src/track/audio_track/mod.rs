@@ -26,7 +26,7 @@ pub struct AudioTrack {
 }
 
 impl AudioTrack {
-    // --- NUMBER CONVERTING ---
+    // --- NUMBER CONVERSION ---
 
     fn beats_to_index(&self, beats: Beats) -> usize {
         (beats.0 / self.audio_ctx.tempo as f64 * 60.0 * self.audio_ctx.sample_rate as f64) as usize

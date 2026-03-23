@@ -1,5 +1,5 @@
-mod audio_track;
-mod note_track;
+pub mod audio_track;
+pub mod note_track;
 mod region_id;
 
 pub use region_id::RegionID;
