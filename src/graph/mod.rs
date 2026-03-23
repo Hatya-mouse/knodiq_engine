@@ -11,24 +11,26 @@ use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct Graph {
+    // --- GRAPH STRUCTURE ---
     nodes: HashMap<NodeID, Box<dyn Node>>,
-    sorted_nodes: Vec<NodeID>,
     edges: Vec<(NodeID, usize, NodeID, usize)>,
     adjacency: HashMap<NodeID, Vec<NodeID>>,
+    input_id: NodeID,
+    output_id: NodeID,
 
+    // --- PROCESSING DATA ---
+    sorted_nodes: Vec<NodeID>,
     output_buffers: HashMap<(NodeID, usize), Vec<u8>>,
     // Pointers to the edge buffer in the input order
     node_inputs: HashMap<NodeID, Vec<*const u8>>,
     node_outputs: HashMap<NodeID, Vec<*mut u8>>,
-
     zero_buffer: Vec<u8>,
 
-    input_id: NodeID,
-    output_id: NodeID,
-
+    // --- CONFIGURATIONS ---
     /// The current audio context.
     audio_ctx: AudioContext,
 
+    // --- MISC ---
     next_node_id: usize,
 }
 
