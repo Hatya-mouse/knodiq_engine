@@ -156,19 +156,6 @@ impl Track for NoteTrack {
         let buffer_start = self.beats_to_samples(playhead);
         let buffer_end = buffer_start + audio_ctx.buffer_size as usize;
 
-        if buffer_start < audio_ctx.buffer_size as usize * 5 {
-            println!("buffer_start: {}", buffer_start);
-            for i in 0..audio_ctx.max_voices as usize {
-                let v = &self.voice_buffer[i];
-                if v.is_active {
-                    println!(
-                        "  voice[{}]: freq={}, active={}",
-                        i, v.frequency, v.is_active
-                    );
-                }
-            }
-        }
-
         let max_voices = audio_ctx.max_voices as usize;
 
         // Seek the event cursor
@@ -224,17 +211,21 @@ impl Track for NoteTrack {
                     self.voice_buffer[current + voice_index] =
                         Voice::new(frequency, velocity, true, 0);
                 } else {
+                    println!("NoteOff: freq={}, sample={}", event.frequency, sample);
                     // Remove the active voice whose frequency matches the event frequency
                     if let Some(remove_index) = self
                         .active_voices
                         .iter()
                         .position(|&i| self.voice_buffer[current + i].frequency == event.frequency)
                     {
+                        println!("  → voice found at active_voices[{}]", remove_index);
                         // Remove the index from the active_voices and get the voice index
                         let voice_index = self.active_voices.remove(remove_index).unwrap();
                         // Mark the voice index as free
                         self.free_voices.push(voice_index);
                         self.voice_buffer[current + voice_index].is_active = false;
+                    } else {
+                        println!("  → voice NOT found!");
                     }
                 }
                 // Increment the event cursor
