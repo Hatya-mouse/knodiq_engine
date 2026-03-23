@@ -56,7 +56,6 @@ impl NoteTrack {
 
     fn beats_to_samples(&self, beats: Beats) -> usize {
         (beats.0 / self.audio_ctx.tempo as f64 * 60.0 * self.audio_ctx.sample_rate as f64) as usize
-            * self.audio_ctx.channels as usize
     }
 
     // --- REGION ADDITION ---
@@ -144,6 +143,9 @@ impl Track for NoteTrack {
         // Initialize the voices
         self.active_voices.clear();
         self.free_voices = (0..self.audio_ctx.max_voices as usize).collect();
+
+        println!("events: {:?}", &self.events);
+        println!("events count: {}", self.events.len());
 
         // Prepare the graph
         self.graph.prepare()
