@@ -99,8 +99,9 @@ impl AudioPlayer {
         let graph_output_id = graph.get_output_id();
         graph.connect(&graph_input_id, "notes", &node_id, node_input_name)?;
         graph.connect(&node_id, node_output_name, &graph_output_id, "audio")?;
-        // Prepare the graph
-        graph.prepare()?;
+
+        // Prepare the track
+        note_track.prepare(Beats(17.0))?;
 
         // Play the sound
         let playhead_samples = Arc::new(AtomicU64::new(0));
