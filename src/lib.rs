@@ -3,4 +3,4 @@ pub mod audio_player;
 mod data_type;
 pub mod graph;
 pub mod node;
-mod type_registry;
+pub mod type_registry;
