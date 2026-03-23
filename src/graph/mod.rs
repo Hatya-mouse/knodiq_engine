@@ -123,7 +123,7 @@ impl Graph {
                 for output_index in 0..node.get_output_len() {
                     let output_type = node
                         .get_output_type(output_index)
-                        .ok_or_else(|| GraphError::OutputTypeUnavailable(*node_id, output_index))?;
+                        .ok_or(GraphError::OutputTypeUnavailable(*node_id, output_index))?;
                     let buffer = vec![0u8; output_type.size * self.audio_ctx.buffer_size as usize];
 
                     // Insert the output buffer to the output_buffers
