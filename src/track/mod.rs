@@ -20,5 +20,5 @@ pub trait Track {
     fn prepare(&mut self, total_duration: Beats) -> Result<(), GraphError>;
 
     /// Processes the track with the given input and output pointer.
-    fn process(&mut self, playhead: usize, output: *mut u8, audio_ctx: &AudioContext);
+    fn process(&mut self, playhead: Beats, output: *mut u8, audio_ctx: &AudioContext);
 }

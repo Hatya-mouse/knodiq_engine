@@ -148,9 +148,9 @@ impl Track for NoteTrack {
         self.graph.prepare()
     }
 
-    fn process(&mut self, playhead: usize, output: *mut u8, audio_ctx: &AudioContext) {
+    fn process(&mut self, playhead: Beats, output: *mut u8, audio_ctx: &AudioContext) {
         // Convert the playhead beats to samples
-        let buffer_start = playhead;
+        let buffer_start = self.beats_to_samples(playhead);
         let buffer_end = buffer_start + audio_ctx.buffer_size as usize;
 
         let max_voices = audio_ctx.max_voices as usize;
@@ -207,6 +207,11 @@ impl Track for NoteTrack {
                     // Set the new voice to the voice buffer
                     self.voice_buffer[current + voice_index] =
                         Voice::new(frequency, velocity, true, 0);
+
+                    println!(
+                        "NoteOn: freq={}, sample={}, buffer_start={}, local_sample={}, voice_index={}",
+                        frequency, sample, buffer_start, local_sample, voice_index
+                    );
                 } else {
                     // Remove the active voice whose frequency matches the event frequency
                     if let Some(remove_index) = self

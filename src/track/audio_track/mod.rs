@@ -118,8 +118,8 @@ impl Track for AudioTrack {
         self.graph.prepare()
     }
 
-    fn process(&mut self, playhead: usize, output: *mut u8, audio_ctx: &AudioContext) {
-        let buffer_start = playhead;
+    fn process(&mut self, playhead: Beats, output: *mut u8, audio_ctx: &AudioContext) {
+        let buffer_start = self.beats_to_index(playhead);
         let buffer_end =
             buffer_start + audio_ctx.buffer_size as usize * audio_ctx.channels as usize;
         // Get the slice pointer from the processed audio data
