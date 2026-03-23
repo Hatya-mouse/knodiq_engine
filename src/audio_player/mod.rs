@@ -88,7 +88,7 @@ impl AudioPlayer {
         note_region.add_note(Note::new(Beats(15.5), Beats(0.5), 880.00, 1.0));
 
         // Add the region to the track
-        note_track.add_region(note_region);
+        // note_track.add_region(note_region);
 
         // Get the graph from the track
         let graph = note_track.get_graph_mut();
