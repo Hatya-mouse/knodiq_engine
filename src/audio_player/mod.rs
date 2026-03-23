@@ -113,11 +113,7 @@ impl AudioPlayer {
                 &config,
                 move |data: &mut [f32], _| {
                     let sample = playhead_clone.load(Ordering::Relaxed);
-                    let beats = Beats(
-                        sample as f64 / audio_ctx.sample_rate as f64 / 60.0
-                            * audio_ctx.tempo as f64,
-                    );
-                    note_track.process(beats, data.as_mut_ptr() as *mut u8, &audio_ctx);
+                    note_track.process(sample as usize, data.as_mut_ptr() as *mut u8, &audio_ctx);
                     playhead_clone.fetch_add(audio_ctx.buffer_size as u64, Ordering::Relaxed);
                 },
                 |err| {
