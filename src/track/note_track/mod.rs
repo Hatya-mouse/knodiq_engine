@@ -156,6 +156,19 @@ impl Track for NoteTrack {
         let buffer_start = self.beats_to_samples(playhead);
         let buffer_end = buffer_start + audio_ctx.buffer_size as usize;
 
+        if buffer_start < audio_ctx.buffer_size as usize * 5 {
+            println!("buffer_start: {}", buffer_start);
+            for i in 0..audio_ctx.max_voices as usize {
+                let v = &self.voice_buffer[i]; // local_sample=0のVoice
+                if v.is_active {
+                    println!(
+                        "  voice[{}]: freq={}, active={}",
+                        i, v.frequency, v.is_active
+                    );
+                }
+            }
+        }
+
         let max_voices = audio_ctx.max_voices as usize;
 
         // Seek the event cursor
