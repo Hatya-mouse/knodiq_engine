@@ -14,7 +14,7 @@ impl Node for AudioInputNode {
     }
 
     fn get_output_names(&self) -> Vec<String> {
-        vec!["output".to_string()]
+        vec!["note".to_string()]
     }
 
     fn get_input_len(&self) -> usize {

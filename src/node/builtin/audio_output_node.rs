@@ -9,7 +9,7 @@ pub struct AudioOutputNode {
 
 impl Node for AudioOutputNode {
     fn get_input_names(&self) -> Vec<String> {
-        vec!["input".to_string()]
+        vec!["audio".to_string()]
     }
 
     fn get_output_names(&self) -> Vec<String> {
