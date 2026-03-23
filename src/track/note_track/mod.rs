@@ -23,7 +23,7 @@ pub struct NoteTrack {
     // --- VOICE MANAGEMENT ---
     events: Vec<VoiceEvent>,
     event_cursor: usize,
-    active_voices: VecDeque<usize>,
+    active_voices: VecDeque<(usize, f32)>,
     free_voices: Vec<usize>,
     voice_buffer: Vec<Voice>,
 
@@ -74,14 +74,14 @@ impl NoteTrack {
     // --- VOICE GETTING ---
 
     /// Returns the vacant voice index, or returns the index of the oldest voice.
-    fn find_or_steal_voice(&mut self) -> usize {
-        let new_voice = self
+    fn find_or_steal_voice(&mut self, new_freq: f32) -> usize {
+        let new_voice_index = self
             .free_voices
             .pop()
-            .or(self.active_voices.pop_front())
+            .or(self.active_voices.pop_front().map(|v| v.0))
             .unwrap_or_default();
-        self.active_voices.push_back(new_voice);
-        new_voice
+        self.active_voices.push_back((new_voice_index, new_freq));
+        new_voice_index
     }
 }
 
@@ -144,9 +144,6 @@ impl Track for NoteTrack {
         self.active_voices.clear();
         self.free_voices = (0..self.audio_ctx.max_voices as usize).collect();
 
-        println!("events: {:?}", &self.events);
-        println!("events count: {}", self.events.len());
-
         // Prepare the graph
         self.graph.prepare()
     }
@@ -188,7 +185,7 @@ impl Track for NoteTrack {
                     .clone_from_slice(&prev_slice[previous..previous + max_voices]);
 
                 // Increment the elapsed_samples
-                for index in self.active_voices.iter() {
+                for (index, _) in self.active_voices.iter() {
                     self.voice_buffer[current + index].elapsed_samples += 1;
                 }
             }
@@ -206,21 +203,20 @@ impl Track for NoteTrack {
 
                 if event.is_note_on {
                     // Start playing the note from the sample
-                    let voice_index = self.find_or_steal_voice();
+                    let voice_index = self.find_or_steal_voice(frequency);
                     // Set the new voice to the voice buffer
                     self.voice_buffer[current + voice_index] =
                         Voice::new(frequency, velocity, true, 0);
                 } else {
-                    println!("NoteOff: freq={}, sample={}", event.frequency, sample);
                     // Remove the active voice whose frequency matches the event frequency
                     if let Some(remove_index) = self
                         .active_voices
                         .iter()
-                        .position(|&i| self.voice_buffer[current + i].frequency == event.frequency)
+                        .position(|(_, freq)| *freq == event.frequency)
                     {
                         println!("  → voice found at active_voices[{}]", remove_index);
                         // Remove the index from the active_voices and get the voice index
-                        let voice_index = self.active_voices.remove(remove_index).unwrap();
+                        let (voice_index, _) = self.active_voices.remove(remove_index).unwrap();
                         // Mark the voice index as free
                         self.free_voices.push(voice_index);
                         self.voice_buffer[current + voice_index].is_active = false;
