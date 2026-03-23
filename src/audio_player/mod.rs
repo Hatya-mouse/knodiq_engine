@@ -1,21 +1,19 @@
-use std::{
-    sync::{Arc, Mutex},
-    thread,
-    time::Duration,
-};
-
 use crate::{
-    audio_context::AudioContext,
+    data_types::{AudioContext, Voice},
     graph::{Graph, error::GraphError},
     node::{
         Node,
         builtin::{AudioOutputNode, NoteInputNode},
     },
-    note::Voice,
 };
 use cpal::{
     BufferSize, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
+};
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
 };
 
 pub struct AudioPlayer {

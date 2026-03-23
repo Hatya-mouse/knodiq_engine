@@ -3,7 +3,7 @@ pub mod node_id;
 pub mod topological_sort;
 
 use crate::{
-    audio_context::AudioContext,
+    data_types::AudioContext,
     graph::{error::GraphError, node_id::NodeID},
     node::Node,
 };
