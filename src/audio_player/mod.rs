@@ -4,7 +4,15 @@ use std::{
     time::Duration,
 };
 
-use crate::{audio_context::AudioContext, data_type::KaslNote, node::Node};
+use crate::{
+    audio_context::AudioContext,
+    data_type::KaslNote,
+    graph::{Graph, error::GraphError},
+    node::{
+        Node,
+        builtin::{AudioOutputNode, NoteInputNode},
+    },
+};
 use cpal::{
     BufferSize, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
@@ -27,7 +35,13 @@ impl AudioPlayer {
         Self { device }
     }
 
-    pub fn play_audio<N>(&self, audio_ctx: AudioContext, mut node: N)
+    pub fn play_audio<N>(
+        &self,
+        audio_ctx: AudioContext,
+        node: N,
+        node_input_name: &str,
+        node_output_name: &str,
+    ) -> Result<(), GraphError>
     where
         N: Node + 'static,
     {
@@ -38,8 +52,24 @@ impl AudioPlayer {
             buffer_size: BufferSize::Fixed(audio_ctx.buffer_size),
         };
 
-        // Prepare the node
-        node.prepare(&audio_ctx);
+        // Create a graph
+        let input_node = NoteInputNode::default();
+        let output_node = AudioOutputNode::default();
+        let mut graph = Graph::new(
+            Box::new(input_node),
+            Box::new(output_node),
+            audio_ctx.clone(),
+        );
+
+        // Add the node to the graph
+        let node_id = graph.add_node(Box::new(node));
+        // Connect the node
+        let graph_input_id = graph.get_input_id();
+        let graph_output_id = graph.get_output_id();
+        graph.connect(&graph_input_id, "output", &node_id, node_input_name)?;
+        graph.connect(&node_id, node_output_name, &graph_output_id, "input")?;
+        // Prepare the graph
+        graph.prepare(&audio_ctx)?;
 
         // Calculate the note array size
         let note_array_size = (audio_ctx.max_voices * audio_ctx.buffer_size) as usize;
@@ -62,7 +92,7 @@ impl AudioPlayer {
                 &config,
                 move |data: &mut [f32], _| {
                     let notes = notes_clone.lock().unwrap();
-                    node.process(
+                    graph.process(
                         &[notes.as_ptr() as *const u8],
                         &[data.as_mut_ptr() as *mut u8],
                         &moved_ctx,
@@ -104,6 +134,8 @@ impl AudioPlayer {
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 79, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 81, 1.0, true, 250);
         AudioPlayer::play_key(&audio_ctx, note_array_size, &notes, 0, 0.0, false, 1000);
+
+        Ok(())
     }
 
     fn play_key(

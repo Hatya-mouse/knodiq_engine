@@ -60,6 +60,16 @@ impl Graph {
         id
     }
 
+    // --- NODE GETTING ---
+
+    pub fn get_input_id(&mut self) -> NodeID {
+        self.input_id
+    }
+
+    pub fn get_output_id(&mut self) -> NodeID {
+        self.output_id
+    }
+
     // --- NODE MANIPULATION ---
 
     /// Adds a new node to the graph, and returns the newly generated node ID.
@@ -199,3 +209,5 @@ impl Graph {
         self.node_inputs[to].clone()
     }
 }
+
+unsafe impl Send for Graph {}
