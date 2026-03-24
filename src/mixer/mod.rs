@@ -1,0 +1,105 @@
+mod tempo_event;
+mod tempo_map;
+mod track_id;
+
+pub use tempo_event::TempoEvent;
+pub use tempo_map::TempoMap;
+
+use crate::{
+    data_types::{AudioContext, Beats},
+    graph::error::GraphError,
+    mixer::track_id::TrackID,
+    track::Track,
+};
+use std::collections::HashMap;
+
+pub struct Mixer {
+    // --- TRACKS ---
+    tracks: HashMap<TrackID, Box<dyn Track>>,
+
+    // --- TEMPO MAP ---
+    pub tempo_map: TempoMap,
+
+    // --- AUDIO CONTEXT ---
+    audio_ctx: AudioContext,
+
+    // --- MISCS ---
+    next_track_id: usize,
+}
+
+impl Mixer {
+    // --- NEW ---
+
+    /// Creates a new mixer with the given tempo.
+    pub fn new(audio_ctx: AudioContext, tempo: f64) -> Self {
+        Self {
+            tracks: HashMap::new(),
+            tempo_map: TempoMap::new(audio_ctx.clone(), tempo),
+            audio_ctx,
+            next_track_id: 0,
+        }
+    }
+
+    // --- TRACK ID GENERATION ---
+
+    /// Generates a new unique track ID.
+    fn generate_track_id(&mut self) -> TrackID {
+        let id = TrackID(self.next_track_id);
+        self.next_track_id += 1;
+        id
+    }
+
+    // --- TRACK MANAGEMENT ---
+
+    /// Adds a new track to the mixer, setting the audio context to the one in the mixer.
+    pub fn add_track(&mut self, mut track: Box<dyn Track>) -> TrackID {
+        let id = self.generate_track_id();
+        track.set_audio_ctx(&self.audio_ctx);
+        self.tracks.insert(id, track);
+        id
+    }
+
+    /// Removes the track from the mixer.
+    pub fn remove_track(&mut self, id: &TrackID) {
+        self.tracks.remove(id);
+    }
+
+    /// Returns a mutable reference to the track.
+    pub fn get_track_mut(&mut self, id: &TrackID) -> Option<&mut Box<dyn Track>> {
+        self.tracks.get_mut(id)
+    }
+
+    // --- MIXING PROCESS ---
+
+    /// Prepares the tracks in the mixer for the playback starting at the given beats.
+    pub fn prepare(&mut self, start: Beats, duration: Beats) -> Result<(), GraphError> {
+        // Convert the start and duration beats to samples
+        let start_samples = self.tempo_map.beats_to_samples(start);
+        let duration_samples = self.tempo_map.beats_to_samples(duration);
+
+        // Prepare the tracks one by one
+        for track in self.tracks.values_mut() {
+            track.prepare(start_samples, duration_samples, &self.tempo_map)?;
+        }
+
+        Ok(())
+    }
+
+    /// Processes the tracks in the mixer a the specified playhead.
+    pub fn process(&mut self, playhead: Beats, output: *mut u8) {
+        // Fill the output buffer with zeros before processing
+        unsafe {
+            let len = self.audio_ctx.buffer_size * self.audio_ctx.channels;
+            let dst = std::slice::from_raw_parts_mut(output as *mut f32, len);
+            dst.fill(0.0);
+        }
+
+        // Convert the playhead beats to samples
+        let playhead_samples = self.tempo_map.beats_to_samples(playhead);
+
+        // Call process function for every tracks
+        for track in self.tracks.values_mut() {
+            track.process(playhead_samples, output);
+        }
+    }
+}
