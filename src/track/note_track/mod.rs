@@ -183,11 +183,11 @@ impl Track for NoteTrack {
                 // Copy the previous slice to the mutable slice of the current buffer
                 curr_slice[..max_voices]
                     .clone_from_slice(&prev_slice[previous..previous + max_voices]);
+            }
 
-                // Increment the elapsed_samples
-                for (index, _) in self.active_voices.iter() {
-                    self.voice_buffer[current + index].elapsed_samples += 1;
-                }
+            // Increment the elapsed_samples
+            for (index, _) in self.active_voices.iter() {
+                self.voice_buffer[current + index].elapsed_samples += 1;
             }
 
             // Consume the events in this sample
