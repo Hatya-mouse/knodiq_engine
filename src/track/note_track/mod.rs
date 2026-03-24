@@ -212,6 +212,11 @@ impl Track for NoteTrack {
                         frequency, voice_index, self.active_voices, self.free_voices
                     );
                 } else {
+                    println!(
+                        "NoteOff: freq={}, active={:?}",
+                        event.frequency, self.active_voices
+                    );
+
                     // Remove the active voice whose frequency matches the event frequency
                     if let Some(remove_index) = self
                         .active_voices
