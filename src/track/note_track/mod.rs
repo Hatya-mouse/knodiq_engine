@@ -208,8 +208,8 @@ impl Track for NoteTrack {
                         Voice::new(frequency, velocity, 0.0, true);
 
                     println!(
-                        "NoteOn: freq={}, voice_index={}, active_voices={:?}",
-                        frequency, voice_index, self.active_voices
+                        "NoteOn: freq={}, voice_index={}, active={:?}, free={:?}",
+                        frequency, voice_index, self.active_voices, self.free_voices
                     );
                 } else {
                     // Remove the active voice whose frequency matches the event frequency
