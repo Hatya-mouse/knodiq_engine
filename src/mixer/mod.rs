@@ -87,6 +87,8 @@ impl Mixer {
         // Convert the playhead beats to samples
         let playhead_samples = self.tempo_map.beats_to_samples(playhead);
 
+        println!("playhead_samples={}", playhead_samples);
+
         // Call process function for every tracks
         for track in self.tracks.values_mut() {
             track.process(playhead_samples, output);

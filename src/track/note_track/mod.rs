@@ -77,11 +77,6 @@ impl NoteTrack {
             .or(self.active_voices.pop_front().map(|v| v.0))
             .unwrap_or_default();
         self.active_voices.push_back((new_voice_index, new_freq));
-
-        println!(
-            "find_or_steal: pushed ({}, {}), active={:?}",
-            new_voice_index, new_freq, self.active_voices
-        );
         new_voice_index
     }
 }
