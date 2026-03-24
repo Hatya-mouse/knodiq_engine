@@ -89,7 +89,7 @@ impl Mixer {
 
         // Call process function for every tracks
         for track in self.tracks.values_mut() {
-            println!("{}", playhead_samples);
+            println!("{:?}", playhead);
             track.process(playhead_samples, output);
         }
     }

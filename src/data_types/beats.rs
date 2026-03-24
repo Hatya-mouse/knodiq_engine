@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Beats(pub f64);
 
 impl Add for Beats {
