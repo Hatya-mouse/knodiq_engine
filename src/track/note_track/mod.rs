@@ -71,6 +71,7 @@ impl NoteTrack {
 
     /// Returns the vacant voice index, or returns the index of the oldest voice.
     fn find_or_steal_voice(&mut self, new_freq: f32) -> usize {
+        println!("self ptr={:p}", self as *const NoteTrack);
         let new_voice_index = self
             .free_voices
             .pop()
@@ -141,11 +142,6 @@ impl Track for NoteTrack {
         self.active_voices.clear();
         self.free_voices = (0..self.audio_ctx.max_voices).collect();
         self.last_voices = vec![Voice::default(); self.audio_ctx.max_voices];
-
-        println!(
-            "events[0..5]: {:?}",
-            &self.events[..5.min(self.events.len())]
-        );
 
         // Prepare the graph
         self.graph.prepare()
