@@ -64,6 +64,7 @@ impl AudioPlayer {
 
         // Add notes to the track
         let mut note_region = NoteRegion::new(Beats(0.0), Beats(17.0), Vec::new());
+        note_region.add_note(Note::new(Beats(0.0), Beats(3.9), 29.13, 1.0));
         note_region.add_note(Note::new(Beats(0.0), Beats(1.9), 1174.65, 1.0));
         note_region.add_note(Note::new(Beats(2.0), Beats(0.5), 1174.65, 1.0));
         note_region.add_note(Note::new(Beats(2.5), Beats(0.166), 1046.50, 1.0));
@@ -72,6 +73,7 @@ impl AudioPlayer {
         note_region.add_note(Note::new(Beats(3.0), Beats(0.3), 880.00, 1.0));
         note_region.add_note(Note::new(Beats(3.5), Beats(2.4), 783.99, 1.0));
 
+        note_region.add_note(Note::new(Beats(4.0), Beats(3.9), 32.70, 1.0));
         note_region.add_note(Note::new(Beats(6.0), Beats(0.5), 880.00, 1.0));
         note_region.add_note(Note::new(Beats(6.5), Beats(0.166), 783.99, 1.0));
         note_region.add_note(Note::new(Beats(6.666), Beats(0.166), 880.00, 1.0));
@@ -79,6 +81,7 @@ impl AudioPlayer {
         note_region.add_note(Note::new(Beats(7.0), Beats(0.3), 698.45, 1.0));
         note_region.add_note(Note::new(Beats(7.5), Beats(0.5), 587.32, 1.0));
 
+        note_region.add_note(Note::new(Beats(8.0), Beats(3.9), 36.70, 1.0));
         note_region.add_note(Note::new(Beats(8.0), Beats(0.5), 523.25, 1.0));
         note_region.add_note(Note::new(Beats(8.5), Beats(0.5), 587.32, 1.0));
         note_region.add_note(Note::new(Beats(9.0), Beats(0.5), 698.45, 1.0));
@@ -86,10 +89,13 @@ impl AudioPlayer {
         note_region.add_note(Note::new(Beats(10.0), Beats(0.5), 587.32, 1.0));
         note_region.add_note(Note::new(Beats(10.5), Beats(1.4), 880.00, 1.0));
 
+        note_region.add_note(Note::new(Beats(12.0), Beats(1.9), 36.70, 1.0));
+        note_region.add_note(Note::new(Beats(8.0), Beats(0.5), 523.25, 1.0));
         note_region.add_note(Note::new(Beats(12.0), Beats(0.5), 523.25, 1.0));
         note_region.add_note(Note::new(Beats(12.5), Beats(0.5), 587.32, 1.0));
         note_region.add_note(Note::new(Beats(13.0), Beats(0.5), 698.45, 1.0));
         note_region.add_note(Note::new(Beats(13.5), Beats(0.5), 523.25, 1.0));
+        note_region.add_note(Note::new(Beats(14.0), Beats(1.9), 43.65, 1.0));
         note_region.add_note(Note::new(Beats(14.0), Beats(0.5), 587.32, 1.0));
         note_region.add_note(Note::new(Beats(14.5), Beats(0.5), 880.00, 1.0));
         note_region.add_note(Note::new(Beats(15.0), Beats(0.5), 783.99, 1.0));
