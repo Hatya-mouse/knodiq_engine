@@ -74,7 +74,7 @@ impl NoteTrack {
         let new_voice_index = self
             .free_voices
             .pop()
-            .or(self.active_voices.pop_front().map(|v| v.0))
+            .or_else(|| self.active_voices.pop_front().map(|v| v.0))
             .unwrap_or_default();
         self.active_voices.push_back((new_voice_index, new_freq));
         new_voice_index
