@@ -232,6 +232,7 @@ impl Track for NoteTrack {
                         self.voice_buffer[current + voice_index].elapsed_samples = 0;
                     }
                 }
+
                 // Increment the event cursor
                 self.event_cursor += 1;
             }

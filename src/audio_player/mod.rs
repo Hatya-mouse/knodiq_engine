@@ -112,10 +112,6 @@ impl AudioPlayer {
             .build_output_stream(
                 &config,
                 move |data: &mut [f32], _| {
-                    println!(
-                        "actual buffer size: {}",
-                        data.len() / audio_ctx.channels as usize
-                    );
                     let sample = playhead_clone.load(Ordering::Relaxed);
                     let beats = Beats(
                         sample as f64 / audio_ctx.sample_rate as f64 / 60.0
