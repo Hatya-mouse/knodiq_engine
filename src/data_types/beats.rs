@@ -1,6 +1,9 @@
-use std::ops::{Add, Div, Mul, Sub};
+use std::{
+    cmp::Ordering,
+    ops::{Add, Div, Mul, Sub},
+};
 
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Beats(pub f64);
 
 impl Add for Beats {
@@ -32,5 +35,25 @@ impl Div for Beats {
 
     fn div(self, rhs: Self) -> Self::Output {
         Self(self.0 / rhs.0)
+    }
+}
+
+impl Eq for Beats {}
+
+impl PartialOrd for Beats {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Beats {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.0 > other.0 {
+            Ordering::Greater
+        } else if self.0 == other.0 {
+            Ordering::Equal
+        } else {
+            Ordering::Less
+        }
     }
 }

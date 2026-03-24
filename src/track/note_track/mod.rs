@@ -109,12 +109,11 @@ impl Track for NoteTrack {
         // Retrieve the notes from the regions in the track
         for region in self.regions.values() {
             // Calculate the start sample of the region
-            let region_start_sample = tempo_map.beats_to_samples(region.start);
             for note in &region.notes {
                 // Calculate the start and end sample of the note
-                let start_sample = region_start_sample + tempo_map.beats_to_samples(note.start);
+                let start_sample = tempo_map.beats_to_samples(region.start + note.start);
                 let end_sample =
-                    region_start_sample + tempo_map.beats_to_samples(note.start + note.duration);
+                    tempo_map.beats_to_samples(region.start + note.start + note.duration);
                 // Add the note start and end event to the events
                 self.events.push(VoiceEvent::new(
                     start_sample,

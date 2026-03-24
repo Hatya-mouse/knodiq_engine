@@ -4,7 +4,7 @@ use crate::{
 };
 
 pub struct TempoMap {
-    events: Vec<TempoEvent>,
+    pub events: Vec<TempoEvent>,
     audio_ctx: AudioContext,
 }
 

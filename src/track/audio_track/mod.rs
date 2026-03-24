@@ -9,9 +9,8 @@ use crate::{
     graph::{Graph, error::GraphError},
     mixer::TempoMap,
     node::builtin::{AudioInputNode, AudioOutputNode},
-    track::{RegionID, Track},
+    track::{RegionID, Track, audio_track::tempo_strech::tempo_strech},
 };
-use resampler::resample_channels;
 use std::collections::HashMap;
 
 #[derive(Default)]
@@ -93,13 +92,11 @@ impl Track for AudioTrack {
 
         // Resample the each regions
         for region in self.regions.values() {
-            let resampled = resample_channels(
-                &region.data,
-                region.frames,
-                region.sample_rate as usize,
-                region.channels as usize,
+            let resampled = tempo_strech(
+                region,
                 self.audio_ctx.sample_rate,
                 self.audio_ctx.channels,
+                tempo_map,
             );
 
             // Calculate the start sample index of the buffer
