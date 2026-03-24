@@ -65,14 +65,14 @@ impl AudioPlayer {
         note_region.add_note(Note::new(Beats(2.5), Beats(0.166), 1046.50, 1.0));
         note_region.add_note(Note::new(Beats(2.666), Beats(0.166), 1174.65, 1.0));
         note_region.add_note(Note::new(Beats(2.822), Beats(0.166), 1046.50, 1.0));
-        note_region.add_note(Note::new(Beats(3.0), Beats(0.5), 880.00, 1.0));
+        note_region.add_note(Note::new(Beats(3.0), Beats(0.3), 880.00, 1.0));
         note_region.add_note(Note::new(Beats(3.5), Beats(2.4), 783.99, 1.0));
 
         note_region.add_note(Note::new(Beats(6.0), Beats(0.5), 880.00, 1.0));
         note_region.add_note(Note::new(Beats(6.5), Beats(0.166), 783.99, 1.0));
         note_region.add_note(Note::new(Beats(6.666), Beats(0.166), 880.00, 1.0));
         note_region.add_note(Note::new(Beats(6.822), Beats(0.166), 783.99, 1.0));
-        note_region.add_note(Note::new(Beats(7.0), Beats(0.5), 698.45, 1.0));
+        note_region.add_note(Note::new(Beats(7.0), Beats(0.3), 698.45, 1.0));
         note_region.add_note(Note::new(Beats(7.5), Beats(0.5), 587.32, 1.0));
 
         note_region.add_note(Note::new(Beats(8.0), Beats(0.5), 523.25, 1.0));
