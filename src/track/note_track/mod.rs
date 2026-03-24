@@ -206,17 +206,7 @@ impl Track for NoteTrack {
                     // Set the new voice to the voice buffer
                     self.voice_buffer[current + voice_index] =
                         Voice::new(frequency, velocity, 0.0, true);
-
-                    println!(
-                        "NoteOn: freq={}, voice_index={}, active={:?}, free={:?}",
-                        frequency, voice_index, self.active_voices, self.free_voices
-                    );
                 } else {
-                    println!(
-                        "NoteOff: freq={}, active={:?}",
-                        event.frequency, self.active_voices
-                    );
-
                     // Remove the active voice whose frequency matches the event frequency
                     if let Some(remove_index) = self
                         .active_voices
@@ -241,14 +231,6 @@ impl Track for NoteTrack {
         let last = (self.audio_ctx.buffer_size - 1) * max_voices;
         self.last_voices
             .clone_from_slice(&self.voice_buffer[last..last + max_voices]);
-
-        println!(
-            "last_voices: {:?}",
-            self.last_voices
-                .iter()
-                .filter(|v| v.is_active)
-                .collect::<Vec<_>>()
-        );
 
         // Get a pointer to the voice buffer
         let input_ptr = self.voice_buffer.as_ptr() as *const u8;
