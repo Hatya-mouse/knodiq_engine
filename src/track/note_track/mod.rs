@@ -190,6 +190,16 @@ impl Track for NoteTrack {
                 self.voice_buffer[current + index].elapsed_samples += 1;
             }
 
+            if local_sample == 0 {
+                for (index, _) in self.active_voices.iter() {
+                    println!(
+                        "voice[{}] elapsed_samples={}",
+                        index,
+                        self.voice_buffer[current + index].elapsed_samples
+                    );
+                }
+            }
+
             // Consume the events in this sample
             while let Some(event) = self.events.get(self.event_cursor) {
                 // Break if the event's sample index is not current sample
