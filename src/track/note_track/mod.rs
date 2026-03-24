@@ -224,11 +224,6 @@ impl Track for NoteTrack {
                         // Mark the voice index as free
                         self.free_voices.push(voice_index);
                         self.voice_buffer[current + voice_index].is_active = false;
-                    } else {
-                        println!(
-                            "NoteOff trying: freq={}, active_voices={:?}",
-                            event.frequency, self.active_voices
-                        );
                     }
                 }
                 // Increment the event cursor
