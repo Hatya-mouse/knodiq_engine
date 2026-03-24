@@ -144,7 +144,7 @@ impl Track for NoteTrack {
         // Initialize the voices
         self.active_voices.clear();
         self.free_voices = (0..self.audio_ctx.max_voices as usize).collect();
-        self.last_voices = vec![Voice::default(); max_voices];
+        self.last_voices = vec![Voice::default(); self.audio_ctx.max_voices as usize];
 
         // Prepare the graph
         self.graph.prepare()
