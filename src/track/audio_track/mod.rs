@@ -103,8 +103,7 @@ impl Track for AudioTrack {
             );
 
             // Calculate the start sample index of the buffer
-            let region_start_index =
-                tempo_map.beats_to_samples(region.start, self.audio_ctx.sample_rate);
+            let region_start_index = tempo_map.beats_to_samples(region.start);
 
             // Add the resampled samples
             let available = self.processed.len().saturating_sub(region_start_index);

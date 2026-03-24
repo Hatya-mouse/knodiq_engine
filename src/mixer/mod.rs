@@ -13,7 +13,6 @@ use crate::{
 };
 use std::collections::HashMap;
 
-#[derive(Default)]
 pub struct Mixer {
     // --- TRACKS ---
     tracks: HashMap<TrackID, Box<dyn Track>>,
@@ -34,9 +33,10 @@ impl Mixer {
     /// Creates a new mixer with the given tempo.
     pub fn new(audio_ctx: AudioContext, tempo: f64) -> Self {
         Self {
+            tracks: HashMap::new(),
+            tempo_map: TempoMap::new(audio_ctx.clone(), tempo),
             audio_ctx,
-            tempo_map: TempoMap::new(tempo),
-            ..Default::default()
+            next_track_id: 0,
         }
     }
 
@@ -64,12 +64,8 @@ impl Mixer {
     /// Prepares the tracks in the mixer for the playback starting at the given beats.
     pub fn prepare(&mut self, start: Beats, duration: Beats) -> Result<(), GraphError> {
         // Convert the start and duration beats to samples
-        let start_samples = self
-            .tempo_map
-            .beats_to_samples(start, self.audio_ctx.sample_rate);
-        let duration_samples = self
-            .tempo_map
-            .beats_to_samples(duration, self.audio_ctx.sample_rate);
+        let start_samples = self.tempo_map.beats_to_samples(start);
+        let duration_samples = self.tempo_map.beats_to_samples(duration);
 
         // Prepare the tracks one by one
         for track in self.tracks.values_mut() {
@@ -89,9 +85,7 @@ impl Mixer {
         }
 
         // Convert the playhead beats to samples
-        let playhead_samples = self
-            .tempo_map
-            .beats_to_samples(playhead, self.audio_ctx.sample_rate);
+        let playhead_samples = self.tempo_map.beats_to_samples(playhead);
 
         // Call process function for every tracks
         for track in self.tracks.values_mut() {
