@@ -108,6 +108,9 @@ impl AudioPlayer {
         graph.connect(&graph_input_id, "notes", &node_id, node_input_name)?;
         graph.connect(&node_id, node_output_name, &graph_output_id, "audio")?;
 
+        // Add the track to the mixer
+        mixer.add_track(Box::new(note_track));
+
         // Prepare the mixer
         mixer.prepare(Beats(0.0), Beats(17.0))?;
 
