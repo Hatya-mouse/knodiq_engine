@@ -18,7 +18,7 @@ pub struct Mixer {
     tracks: HashMap<TrackID, Box<dyn Track>>,
 
     // --- TEMPO MAP ---
-    tempo_map: TempoMap,
+    pub tempo_map: TempoMap,
 
     // --- AUDIO CONTEXT ---
     audio_ctx: AudioContext,
@@ -49,7 +49,7 @@ impl Mixer {
         id
     }
 
-    // --- TRACK ADDITION ---
+    // --- TRACK MANAGEMENT ---
 
     /// Adds a new track to the mixer, setting the audio context to the one in the mixer.
     pub fn add_track(&mut self, mut track: Box<dyn Track>) -> TrackID {
@@ -57,6 +57,16 @@ impl Mixer {
         track.set_audio_ctx(&self.audio_ctx);
         self.tracks.insert(id, track);
         id
+    }
+
+    /// Removes the track from the mixer.
+    pub fn remove_track(&mut self, id: &TrackID) {
+        self.tracks.remove(id);
+    }
+
+    /// Returns a mutable reference to the track.
+    pub fn get_track_mut(&mut self, id: &TrackID) -> Option<&mut Box<dyn Track>> {
+        self.tracks.get_mut(id)
     }
 
     // --- MIXING PROCESS ---
