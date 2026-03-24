@@ -195,7 +195,7 @@ impl Track for NoteTrack {
 
             // Increment the elapsed_samples
             for (index, _) in self.active_voices.iter() {
-                self.voice_buffer[current + index].elapsed_samples += 1;
+                self.voice_buffer[current + index].age += 1.0 / audio_ctx.sample_rate as f32;
             }
 
             // Consume the events in this sample
@@ -214,7 +214,7 @@ impl Track for NoteTrack {
                     let voice_index = self.find_or_steal_voice(frequency);
                     // Set the new voice to the voice buffer
                     self.voice_buffer[current + voice_index] =
-                        Voice::new(frequency, velocity, true, 0);
+                        Voice::new(frequency, velocity, 0.0, true);
                 } else {
                     // Remove the active voice whose frequency matches the event frequency
                     if let Some(remove_index) = self
@@ -227,7 +227,7 @@ impl Track for NoteTrack {
                         // Mark the voice index as free
                         self.free_voices.push(voice_index);
                         self.voice_buffer[current + voice_index].is_active = false;
-                        self.voice_buffer[current + voice_index].elapsed_samples = 0;
+                        self.voice_buffer[current + voice_index].age = 0.0;
                     }
                 }
 
