@@ -124,7 +124,8 @@ impl AudioPlayer {
                 &config,
                 move |data: &mut [f32], _| {
                     let sample = playhead_clone.load(Ordering::Relaxed);
-                    let beats = Beats(sample as f64 / audio_ctx.sample_rate as f64 / 60.0 * tempo);
+                    let beats =
+                        Beats((sample as f64 / audio_ctx.sample_rate as f64) * (tempo / 60.0));
                     mixer.process(beats, data.as_mut_ptr() as *mut u8);
                     playhead_clone.fetch_add(audio_ctx.buffer_size as u64, Ordering::Relaxed);
                 },
