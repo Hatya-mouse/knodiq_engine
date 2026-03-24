@@ -25,6 +25,7 @@ pub struct NoteTrack {
     event_cursor: usize,
     active_voices: VecDeque<(usize, f32)>,
     free_voices: Vec<usize>,
+    last_voices: Vec<Voice>,
     voice_buffer: Vec<Voice>,
 
     // --- AUDIO CONTEXT ---
@@ -174,7 +175,13 @@ impl Track for NoteTrack {
             // Calculate the index of the first current voice
             let current = local_sample * max_voices;
 
-            // If the current sample is not the first sample,
+            // If the current sample is the first sample in the buffer,
+            // Copy from the last voices
+            if local_sample == 0 && !self.last_voices.is_empty() {
+                self.voice_buffer[..max_voices].clone_from_slice(&self.last_voices);
+            }
+
+            // If the current sample is not the first sample in the buffer,
             // copy the previous voices to the current index
             if local_sample > 0 {
                 let previous = (local_sample - 1) * max_voices;
@@ -188,16 +195,6 @@ impl Track for NoteTrack {
             // Increment the elapsed_samples
             for (index, _) in self.active_voices.iter() {
                 self.voice_buffer[current + index].elapsed_samples += 1;
-            }
-
-            if local_sample == 0 {
-                for (index, _) in self.active_voices.iter() {
-                    println!(
-                        "voice[{}] elapsed_samples={}",
-                        index,
-                        self.voice_buffer[current + index].elapsed_samples
-                    );
-                }
             }
 
             // Consume the events in this sample
@@ -237,6 +234,11 @@ impl Track for NoteTrack {
                 self.event_cursor += 1;
             }
         }
+
+        // Copy the last voices
+        let last = (audio_ctx.buffer_size as usize - 1) * max_voices;
+        self.last_voices
+            .clone_from_slice(&self.voice_buffer[last..last + max_voices]);
 
         // Get a pointer to the voice buffer
         let input_ptr = self.voice_buffer.as_ptr() as *const u8;
