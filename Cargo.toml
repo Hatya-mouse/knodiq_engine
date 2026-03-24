@@ -11,4 +11,3 @@ path = "src/lib.rs"
 
 [dependencies]
 cpal = "0.17.3"
-wide = "1.2.0"
