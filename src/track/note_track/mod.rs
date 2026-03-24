@@ -71,13 +71,13 @@ impl NoteTrack {
 
     /// Returns the vacant voice index, or returns the index of the oldest voice.
     fn find_or_steal_voice(&mut self, new_freq: f32) -> usize {
-        println!("self ptr={:p}", self as *const NoteTrack);
         let new_voice_index = self
             .free_voices
             .pop()
             .or(self.active_voices.pop_front().map(|v| v.0))
             .unwrap_or_default();
         self.active_voices.push_back((new_voice_index, new_freq));
+        println!("after push_back: active={:?}", self.active_voices);
         new_voice_index
     }
 }
