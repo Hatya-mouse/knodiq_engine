@@ -23,6 +23,10 @@ impl TempoMap {
     pub fn beats_to_samples(&self, beats: Beats, sample_rate: usize) -> usize {
         // Take the first bpm for now
         let bpm = self.events[0].bpm;
+        println!(
+            "bpm: {}, beats: {:?}, sample_rate: {}",
+            bpm, beats, sample_rate
+        );
         (beats.0 / bpm * 60.0 * sample_rate as f64) as usize
     }
 }
