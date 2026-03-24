@@ -77,7 +77,6 @@ impl NoteTrack {
             .or(self.active_voices.pop_front().map(|v| v.0))
             .unwrap_or_default();
         self.active_voices.push_back((new_voice_index, new_freq));
-        println!("after push_back: active={:?}", self.active_voices);
         new_voice_index
     }
 }
@@ -242,6 +241,14 @@ impl Track for NoteTrack {
         let last = (self.audio_ctx.buffer_size - 1) * max_voices;
         self.last_voices
             .clone_from_slice(&self.voice_buffer[last..last + max_voices]);
+
+        println!(
+            "last_voices: {:?}",
+            self.last_voices
+                .iter()
+                .filter(|v| v.is_active)
+                .collect::<Vec<_>>()
+        );
 
         // Get a pointer to the voice buffer
         let input_ptr = self.voice_buffer.as_ptr() as *const u8;
