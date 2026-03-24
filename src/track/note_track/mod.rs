@@ -217,11 +217,6 @@ impl Track for NoteTrack {
                     // Set the new voice to the voice buffer
                     self.voice_buffer[current + voice_index] =
                         Voice::new(frequency, velocity, true, 0);
-
-                    println!(
-                        "NoteOn: freq={}, sample={}, buffer_start={}, local_sample={}, voice_index={}",
-                        frequency, sample, buffer_start, local_sample, voice_index
-                    );
                 } else {
                     // Remove the active voice whose frequency matches the event frequency
                     if let Some(remove_index) = self
@@ -234,6 +229,7 @@ impl Track for NoteTrack {
                         // Mark the voice index as free
                         self.free_voices.push(voice_index);
                         self.voice_buffer[current + voice_index].is_active = false;
+                        self.voice_buffer[current + voice_index].elapsed_samples = 0;
                     }
                 }
                 // Increment the event cursor
