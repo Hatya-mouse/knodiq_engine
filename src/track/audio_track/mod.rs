@@ -3,8 +3,9 @@ mod audio_region;
 pub use audio_region::AudioRegion;
 
 use crate::{
-    data_types::{AudioContext, Beats},
+    data_types::AudioContext,
     graph::{Graph, error::GraphError},
+    mixer::TempoMap,
     node::builtin::{AudioInputNode, AudioOutputNode},
     resampler::resample_channels,
     track::{RegionID, Track},
@@ -45,13 +46,6 @@ impl AudioTrack {
         }
     }
 
-    // --- NUMBER CONVERSION ---
-
-    fn beats_to_index(&self, beats: Beats) -> usize {
-        (beats.0 / self.audio_ctx.tempo as f64 * 60.0 * self.audio_ctx.sample_rate as f64) as usize
-            * self.audio_ctx.channels as usize
-    }
-
     // --- REGION ADDITION ---
 
     fn generate_region_id(&mut self) -> RegionID {
@@ -82,15 +76,18 @@ impl Track for AudioTrack {
 
     // --- TRACK PROCESSING ---
 
-    fn prepare(&mut self, total_duration: Beats) -> Result<(), GraphError> {
+    fn prepare(
+        &mut self,
+        _start: usize,
+        duration: usize,
+        tempo_map: &TempoMap,
+    ) -> Result<(), GraphError> {
         // Calculate the total sample number
         // Ceil to a multiple of the buffer size
-        let total_frames = self
-            .beats_to_index(total_duration)
-            .div_ceil(self.audio_ctx.buffer_size as usize)
-            * self.audio_ctx.buffer_size as usize;
+        let total_frames =
+            duration.div_ceil(self.audio_ctx.buffer_size) * self.audio_ctx.buffer_size;
         // Initialize the processed vector with zeros
-        self.processed = vec![0.0; total_frames * self.audio_ctx.channels as usize];
+        self.processed = vec![0.0; total_frames * self.audio_ctx.channels];
 
         // Resample the each regions
         for region in self.regions.values() {
@@ -99,12 +96,13 @@ impl Track for AudioTrack {
                 region.frames,
                 region.sample_rate as usize,
                 region.channels as usize,
-                self.audio_ctx.sample_rate as usize,
-                self.audio_ctx.channels as usize,
+                self.audio_ctx.sample_rate,
+                self.audio_ctx.channels,
             );
 
             // Calculate the start sample index of the buffer
-            let region_start_index = self.beats_to_index(region.start);
+            let region_start_index =
+                tempo_map.beats_to_samples(region.start, self.audio_ctx.sample_rate);
 
             // Add the resampled samples
             let available = self.processed.len().saturating_sub(region_start_index);
@@ -118,17 +116,15 @@ impl Track for AudioTrack {
         self.graph.prepare()
     }
 
-    fn process(&mut self, playhead: Beats, output: *mut u8, audio_ctx: &AudioContext) {
-        let buffer_start = self.beats_to_index(playhead);
-        let buffer_end =
-            buffer_start + audio_ctx.buffer_size as usize * audio_ctx.channels as usize;
+    fn process(&mut self, playhead: usize, output: *mut u8) {
+        let buffer_end = playhead + self.audio_ctx.buffer_size * self.audio_ctx.channels;
         // Get the slice pointer from the processed audio data
         let input_ptr = if buffer_end <= self.processed.len() {
-            self.processed[buffer_start..buffer_end].as_ptr() as *const u8
+            self.processed[playhead..buffer_end].as_ptr() as *const u8
         } else {
             std::ptr::null()
         };
         // Process the graph
-        self.graph.process(&[input_ptr], &[output], audio_ctx);
+        self.graph.process(&[input_ptr], &[output]);
     }
 }

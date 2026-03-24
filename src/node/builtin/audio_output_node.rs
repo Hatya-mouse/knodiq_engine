@@ -2,7 +2,6 @@ use crate::{
     data_types::{AudioContext, TypeInfo},
     node::Node,
 };
-use std::ptr::copy_nonoverlapping;
 
 /// An empty node that just writes the `process` input to the node output.
 #[derive(Default)]
@@ -40,10 +39,7 @@ impl Node for AudioOutputNode {
     }
 
     fn update(&mut self, audio_ctx: &AudioContext) {
-        self.data_type = TypeInfo::new(
-            4 * audio_ctx.channels as usize * audio_ctx.buffer_size as usize,
-            4,
-        );
+        self.data_type = TypeInfo::new(4 * audio_ctx.channels * audio_ctx.buffer_size, 4);
     }
 
     fn prepare(&mut self) {}
@@ -51,8 +47,13 @@ impl Node for AudioOutputNode {
     fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], _audio_ctx: &AudioContext) {
         for (input, output) in inputs.iter().zip(outputs.iter()) {
             unsafe {
-                // Copy the entire input to the output
-                copy_nonoverlapping(*input, *output, self.data_type.size);
+                // Add the input data to the output buffer
+                let len = self.data_type.size / 4;
+                let src = std::slice::from_raw_parts(*input as *const f32, len);
+                let dst = std::slice::from_raw_parts_mut(*output as *mut f32, len);
+                for (d, s) in dst.iter_mut().zip(src.iter()) {
+                    *d += *s;
+                }
             }
         }
     }

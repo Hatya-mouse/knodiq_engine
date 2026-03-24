@@ -1,9 +1,7 @@
 #[derive(Clone, Default)]
 pub struct AudioContext {
-    pub channels: u16,
-    pub sample_rate: u32,
-    pub buffer_size: u32,
-    pub max_voices: u32,
-
-    pub tempo: u32,
+    pub channels: usize,
+    pub sample_rate: usize,
+    pub buffer_size: usize,
+    pub max_voices: usize,
 }

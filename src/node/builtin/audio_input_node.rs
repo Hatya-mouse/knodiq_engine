@@ -40,10 +40,7 @@ impl Node for AudioInputNode {
     }
 
     fn update(&mut self, audio_ctx: &AudioContext) {
-        self.data_type = TypeInfo::new(
-            4 * audio_ctx.channels as usize * audio_ctx.buffer_size as usize,
-            4,
-        );
+        self.data_type = TypeInfo::new(4 * audio_ctx.channels * audio_ctx.buffer_size, 4);
     }
 
     fn prepare(&mut self) {}

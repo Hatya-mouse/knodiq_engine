@@ -5,11 +5,12 @@ mod region_id;
 pub use region_id::RegionID;
 
 use crate::{
-    data_types::{AudioContext, Beats},
+    data_types::AudioContext,
     graph::{Graph, error::GraphError},
+    mixer::TempoMap,
 };
 
-pub trait Track {
+pub trait Track: Send {
     /// Returns a mutable pointer to the Graph.
     fn get_graph_mut(&mut self) -> &mut Graph;
 
@@ -17,8 +18,13 @@ pub trait Track {
     fn set_audio_ctx(&mut self, audio_ctx: &AudioContext);
 
     /// Prepares the track for processing.
-    fn prepare(&mut self, total_duration: Beats) -> Result<(), GraphError>;
+    fn prepare(
+        &mut self,
+        start: usize,
+        duration: usize,
+        tempo_map: &TempoMap,
+    ) -> Result<(), GraphError>;
 
     /// Processes the track with the given input and output pointer.
-    fn process(&mut self, playhead: Beats, output: *mut u8, audio_ctx: &AudioContext);
+    fn process(&mut self, playhead: usize, output: *mut u8);
 }

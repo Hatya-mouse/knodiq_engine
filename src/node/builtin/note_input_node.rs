@@ -41,7 +41,7 @@ impl Node for NoteInputNode {
 
     fn update(&mut self, audio_ctx: &AudioContext) {
         self.data_type = TypeInfo::new(
-            size_of::<Voice>() * audio_ctx.max_voices as usize * audio_ctx.buffer_size as usize,
+            size_of::<Voice>() * audio_ctx.max_voices * audio_ctx.buffer_size,
             4,
         );
     }

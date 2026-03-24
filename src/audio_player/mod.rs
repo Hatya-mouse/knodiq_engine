@@ -1,6 +1,7 @@
 use crate::{
     data_types::{AudioContext, Beats},
     graph::error::GraphError,
+    mixer::Mixer,
     node::Node,
     track::{
         Track,
@@ -44,17 +45,20 @@ impl AudioPlayer {
         node_input_name: &str,
         node_output_name: &str,
         duration: u64,
+        tempo: f64,
     ) -> Result<(), GraphError>
     where
         N: Node + 'static,
     {
         // Create a config
         let config = StreamConfig {
-            channels: audio_ctx.channels,
-            sample_rate: audio_ctx.sample_rate,
-            buffer_size: BufferSize::Fixed(audio_ctx.buffer_size),
+            channels: audio_ctx.channels as u16,
+            sample_rate: audio_ctx.sample_rate as u32,
+            buffer_size: BufferSize::Fixed(audio_ctx.buffer_size as u32),
         };
 
+        // Create a master mixer
+        let mut mixer = Mixer::new(tempo);
         // Create a track
         let mut note_track = NoteTrack::new(audio_ctx.clone());
 
@@ -104,8 +108,8 @@ impl AudioPlayer {
         graph.connect(&graph_input_id, "notes", &node_id, node_input_name)?;
         graph.connect(&node_id, node_output_name, &graph_output_id, "audio")?;
 
-        // Prepare the track
-        note_track.prepare(Beats(17.0))?;
+        // Prepare the mixer
+        mixer.prepare(Beats(0.0), Beats(17.0))?;
 
         // Play the sound
         let playhead_samples = Arc::new(AtomicU64::new(0));
@@ -117,11 +121,8 @@ impl AudioPlayer {
                 &config,
                 move |data: &mut [f32], _| {
                     let sample = playhead_clone.load(Ordering::Relaxed);
-                    let beats = Beats(
-                        sample as f64 / audio_ctx.sample_rate as f64 / 60.0
-                            * audio_ctx.tempo as f64,
-                    );
-                    note_track.process(beats, data.as_mut_ptr() as *mut u8, &audio_ctx);
+                    let beats = Beats(sample as f64 / audio_ctx.sample_rate as f64 / 60.0 * tempo);
+                    mixer.process(beats, data.as_mut_ptr() as *mut u8);
                     playhead_clone.fetch_add(audio_ctx.buffer_size as u64, Ordering::Relaxed);
                 },
                 |err| {

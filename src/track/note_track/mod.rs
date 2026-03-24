@@ -4,8 +4,9 @@ mod voice_event;
 pub use note_region::{Note, NoteRegion};
 
 use crate::{
-    data_types::{AudioContext, Beats, Voice},
+    data_types::{AudioContext, Voice},
     graph::{Graph, error::GraphError},
+    mixer::TempoMap,
     node::builtin::{AudioOutputNode, NoteInputNode},
     track::{RegionID, Track},
 };
@@ -53,12 +54,6 @@ impl NoteTrack {
         }
     }
 
-    // --- NUMBER CONVERSION ---
-
-    fn beats_to_samples(&self, beats: Beats) -> usize {
-        (beats.0 / self.audio_ctx.tempo as f64 * 60.0 * self.audio_ctx.sample_rate as f64) as usize
-    }
-
     // --- REGION ADDITION ---
 
     fn generate_region_id(&mut self) -> RegionID {
@@ -102,19 +97,27 @@ impl Track for NoteTrack {
 
     // --- TRACK PROCESSING ---
 
-    fn prepare(&mut self, _total_duration: Beats) -> Result<(), GraphError> {
+    fn prepare(
+        &mut self,
+        _start: usize,
+        _duration: usize,
+        tempo_map: &TempoMap,
+    ) -> Result<(), GraphError> {
         // Clear the old events
         self.events.clear();
 
         // Retrieve the notes from the regions in the track
         for region in self.regions.values() {
             // Calculate the start sample of the region
-            let region_start_sample = self.beats_to_samples(region.start);
+            let region_start_sample =
+                tempo_map.beats_to_samples(region.start, self.audio_ctx.sample_rate);
             for note in &region.notes {
                 // Calculate the start and end sample of the note
-                let start_sample = region_start_sample + self.beats_to_samples(note.start);
-                let end_sample =
-                    region_start_sample + self.beats_to_samples(note.start + note.duration);
+                let start_sample = region_start_sample
+                    + tempo_map.beats_to_samples(note.start, self.audio_ctx.sample_rate);
+                let end_sample = region_start_sample
+                    + tempo_map
+                        .beats_to_samples(note.start + note.duration, self.audio_ctx.sample_rate);
                 // Add the note start and end event to the events
                 self.events.push(VoiceEvent::new(
                     start_sample,
@@ -135,44 +138,36 @@ impl Track for NoteTrack {
         self.events.sort_unstable_by_key(|e| e.sample_index);
 
         // Initialize the voice buffer
-        self.voice_buffer = vec![
-            Voice::default();
-            self.audio_ctx.buffer_size as usize
-                * self.audio_ctx.max_voices as usize
-        ];
+        self.voice_buffer =
+            vec![Voice::default(); self.audio_ctx.buffer_size * self.audio_ctx.max_voices];
 
         // Initialize the voices
         self.active_voices.clear();
-        self.free_voices = (0..self.audio_ctx.max_voices as usize).collect();
-        self.last_voices = vec![Voice::default(); self.audio_ctx.max_voices as usize];
+        self.free_voices = (0..self.audio_ctx.max_voices).collect();
+        self.last_voices = vec![Voice::default(); self.audio_ctx.max_voices];
 
         // Prepare the graph
         self.graph.prepare()
     }
 
-    fn process(&mut self, playhead: Beats, output: *mut u8, audio_ctx: &AudioContext) {
+    fn process(&mut self, playhead: usize, output: *mut u8) {
         // Convert the playhead beats to samples
-        let buffer_start = self.beats_to_samples(playhead);
-        let buffer_end = buffer_start + audio_ctx.buffer_size as usize;
-
-        let max_voices = audio_ctx.max_voices as usize;
+        let buffer_end = playhead + self.audio_ctx.buffer_size;
+        let max_voices = self.audio_ctx.max_voices;
 
         // Seek the event cursor
         if self
             .events
             .get(self.event_cursor)
-            .is_some_and(|e| e.sample_index > buffer_start)
-            || (self.event_cursor > 0
-                && self.events[self.event_cursor - 1].sample_index > buffer_start)
+            .is_some_and(|e| e.sample_index > playhead)
+            || (self.event_cursor > 0 && self.events[self.event_cursor - 1].sample_index > playhead)
         {
-            self.event_cursor = self
-                .events
-                .partition_point(|e| e.sample_index < buffer_start);
+            self.event_cursor = self.events.partition_point(|e| e.sample_index < playhead);
         }
 
-        for sample in buffer_start..buffer_end {
+        for sample in playhead..buffer_end {
             // Calculate the local sample in the buffer chunk
-            let local_sample = sample - buffer_start;
+            let local_sample = sample - playhead;
             // Calculate the index of the first current voice
             let current = local_sample * max_voices;
 
@@ -195,7 +190,7 @@ impl Track for NoteTrack {
 
             // Increment the elapsed_samples
             for (index, _) in self.active_voices.iter() {
-                self.voice_buffer[current + index].age += 1.0 / audio_ctx.sample_rate as f32;
+                self.voice_buffer[current + index].age += 1.0 / self.audio_ctx.sample_rate as f32;
             }
 
             // Consume the events in this sample
@@ -237,13 +232,13 @@ impl Track for NoteTrack {
         }
 
         // Copy the last voices
-        let last = (audio_ctx.buffer_size as usize - 1) * max_voices;
+        let last = (self.audio_ctx.buffer_size - 1) * max_voices;
         self.last_voices
             .clone_from_slice(&self.voice_buffer[last..last + max_voices]);
 
         // Get a pointer to the voice buffer
         let input_ptr = self.voice_buffer.as_ptr() as *const u8;
         // Process the graph
-        self.graph.process(&[input_ptr], &[output], audio_ctx);
+        self.graph.process(&[input_ptr], &[output]);
     }
 }

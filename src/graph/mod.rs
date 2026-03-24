@@ -135,7 +135,7 @@ impl Graph {
             let output_type = node
                 .get_output_type(output_index)
                 .ok_or(GraphError::OutputTypeUnavailable(*node_id, output_index))?;
-            let buffer = vec![0u8; output_type.size * audio_ctx.buffer_size as usize];
+            let buffer = vec![0u8; output_type.size * audio_ctx.buffer_size];
 
             // Insert the output buffer to the output_buffers
             output_buffers.insert((*node_id, output_index), buffer);
@@ -192,7 +192,7 @@ impl Graph {
                 max_size = max_size.max(type_info.size);
             }
         }
-        self.zero_buffer = vec![0u8; max_size * self.audio_ctx.buffer_size as usize];
+        self.zero_buffer = vec![0u8; max_size * self.audio_ctx.buffer_size];
 
         // Build node_inputs from edges
         for edge in &self.edges {
@@ -207,12 +207,12 @@ impl Graph {
 
     /// Processes the graph in the sorted order and writes the result in the output pointer.
     /// The host must pass the audio context which is as the same as the one given in the `set_audio_ctx` function.
-    pub fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], audio_ctx: &AudioContext) {
+    pub fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8]) {
         // Get the pointer to the output buffer of the input node
         let output_buffers = self.get_output_ptr(&self.input_id);
         let input_node = self.nodes.get_mut(&self.input_id).unwrap();
         // Process the input node
-        input_node.process(inputs, &output_buffers, audio_ctx);
+        input_node.process(inputs, &output_buffers, &self.audio_ctx);
 
         for node_id in self.sorted_nodes.clone() {
             // Get the pointer to the input buffer of the node
@@ -222,7 +222,7 @@ impl Graph {
 
             // Pass the pointers and process
             if let Some(node) = self.nodes.get_mut(&node_id) {
-                node.process(&input_buffers, &output_buffers, audio_ctx);
+                node.process(&input_buffers, &output_buffers, &self.audio_ctx);
             }
         }
 
@@ -231,7 +231,7 @@ impl Graph {
         let output_node = self.nodes.get_mut(&self.output_id).unwrap();
         // Process the output node
         // Output data will be written to the output pointer
-        output_node.process(&input_buffers, outputs, audio_ctx);
+        output_node.process(&input_buffers, outputs, &self.audio_ctx);
     }
 
     fn get_output_ptr(&self, from: &NodeID) -> Vec<*mut u8> {
