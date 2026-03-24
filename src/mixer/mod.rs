@@ -30,8 +30,9 @@ impl Mixer {
     // --- NEW ---
 
     /// Creates a new mixer with the given tempo.
-    pub fn new(tempo: f64) -> Self {
+    pub fn new(audio_ctx: AudioContext, tempo: f64) -> Self {
         Self {
+            audio_ctx,
             tempo_map: TempoMap::new(tempo),
             ..Default::default()
         }
@@ -39,6 +40,7 @@ impl Mixer {
 
     // --- TRACK ID GENERATION ---
 
+    /// Generates a new unique track ID.
     fn generate_track_id(&mut self) -> TrackID {
         let id = TrackID(self.next_track_id);
         self.next_track_id += 1;
@@ -47,8 +49,10 @@ impl Mixer {
 
     // --- TRACK ADDITION ---
 
-    pub fn add_track(&mut self, track: Box<dyn Track>) -> TrackID {
+    /// Adds a new track to the mixer, setting the audio context to the one in the mixer.
+    pub fn add_track(&mut self, mut track: Box<dyn Track>) -> TrackID {
         let id = self.generate_track_id();
+        track.set_audio_ctx(&self.audio_ctx);
         self.tracks.insert(id, track);
         id
     }

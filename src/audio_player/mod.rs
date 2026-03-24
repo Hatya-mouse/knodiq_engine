@@ -58,7 +58,7 @@ impl AudioPlayer {
         };
 
         // Create a master mixer
-        let mut mixer = Mixer::new(tempo);
+        let mut mixer = Mixer::new(audio_ctx.clone(), tempo);
         // Create a track
         let mut note_track = NoteTrack::new(audio_ctx.clone());
 
