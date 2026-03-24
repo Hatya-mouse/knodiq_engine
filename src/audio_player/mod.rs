@@ -90,7 +90,6 @@ impl AudioPlayer {
         note_region.add_note(Note::new(Beats(10.5), Beats(1.4), 880.00, 1.0));
 
         note_region.add_note(Note::new(Beats(12.0), Beats(1.9), 36.70, 1.0));
-        note_region.add_note(Note::new(Beats(8.0), Beats(0.5), 523.25, 1.0));
         note_region.add_note(Note::new(Beats(12.0), Beats(0.5), 523.25, 1.0));
         note_region.add_note(Note::new(Beats(12.5), Beats(0.5), 587.32, 1.0));
         note_region.add_note(Note::new(Beats(13.0), Beats(0.5), 698.45, 1.0));
