@@ -206,6 +206,11 @@ impl Track for NoteTrack {
                     // Set the new voice to the voice buffer
                     self.voice_buffer[current + voice_index] =
                         Voice::new(frequency, velocity, 0.0, true);
+
+                    println!(
+                        "NoteOn: freq={}, voice_index={}, active_voices={:?}",
+                        frequency, voice_index, self.active_voices
+                    );
                 } else {
                     // Remove the active voice whose frequency matches the event frequency
                     if let Some(remove_index) = self
