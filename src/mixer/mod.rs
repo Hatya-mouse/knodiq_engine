@@ -1,6 +1,8 @@
+mod tempo_event;
 mod tempo_map;
 mod track_id;
 
+pub use tempo_event::TempoEvent;
 pub use tempo_map::TempoMap;
 
 use crate::{

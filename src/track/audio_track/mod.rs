@@ -1,4 +1,6 @@
 mod audio_region;
+mod resampler;
+mod tempo_strech;
 
 pub use audio_region::AudioRegion;
 
@@ -7,9 +9,9 @@ use crate::{
     graph::{Graph, error::GraphError},
     mixer::TempoMap,
     node::builtin::{AudioInputNode, AudioOutputNode},
-    resampler::resample_channels,
     track::{RegionID, Track},
 };
+use resampler::resample_channels;
 use std::collections::HashMap;
 
 #[derive(Default)]
