@@ -9,8 +9,9 @@ use crate::{
     graph::{Graph, error::GraphError},
     mixer::TempoMap,
 };
+use std::any::Any;
 
-pub trait Track: Send {
+pub trait Track: Send + Any {
     /// Clones the track.
     fn clone_box(&self) -> Box<dyn Track>;
 
@@ -33,6 +34,12 @@ pub trait Track: Send {
 
     /// Processes the track with the given input and output pointer.
     fn process(&mut self, playhead: usize, output: &mut [f32]);
+
+    /// Converts a reference to the track to any.
+    fn as_any(&self) -> &dyn Any;
+
+    /// Converts a mutable reference to the track to any.
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 impl Clone for Box<dyn Track> {

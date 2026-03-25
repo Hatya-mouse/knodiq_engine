@@ -149,4 +149,14 @@ impl Track for AudioTrack {
         self.graph
             .process(&[input_ptr], &[output.as_mut_ptr() as *mut u8]);
     }
+
+    // --- ANY CASTING ---
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
 }
