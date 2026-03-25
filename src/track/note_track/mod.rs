@@ -163,7 +163,7 @@ impl Track for NoteTrack {
         self.graph.prepare()
     }
 
-    fn process(&mut self, playhead: usize, output: *mut u8) {
+    fn process(&mut self, playhead: usize, output: &mut [f32]) {
         // Convert the playhead beats to samples
         let buffer_end = playhead + self.audio_ctx.buffer_size;
         let max_voices = self.audio_ctx.max_voices;
@@ -252,6 +252,7 @@ impl Track for NoteTrack {
         // Get a pointer to the voice buffer
         let input_ptr = self.voice_buffer.as_ptr() as *const u8;
         // Process the graph
-        self.graph.process(&[input_ptr], &[output]);
+        self.graph
+            .process(&[input_ptr], &[output.as_mut_ptr() as *mut u8]);
     }
 }

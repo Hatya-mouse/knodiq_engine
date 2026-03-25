@@ -40,11 +40,11 @@ impl Mixer {
     // --- MIXING PROCESS ---
 
     /// Processes the tracks in the mixer a the specified playhead.
-    pub fn process(&mut self, playhead: usize, output: *mut u8) {
+    pub fn process(&mut self, playhead: usize, output: &mut [f32]) {
         // Fill the output buffer with zeros before processing
         unsafe {
             let len = self.project.audio_ctx.buffer_size * self.project.audio_ctx.channels;
-            let dst = std::slice::from_raw_parts_mut(output as *mut f32, len);
+            let dst = std::slice::from_raw_parts_mut(output.as_mut_ptr(), len);
             dst.fill(0.0);
         }
 

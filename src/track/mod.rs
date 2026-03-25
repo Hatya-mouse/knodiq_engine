@@ -32,7 +32,7 @@ pub trait Track: Send {
     ) -> Result<(), GraphError>;
 
     /// Processes the track with the given input and output pointer.
-    fn process(&mut self, playhead: usize, output: *mut u8);
+    fn process(&mut self, playhead: usize, output: &mut [f32]);
 }
 
 impl Clone for Box<dyn Track> {

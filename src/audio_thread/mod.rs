@@ -141,7 +141,7 @@ impl AudioThread {
 
                     // Process the mixer
                     let current_playhead = playhead.load(Ordering::Relaxed);
-                    mixer.process(current_playhead, data.as_mut_ptr() as *mut u8);
+                    mixer.process(current_playhead, data);
 
                     // Increment the playhead
                     playhead.fetch_add(mixer.project.audio_ctx.buffer_size, Ordering::Relaxed);
