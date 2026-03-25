@@ -21,7 +21,7 @@ use ringbuf::{
 use std::{
     sync::{
         Arc, Mutex,
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
         mpsc,
     },
     thread,
@@ -73,28 +73,41 @@ impl AudioThread {
             .default_output_device()
             .expect("Expect a default output device");
 
+        // Manage is_playing using Arc
+        let is_playing = Arc::new(AtomicBool::new(false));
+        let is_playing_clone = is_playing.clone();
+
         // Create an output callback
         let config = cpal::StreamConfig {
             channels: audio_ctx.channels as u16,
             sample_rate: audio_ctx.sample_rate as u32,
             buffer_size: cpal::BufferSize::Fixed(audio_ctx.buffer_size as u32),
         };
-        let stream =
-            AudioThread::output_callback(mixer, consumer, pending_arc, device, config, playhead);
-        stream.pause().unwrap();
+        let stream = AudioThread::output_callback(
+            mixer,
+            consumer,
+            pending_arc,
+            device,
+            config,
+            playhead,
+            is_playing_clone,
+        );
+        // stream.pause().unwrap();
 
         // Create a message loop
         for command in command_rx {
             match command {
                 AudioCommand::Play => {
-                    if let Err(err) = stream.play() {
-                        error_tx.send(AudioError::PlayStreamError(err)).unwrap();
-                    }
+                    // if let Err(err) = stream.play() {
+                    //     error_tx.send(AudioError::PlayStreamError(err)).unwrap();
+                    // }
+                    is_playing.store(true, Ordering::Release);
                 }
                 AudioCommand::Pause => {
-                    if let Err(err) = stream.pause() {
-                        error_tx.send(AudioError::PauseStreamError(err)).unwrap();
-                    }
+                    // if let Err(err) = stream.pause() {
+                    //     error_tx.send(AudioError::PauseStreamError(err)).unwrap();
+                    // }
+                    is_playing.store(false, Ordering::Release);
                 }
                 AudioCommand::Seek(_) => {
                     if let Err(command) = producer.try_push(command) {
@@ -120,6 +133,7 @@ impl AudioThread {
         device: cpal::Device,
         config: cpal::StreamConfig,
         playhead: Arc<AtomicUsize>,
+        is_playing: Arc<AtomicBool>,
     ) -> cpal::Stream {
         device
             .build_output_stream(
@@ -141,12 +155,17 @@ impl AudioThread {
                         mixer.seek();
                     }
 
-                    // Process the mixer
-                    let current_playhead = playhead.load(Ordering::Relaxed);
-                    mixer.process(current_playhead, data);
+                    let is_playing = is_playing.load(Ordering::Relaxed);
+                    if is_playing {
+                        // Process the mixer
+                        let current_playhead = playhead.load(Ordering::Relaxed);
+                        mixer.process(current_playhead, data);
 
-                    // Increment the playhead
-                    playhead.fetch_add(mixer.project.audio_ctx.buffer_size, Ordering::Relaxed);
+                        // Increment the playhead
+                        playhead.fetch_add(mixer.project.audio_ctx.buffer_size, Ordering::Relaxed);
+                    } else {
+                        data.fill(0.0);
+                    }
                 },
                 |err| {
                     eprintln!("An error occured on stream: {}", err);
