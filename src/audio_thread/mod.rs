@@ -115,6 +115,8 @@ impl AudioThread {
                     }
                 }
                 AudioCommand::UpdateProject(mut new_project) => {
+                    println!("Received a new project");
+
                     if let Err(err) = new_project.prepare() {
                         error_tx.send(AudioError::GraphError(err)).unwrap();
                     }
@@ -144,6 +146,7 @@ impl AudioThread {
                         && let Some(new_project) = pending.take()
                     {
                         mixer.apply_project(new_project);
+                        println!("Updated to a new project");
                     }
 
                     // Process the seek
