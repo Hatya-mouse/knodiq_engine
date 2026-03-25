@@ -22,7 +22,11 @@ use std::{
 };
 
 pub struct AudioPlayer {
+    /// An output device to play the audio.
     device: cpal::Device,
+
+    /// A mixer to process the audio.
+    mixer: Mixer,
 }
 
 impl AudioPlayer {
@@ -38,7 +42,7 @@ impl AudioPlayer {
         Self { device }
     }
 
-    pub fn play_audio<N>(
+    pub fn start_playing<N>(
         &self,
         audio_ctx: AudioContext,
         node: N,

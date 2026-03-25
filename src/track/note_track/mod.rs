@@ -95,6 +95,15 @@ impl Track for NoteTrack {
         self.graph.set_audio_ctx(audio_ctx);
     }
 
+    // --- SEEKING ---
+
+    fn seek(&mut self) {
+        // Clear all voices before seeking
+        self.active_voices.clear();
+        self.free_voices = (0..self.audio_ctx.max_voices).collect();
+        self.last_voices = vec![Voice::default(); self.audio_ctx.max_voices];
+    }
+
     // --- TRACK PROCESSING ---
 
     fn prepare(

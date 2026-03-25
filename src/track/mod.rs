@@ -17,6 +17,9 @@ pub trait Track: Send {
     /// Sets the audio context to the new one.
     fn set_audio_ctx(&mut self, audio_ctx: &AudioContext);
 
+    /// Prepares for the seeking.
+    fn seek(&mut self);
+
     /// Prepares the track for processing.
     fn prepare(
         &mut self,

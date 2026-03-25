@@ -1,4 +1,5 @@
 pub mod audio_player;
+pub mod audio_thread;
 pub mod data_types;
 pub mod graph;
 pub mod mixer;

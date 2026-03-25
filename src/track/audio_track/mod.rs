@@ -75,6 +75,10 @@ impl Track for AudioTrack {
         self.graph.set_audio_ctx(audio_ctx);
     }
 
+    // --- SEEKING ---
+
+    fn seek(&mut self) {}
+
     // --- TRACK PROCESSING ---
 
     fn prepare(
