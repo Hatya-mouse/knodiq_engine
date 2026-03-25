@@ -6,6 +6,7 @@ mod track_id;
 pub use project::Project;
 pub use tempo_event::TempoEvent;
 pub use tempo_map::TempoMap;
+pub use track_id::TrackID;
 
 pub struct Mixer {
     // --- PROJECT ---

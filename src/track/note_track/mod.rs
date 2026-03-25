@@ -1,7 +1,9 @@
+mod note;
 mod note_region;
 mod voice_event;
 
-pub use note_region::{Note, NoteRegion};
+pub use note::{Note, NoteID};
+pub use note_region::NoteRegion;
 
 use crate::{
     data_types::{AudioContext, Voice},
@@ -124,7 +126,7 @@ impl Track for NoteTrack {
         // Retrieve the notes from the regions in the track
         for region in self.regions.values() {
             // Calculate the start sample of the region
-            for note in &region.notes {
+            for note in region.notes.values() {
                 // Calculate the start and end sample of the note
                 let start_sample = tempo_map.beats_to_samples(region.start + note.start);
                 let end_sample =
