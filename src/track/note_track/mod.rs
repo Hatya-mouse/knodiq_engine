@@ -64,9 +64,10 @@ impl NoteTrack {
         id
     }
 
-    pub fn add_region(&mut self, region: NoteRegion) {
+    pub fn add_region(&mut self, region: NoteRegion) -> RegionID {
         let id = self.generate_region_id();
         self.regions.insert(id, region);
+        id
     }
 
     // --- VOICE GETTING ---

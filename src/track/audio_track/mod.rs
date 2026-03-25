@@ -55,9 +55,10 @@ impl AudioTrack {
         id
     }
 
-    pub fn add_region(&mut self, region: AudioRegion) {
+    pub fn add_region(&mut self, region: AudioRegion) -> RegionID {
         let id = self.generate_region_id();
         self.regions.insert(id, region);
+        id
     }
 }
 
