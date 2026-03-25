@@ -209,16 +209,22 @@ impl Graph {
     /// The host must pass the audio context which is as the same as the one given in the `set_audio_ctx` function.
     pub fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8]) {
         // Get the pointer to the output buffer of the input node
-        let output_buffers = self.get_output_ptr(&self.input_id);
+        let Some(output_buffers) = self.get_output_ptr(&self.input_id) else {
+            return;
+        };
         let input_node = self.nodes.get_mut(&self.input_id).unwrap();
         // Process the input node
         input_node.process(inputs, &output_buffers, &self.audio_ctx);
 
         for node_id in self.sorted_nodes.clone() {
             // Get the pointer to the input buffer of the node
-            let input_buffers = self.get_input_ptr(&node_id);
+            let Some(input_buffers) = self.get_input_ptr(&node_id) else {
+                return;
+            };
             // Get the pointer to the output buffer of the node
-            let output_buffers = self.get_output_ptr(&node_id);
+            let Some(output_buffers) = self.get_output_ptr(&node_id) else {
+                return;
+            };
 
             // Pass the pointers and process
             if let Some(node) = self.nodes.get_mut(&node_id) {
@@ -227,19 +233,21 @@ impl Graph {
         }
 
         // Get the pointer to the input buffer of the output node
-        let input_buffers = self.get_input_ptr(&self.output_id);
+        let Some(input_buffers) = self.get_input_ptr(&self.output_id) else {
+            return;
+        };
         let output_node = self.nodes.get_mut(&self.output_id).unwrap();
         // Process the output node
         // Output data will be written to the output pointer
         output_node.process(&input_buffers, outputs, &self.audio_ctx);
     }
 
-    fn get_output_ptr(&self, from: &NodeID) -> Vec<*mut u8> {
-        self.node_outputs[from].clone()
+    fn get_output_ptr(&self, from: &NodeID) -> Option<Vec<*mut u8>> {
+        self.node_outputs.get(from).cloned()
     }
 
-    fn get_input_ptr(&self, to: &NodeID) -> Vec<*const u8> {
-        self.node_inputs[to].clone()
+    fn get_input_ptr(&self, to: &NodeID) -> Option<Vec<*const u8>> {
+        self.node_inputs.get(to).cloned()
     }
 }
 
