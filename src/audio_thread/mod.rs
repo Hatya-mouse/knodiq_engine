@@ -8,7 +8,7 @@ pub use handle::AudioThreadHandle;
 use ringbuf::{
     SharedRb,
     storage::Heap,
-    traits::{Producer, Split},
+    traits::{Consumer, Producer, Split},
     wrap::caching::Caching,
 };
 
@@ -51,7 +51,7 @@ impl AudioThread {
         error_tx: mpsc::Sender<AudioError>,
         playhead: Arc<AtomicUsize>,
     ) {
-        let (mut producer, mut consumer) = ringbuf::HeapRb::<AudioCommand>::new(64).split();
+        let (mut producer, consumer) = ringbuf::HeapRb::<AudioCommand>::new(64).split();
 
         // Create a mixer and a project
         let audio_ctx = AudioContext {
@@ -75,7 +75,14 @@ impl AudioThread {
             sample_rate: audio_ctx.sample_rate as u32,
             buffer_size: cpal::BufferSize::Fixed(audio_ctx.buffer_size as u32),
         };
-        let stream = AudioThread::output_callback(mixer, pending_project, device, config, playhead);
+        let stream = AudioThread::output_callback(
+            mixer,
+            consumer,
+            pending_project,
+            device,
+            config,
+            playhead,
+        );
 
         // Create a message loop
         for command in command_rx {
@@ -100,11 +107,11 @@ impl AudioThread {
 
     fn output_callback(
         mut mixer: Mixer,
+        mut consumer: Caching<Arc<SharedRb<Heap<AudioCommand>>>, false, true>,
         pending_project: Arc<Mutex<Option<Project>>>,
         device: cpal::Device,
         config: cpal::StreamConfig,
         playhead: Arc<AtomicUsize>,
-        consumer: Caching<Arc<SharedRb<Heap<AudioCommand>>>, false, true>,
     ) -> cpal::Stream {
         device
             .build_output_stream(
@@ -116,12 +123,21 @@ impl AudioThread {
                         }
                     }
 
+                    // Process the seek
+                    if let Some(command) = consumer.try_pop()
+                        && let AudioCommand::Seek(target) = command
+                    {
+                        let target_sample = mixer.project.tempo_map.beats_to_samples(target);
+                        playhead.store(target_sample, Ordering::Relaxed);
+                        mixer.seek();
+                    }
+
                     // Process the mixer
                     let current_playhead = playhead.load(Ordering::Relaxed);
                     mixer.process(current_playhead, data.as_mut_ptr() as *mut u8);
 
                     // Increment the playhead
-                    playhead.fetch_add(audio_ctx.buffer_size, Ordering::Relaxed);
+                    playhead.fetch_add(mixer.project.audio_ctx.buffer_size, Ordering::Relaxed);
                 },
                 |err| {
                     eprintln!("An error occured on stream: {}", err);

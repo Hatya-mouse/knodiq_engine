@@ -1,5 +1,5 @@
-   0.026750167s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: false }/TargetInner { ..: lib_target("knodiq_engine", ["lib"], "/Users/shuntaro/Documents/Projects/knodiq_engine/src/lib.rs", Edition2024) }
-   0.026773625s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-192d0c27d5173426/lib-knodiq_engine`
+   0.025544500s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: false }/TargetInner { ..: lib_target("knodiq_engine", ["lib"], "/Users/shuntaro/Documents/Projects/knodiq_engine/src/lib.rs", Edition2024) }
+   0.025566167s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-192d0c27d5173426/lib-knodiq_engine`
 
 Caused by:
     No such file or directory (os error 2)
@@ -22,8 +22,8 @@ Stack backtrace:
   14: std::rt::lang_start::<()>::{closure#0}
   15: std::rt::lang_start_internal
   16: _main
-   0.031209250s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: true }/TargetInner { ..: lib_target("knodiq_engine", ["lib"], "/Users/shuntaro/Documents/Projects/knodiq_engine/src/lib.rs", Edition2024) }
-   0.031218542s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-a76f9516fcec90e8/test-lib-knodiq_engine`
+   0.030100958s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: true }/TargetInner { ..: lib_target("knodiq_engine", ["lib"], "/Users/shuntaro/Documents/Projects/knodiq_engine/src/lib.rs", Edition2024) }
+   0.030111708s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-a76f9516fcec90e8/test-lib-knodiq_engine`
 
 Caused by:
     No such file or directory (os error 2)
@@ -46,8 +46,8 @@ Stack backtrace:
   14: std::rt::lang_start::<()>::{closure#0}
   15: std::rt::lang_start_internal
   16: _main
-   0.031499708s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: false }/TargetInner { name: "knodiq_engine", doc: true, ..: with_path("/Users/shuntaro/Documents/Projects/knodiq_engine/src/main.rs", Edition2024) }
-   0.031505250s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-06fdc4a2af2ce540/bin-knodiq_engine`
+   0.030396375s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: false }/TargetInner { name: "knodiq_engine", doc: true, ..: with_path("/Users/shuntaro/Documents/Projects/knodiq_engine/src/main.rs", Edition2024) }
+   0.030402250s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-06fdc4a2af2ce540/bin-knodiq_engine`
 
 Caused by:
     No such file or directory (os error 2)
@@ -70,8 +70,8 @@ Stack backtrace:
   14: std::rt::lang_start::<()>::{closure#0}
   15: std::rt::lang_start_internal
   16: _main
-   0.031718125s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: true }/TargetInner { name: "knodiq_engine", doc: true, ..: with_path("/Users/shuntaro/Documents/Projects/knodiq_engine/src/main.rs", Edition2024) }
-   0.031722250s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-5b4ee9cb109d05f2/test-bin-knodiq_engine`
+   0.030592625s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: true }/TargetInner { name: "knodiq_engine", doc: true, ..: with_path("/Users/shuntaro/Documents/Projects/knodiq_engine/src/main.rs", Edition2024) }
+   0.030598792s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-5b4ee9cb109d05f2/test-bin-knodiq_engine`
 
 Caused by:
     No such file or directory (os error 2)
@@ -95,6 +95,6 @@ Stack backtrace:
   15: std::rt::lang_start_internal
   16: _main
     Checking knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)
-error: could not compile `knodiq_engine` (lib test) due to 6 previous errors
+error: could not compile `knodiq_engine` (lib test) due to 4 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `knodiq_engine` (lib) due to 6 previous errors
+error: could not compile `knodiq_engine` (lib) due to 4 previous errors

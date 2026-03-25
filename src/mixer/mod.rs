@@ -11,18 +11,20 @@ use crate::{data_types::Beats, graph::error::GraphError};
 
 pub struct Mixer {
     // --- PROJECT ---
-    project: Project,
+    pub project: Project,
 }
 
 impl Mixer {
     // --- NEW ---
 
+    /// Creates a new mixer instance with the given project.
     pub fn new(project: Project) -> Self {
         Self { project }
     }
 
     // --- PROJECT APPLYING ---
 
+    /// Replaces the project with the new one. Tracks inside the project must have been prepared.
     pub fn apply_project(&mut self, new_project: Project) {
         self.project = new_project;
     }
