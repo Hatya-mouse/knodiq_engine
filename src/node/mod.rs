@@ -1,8 +1,9 @@
 pub mod builtin;
 
 use crate::data_types::{AudioContext, TypeInfo};
+use std::any::Any;
 
-pub trait Node: Send {
+pub trait Node: Send + Any {
     /// Clones the node.
     fn clone_box(&self) -> Box<dyn Node>;
 
@@ -32,6 +33,11 @@ pub trait Node: Send {
 
     /// Processes the given input pointer and writes the output to the output pointer.
     fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], audio_ctx: &AudioContext);
+
+    fn as_any(&self) -> &dyn Any;
+
+    /// Converts a mutable reference to the track to any.
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 impl Clone for Box<dyn Node> {
