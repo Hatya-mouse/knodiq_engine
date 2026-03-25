@@ -6,3 +6,5 @@ pub enum AudioError {
     PauseStreamError(cpal::PauseStreamError),
     CommandFailed(AudioCommand),
 }
+
+unsafe impl Sync for AudioError {}
