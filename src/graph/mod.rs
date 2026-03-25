@@ -9,7 +9,7 @@ use crate::{
 };
 use std::collections::HashMap;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Graph {
     // --- GRAPH STRUCTURE ---
     nodes: HashMap<NodeID, Box<dyn Node>>,

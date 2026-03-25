@@ -1,6 +1,7 @@
 use crate::data_types::Beats;
 use std::cmp::Ordering;
 
+#[derive(Clone)]
 pub struct TempoEvent {
     pub beat: Beats,
     pub bpm: f64,

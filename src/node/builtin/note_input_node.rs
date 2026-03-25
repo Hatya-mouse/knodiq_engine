@@ -5,12 +5,16 @@ use crate::{
 use std::ptr::copy_nonoverlapping;
 
 /// An empty node that just writes the `process` input to the node output.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct NoteInputNode {
     data_type: TypeInfo,
 }
 
 impl Node for NoteInputNode {
+    fn clone_box(&self) -> Box<dyn Node> {
+        Box::new(self.clone())
+    }
+
     fn get_input_names(&self) -> Vec<String> {
         Vec::new()
     }

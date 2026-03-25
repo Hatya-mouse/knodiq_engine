@@ -13,7 +13,7 @@ use crate::{
 };
 use std::collections::HashMap;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AudioTrack {
     // --- GRAPH ---
     graph: Graph,
@@ -62,6 +62,12 @@ impl AudioTrack {
 }
 
 impl Track for AudioTrack {
+    // --- CLONING ---
+
+    fn clone_box(&self) -> Box<dyn Track> {
+        Box::new(self.clone())
+    }
+
     // --- GRAPH GETTING ---
 
     fn get_graph_mut(&mut self) -> &mut Graph {

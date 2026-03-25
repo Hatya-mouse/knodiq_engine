@@ -11,6 +11,9 @@ use crate::{
 };
 
 pub trait Track: Send {
+    /// Clones the track.
+    fn clone_box(&self) -> Box<dyn Track>;
+
     /// Returns a mutable pointer to the Graph.
     fn get_graph_mut(&mut self) -> &mut Graph;
 
@@ -30,4 +33,10 @@ pub trait Track: Send {
 
     /// Processes the track with the given input and output pointer.
     fn process(&mut self, playhead: usize, output: *mut u8);
+}
+
+impl Clone for Box<dyn Track> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
 }

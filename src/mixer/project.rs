@@ -6,6 +6,7 @@ use crate::{
 };
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub struct Project {
     // --- TRACKS ---
     /// Tracks in the project.

@@ -4,12 +4,16 @@ use crate::{
 };
 
 /// An empty node that just writes the `process` input to the node output.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AudioOutputNode {
     data_type: TypeInfo,
 }
 
 impl Node for AudioOutputNode {
+    fn clone_box(&self) -> Box<dyn Node> {
+        Box::new(self.clone())
+    }
+
     fn get_input_names(&self) -> Vec<String> {
         vec!["audio".to_string()]
     }

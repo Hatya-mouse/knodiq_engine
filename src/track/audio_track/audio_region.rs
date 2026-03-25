@@ -1,6 +1,7 @@
 use crate::data_types::Beats;
 
 /// Stores the raw audio source data.
+#[derive(Clone)]
 pub struct AudioRegion {
     pub data: Vec<f32>,
     pub frames: usize,

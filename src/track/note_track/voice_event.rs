@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(super) struct VoiceEvent {
     pub sample_index: usize,
     pub frequency: f32,

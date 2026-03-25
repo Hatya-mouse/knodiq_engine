@@ -1,5 +1,6 @@
 use crate::data_types::Beats;
 
+#[derive(Clone)]
 pub struct Note {
     /// Relative start position in the region in beats.
     pub start: Beats,
@@ -22,6 +23,7 @@ impl Note {
     }
 }
 
+#[derive(Clone)]
 pub struct NoteRegion {
     pub start: Beats,
     pub duration: Beats,

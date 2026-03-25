@@ -3,6 +3,9 @@ pub mod builtin;
 use crate::data_types::{AudioContext, TypeInfo};
 
 pub trait Node: Send {
+    /// Clones the node.
+    fn clone_box(&self) -> Box<dyn Node>;
+
     /// Returns a vector of the names of all inputs.
     fn get_input_names(&self) -> Vec<String>;
 
@@ -29,4 +32,10 @@ pub trait Node: Send {
 
     /// Processes the given input pointer and writes the output to the output pointer.
     fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], audio_ctx: &AudioContext);
+}
+
+impl Clone for Box<dyn Node> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
 }
