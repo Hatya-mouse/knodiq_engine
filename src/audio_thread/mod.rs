@@ -139,6 +139,8 @@ impl AudioThread {
             .build_output_stream(
                 &config,
                 move |data: &mut [f32], _| {
+                    println!("Audio thread now");
+
                     // Get the project without blocking
                     if let Ok(mut pending) = pending_project.try_lock()
                         && let Some(new_project) = pending.take()
