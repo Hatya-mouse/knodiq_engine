@@ -3,19 +3,19 @@ pub mod error;
 mod handle;
 
 pub use audio_command::AudioCommand;
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 pub use handle::AudioThreadHandle;
-use ringbuf::{
-    SharedRb,
-    storage::Heap,
-    traits::{Consumer, Producer, Split},
-    wrap::caching::Caching,
-};
 
 use crate::{
     audio_thread::error::AudioError,
     data_types::AudioContext,
     mixer::{Mixer, Project},
+};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use ringbuf::{
+    SharedRb,
+    storage::Heap,
+    traits::{Consumer, Producer, Split},
+    wrap::caching::Caching,
 };
 use std::{
     sync::{
@@ -29,14 +29,20 @@ use std::{
 pub struct AudioThread;
 
 impl AudioThread {
-    pub fn spawn() -> AudioThreadHandle {
+    pub fn spawn(audio_ctx: AudioContext, initial_project: Project) -> AudioThreadHandle {
         let (command_tx, command_rx) = mpsc::channel();
         let (error_tx, error_rx) = mpsc::channel();
         let playhead = Arc::new(AtomicUsize::new(0));
         let playhead_clone = playhead.clone();
 
         thread::spawn(move || {
-            AudioThread::audio_thread(command_rx, error_tx, playhead_clone);
+            AudioThread::audio_thread(
+                command_rx,
+                error_tx,
+                playhead_clone,
+                audio_ctx,
+                initial_project,
+            );
         });
 
         AudioThreadHandle {
@@ -50,18 +56,15 @@ impl AudioThread {
         command_rx: mpsc::Receiver<AudioCommand>,
         error_tx: mpsc::Sender<AudioError>,
         playhead: Arc<AtomicUsize>,
+        audio_ctx: AudioContext,
+        initial_project: Project,
     ) {
         let (mut producer, consumer) = ringbuf::HeapRb::<AudioCommand>::new(64).split();
 
-        // Create a mixer and a project
-        let audio_ctx = AudioContext {
-            channels: 2,
-            sample_rate: 48000,
-            buffer_size: 512,
-            max_voices: 32,
-        };
+        // Create a mixer with the given initial project
         let pending_project = Arc::new(Mutex::new(None));
-        let mixer = Mixer::new(Project::new(audio_ctx.clone(), 120.0));
+        let pending_arc = Arc::clone(&pending_project);
+        let mixer = Mixer::new(initial_project);
 
         // Get a cpal device
         let host = cpal::default_host();
@@ -75,30 +78,35 @@ impl AudioThread {
             sample_rate: audio_ctx.sample_rate as u32,
             buffer_size: cpal::BufferSize::Fixed(audio_ctx.buffer_size as u32),
         };
-        let stream = AudioThread::output_callback(
-            mixer,
-            consumer,
-            pending_project,
-            device,
-            config,
-            playhead,
-        );
+        let stream =
+            AudioThread::output_callback(mixer, consumer, pending_arc, device, config, playhead);
 
         // Create a message loop
         for command in command_rx {
             match command {
                 AudioCommand::Play => {
-                    stream.play();
+                    if let Err(err) = stream.play() {
+                        error_tx.send(AudioError::PlayStreamError(err)).unwrap();
+                    }
                 }
                 AudioCommand::Pause => {
-                    stream.pause();
-                }
-                AudioCommand::Seek(_) => match producer.try_push(command) {
-                    Ok(_) => (),
-                    Err(command) => {
-                        error_tx.send(AudioError::CommandFailed(command));
+                    if let Err(err) = stream.pause() {
+                        error_tx.send(AudioError::PauseStreamError(err)).unwrap();
                     }
-                },
+                }
+                AudioCommand::Seek(_) => {
+                    if let Err(command) = producer.try_push(command) {
+                        error_tx.send(AudioError::CommandFailed(command)).unwrap();
+                    }
+                }
+                AudioCommand::UpdateProject(mut new_project) => {
+                    if let Err(err) = new_project.prepare() {
+                        error_tx.send(AudioError::GraphError(err)).unwrap();
+                    }
+
+                    let mut pending_project = pending_project.lock().unwrap();
+                    *pending_project = Some(new_project);
+                }
             }
         }
     }
@@ -115,10 +123,11 @@ impl AudioThread {
             .build_output_stream(
                 &config,
                 move |data: &mut [f32], _| {
-                    if let Ok(mut pending) = pending_project.try_lock() {
-                        if let Some(new_project) = pending.take() {
-                            mixer.apply_project(new_project);
-                        }
+                    // Get the project without blocking
+                    if let Ok(mut pending) = pending_project.try_lock()
+                        && let Some(new_project) = pending.take()
+                    {
+                        mixer.apply_project(new_project);
                     }
 
                     // Process the seek

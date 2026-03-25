@@ -1,100 +1,16 @@
-   0.024258125s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: false }/TargetInner { ..: lib_target("knodiq_engine", ["lib"], "/Users/shuntaro/Documents/Projects/knodiq_engine/src/lib.rs", Edition2024) }
-   0.024281667s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-192d0c27d5173426/lib-knodiq_engine`
-
-Caused by:
-    No such file or directory (os error 2)
-
-Stack backtrace:
-   0: std::backtrace::Backtrace::create
-   1: cargo_util::paths::read_bytes
-   2: cargo_util::paths::read
-   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
-   4: cargo::core::compiler::fingerprint::prepare_target
-   5: cargo::core::compiler::compile
-   6: <cargo::core::compiler::build_runner::BuildRunner>::compile
-   7: cargo::ops::cargo_compile::compile_ws
-   8: cargo::ops::cargo_compile::compile_with_exec
-   9: cargo::ops::cargo_compile::compile
-  10: cargo::commands::check::exec
-  11: <cargo::cli::Exec>::exec
-  12: cargo::main
-  13: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
-  14: std::rt::lang_start::<()>::{closure#0}
-  15: std::rt::lang_start_internal
-  16: _main
-   0.028158042s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: true }/TargetInner { ..: lib_target("knodiq_engine", ["lib"], "/Users/shuntaro/Documents/Projects/knodiq_engine/src/lib.rs", Edition2024) }
-   0.028167750s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-a76f9516fcec90e8/test-lib-knodiq_engine`
-
-Caused by:
-    No such file or directory (os error 2)
-
-Stack backtrace:
-   0: std::backtrace::Backtrace::create
-   1: cargo_util::paths::read_bytes
-   2: cargo_util::paths::read
-   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
-   4: cargo::core::compiler::fingerprint::prepare_target
-   5: cargo::core::compiler::compile
-   6: <cargo::core::compiler::build_runner::BuildRunner>::compile
-   7: cargo::ops::cargo_compile::compile_ws
-   8: cargo::ops::cargo_compile::compile_with_exec
-   9: cargo::ops::cargo_compile::compile
-  10: cargo::commands::check::exec
-  11: <cargo::cli::Exec>::exec
-  12: cargo::main
-  13: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
-  14: std::rt::lang_start::<()>::{closure#0}
-  15: std::rt::lang_start_internal
-  16: _main
-   0.028458333s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: false }/TargetInner { name: "knodiq_engine", doc: true, ..: with_path("/Users/shuntaro/Documents/Projects/knodiq_engine/src/main.rs", Edition2024) }
-   0.028463667s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-06fdc4a2af2ce540/bin-knodiq_engine`
-
-Caused by:
-    No such file or directory (os error 2)
-
-Stack backtrace:
-   0: std::backtrace::Backtrace::create
-   1: cargo_util::paths::read_bytes
-   2: cargo_util::paths::read
-   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
-   4: cargo::core::compiler::fingerprint::prepare_target
-   5: cargo::core::compiler::compile
-   6: <cargo::core::compiler::build_runner::BuildRunner>::compile
-   7: cargo::ops::cargo_compile::compile_ws
-   8: cargo::ops::cargo_compile::compile_with_exec
-   9: cargo::ops::cargo_compile::compile
-  10: cargo::commands::check::exec
-  11: <cargo::cli::Exec>::exec
-  12: cargo::main
-  13: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
-  14: std::rt::lang_start::<()>::{closure#0}
-  15: std::rt::lang_start_internal
-  16: _main
-   0.028667208s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint error for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: true }/TargetInner { name: "knodiq_engine", doc: true, ..: with_path("/Users/shuntaro/Documents/Projects/knodiq_engine/src/main.rs", Edition2024) }
-   0.028672125s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-5b4ee9cb109d05f2/test-bin-knodiq_engine`
-
-Caused by:
-    No such file or directory (os error 2)
-
-Stack backtrace:
-   0: std::backtrace::Backtrace::create
-   1: cargo_util::paths::read_bytes
-   2: cargo_util::paths::read
-   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
-   4: cargo::core::compiler::fingerprint::prepare_target
-   5: cargo::core::compiler::compile
-   6: <cargo::core::compiler::build_runner::BuildRunner>::compile
-   7: cargo::ops::cargo_compile::compile_ws
-   8: cargo::ops::cargo_compile::compile_with_exec
-   9: cargo::ops::cargo_compile::compile
-  10: cargo::commands::check::exec
-  11: <cargo::cli::Exec>::exec
-  12: cargo::main
-  13: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
-  14: std::rt::lang_start::<()>::{closure#0}
-  15: std::rt::lang_start_internal
-  16: _main
+   0.030988542s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: stale: changed "/Users/shuntaro/Documents/Projects/knodiq_engine/src/audio_thread/mod.rs"
+   0.031003625s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:           (vs) "/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-192d0c27d5173426/dep-lib-knodiq_engine"
+   0.031006958s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 1774407823, nanos: 830608409 } < FileTime { seconds: 1774407874, nanos: 77255884 }
+   0.031097417s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint dirty for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: false }/TargetInner { ..: lib_target("knodiq_engine", ["lib"], "/Users/shuntaro/Documents/Projects/knodiq_engine/src/lib.rs", Edition2024) }
+   0.031110875s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-192d0c27d5173426/dep-lib-knodiq_engine", reference_mtime: FileTime { seconds: 1774407823, nanos: 830608409 }, stale: "/Users/shuntaro/Documents/Projects/knodiq_engine/src/audio_thread/mod.rs", stale_mtime: FileTime { seconds: 1774407874, nanos: 77255884 } }))
+   0.033861167s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: stale: changed "/Users/shuntaro/Documents/Projects/knodiq_engine/src/audio_thread/mod.rs"
+   0.033867958s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:           (vs) "/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-a76f9516fcec90e8/dep-test-lib-knodiq_engine"
+   0.033870083s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 1774407823, nanos: 830609034 } < FileTime { seconds: 1774407874, nanos: 77255884 }
+   0.033930875s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint dirty for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: true }/TargetInner { ..: lib_target("knodiq_engine", ["lib"], "/Users/shuntaro/Documents/Projects/knodiq_engine/src/lib.rs", Edition2024) }
+   0.033937292s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "/Users/shuntaro/Documents/Projects/knodiq_engine/target/debug/.fingerprint/knodiq_engine-a76f9516fcec90e8/dep-test-lib-knodiq_engine", reference_mtime: FileTime { seconds: 1774407823, nanos: 830609034 }, stale: "/Users/shuntaro/Documents/Projects/knodiq_engine/src/audio_thread/mod.rs", stale_mtime: FileTime { seconds: 1774407874, nanos: 77255884 } }))
+   0.034220375s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint dirty for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: false }/TargetInner { name: "knodiq_engine", doc: true, ..: with_path("/Users/shuntaro/Documents/Projects/knodiq_engine/src/main.rs", Edition2024) }
+   0.034228000s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "knodiq_engine" })
+   0.034504958s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint: fingerprint dirty for knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)/Check { test: true }/TargetInner { name: "knodiq_engine", doc: true, ..: with_path("/Users/shuntaro/Documents/Projects/knodiq_engine/src/main.rs", Edition2024) }
+   0.034509917s  INFO prepare_target{force=false package_id=knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine) target="knodiq_engine"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "knodiq_engine" })
     Checking knodiq_engine v0.3.10 (/Users/shuntaro/Documents/Projects/knodiq_engine)
-error: could not compile `knodiq_engine` (lib test) due to 4 previous errors
-warning: build failed, waiting for other jobs to finish...
-error: could not compile `knodiq_engine` (lib) due to 4 previous errors
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.20s

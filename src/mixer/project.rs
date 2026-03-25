@@ -1,5 +1,6 @@
 use crate::{
-    data_types::AudioContext,
+    data_types::{AudioContext, Beats},
+    graph::error::GraphError,
     mixer::{TempoMap, track_id::TrackID},
     track::Track,
 };
@@ -7,15 +8,25 @@ use std::collections::HashMap;
 
 pub struct Project {
     // --- TRACKS ---
+    /// Tracks in the project.
     pub tracks: HashMap<TrackID, Box<dyn Track>>,
 
     // --- TEMPO MAP ---
+    /// A tempo map to store the tempo changes.
     pub tempo_map: TempoMap,
 
     // --- AUDIO CONTEXT ---
+    /// An audio context for the project, which stores some configurations.
     pub audio_ctx: AudioContext,
 
+    // --- RANGE ---
+    /// The start beats of the range to be exported or played.
+    pub range_start: Beats,
+    /// The duration of the range to be exported or played.
+    pub range_duration: Beats,
+
     // --- MISCS ---
+    /// The next track ID for generating track IDs.
     next_track_id: usize,
 }
 
@@ -23,11 +34,18 @@ impl Project {
     // --- NEW ---
 
     /// Creates a new project with the given tempo map.
-    pub fn new(audio_ctx: AudioContext, bpm: f64) -> Self {
+    pub fn new(
+        audio_ctx: AudioContext,
+        bpm: f64,
+        range_start: Beats,
+        range_duration: Beats,
+    ) -> Self {
         Self {
             tracks: HashMap::new(),
             tempo_map: TempoMap::new(audio_ctx.clone(), bpm),
             audio_ctx,
+            range_start,
+            range_duration,
             next_track_id: 0,
         }
     }
@@ -59,5 +77,22 @@ impl Project {
     /// Returns a mutable reference to the track.
     pub fn get_track_mut(&mut self, id: &TrackID) -> Option<&mut Box<dyn Track>> {
         self.tracks.get_mut(id)
+    }
+
+    // --- MIXING PREPARATION ---
+
+    /// Prepares the tracks in the mixer for the playback.
+    /// `start` and `duration` indicates the range to be processed.
+    pub fn prepare(&mut self) -> Result<(), GraphError> {
+        // Convert the start and duration beats to samples
+        let start_samples = self.tempo_map.beats_to_samples(self.range_start);
+        let duration_samples = self.tempo_map.beats_to_samples(self.range_duration);
+
+        // Prepare the tracks one by one
+        for track in self.tracks.values_mut() {
+            track.prepare(start_samples, duration_samples, &self.tempo_map)?;
+        }
+
+        Ok(())
     }
 }
