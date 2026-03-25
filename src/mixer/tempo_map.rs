@@ -112,4 +112,23 @@ impl TempoMap {
         event.sample_offset
             + (remaining_beats.0 / event.bpm * 60.0 * self.audio_ctx.sample_rate as f64) as usize
     }
+
+    /// Convert samples to the Beats using the tempo map.
+    pub fn samples_to_beats(&self, samples: usize) -> Beats {
+        // Find the last event before the sample
+        let idx = self
+            .events
+            .partition_point(|e| e.sample_offset <= samples)
+            .saturating_sub(1);
+        let event = &self.events[idx];
+
+        // Calculate the elapsed samples from the event's beats
+        let elapsed_samples = (samples - event.sample_offset) as f64;
+
+        // Convert the elapsed samples to beats
+        let elapsed_beats =
+            (elapsed_samples * event.bpm) / (60.0 * self.audio_ctx.sample_rate as f64);
+
+        event.beat + Beats(elapsed_beats)
+    }
 }
