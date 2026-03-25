@@ -58,13 +58,14 @@ impl AudioThread {
         error_tx: mpsc::Sender<AudioError>,
         playhead: Arc<AtomicUsize>,
         audio_ctx: AudioContext,
-        initial_project: Project,
+        mut initial_project: Project,
     ) {
         let (mut producer, consumer) = ringbuf::HeapRb::<AudioCommand>::new(64).split();
 
         // Create a mixer with the given initial project
         let pending_project = Arc::new(Mutex::new(None));
         let pending_arc = Arc::clone(&pending_project);
+        initial_project.prepare().unwrap();
         let mixer = Mixer::new(initial_project);
 
         // Get a cpal device

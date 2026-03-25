@@ -48,7 +48,6 @@ impl Node for NoteInputNode {
             size_of::<Voice>() * audio_ctx.max_voices * audio_ctx.buffer_size,
             4,
         );
-        println!("NoteInputNode data_type size: {}", self.data_type.size);
     }
 
     fn prepare(&mut self) {}
