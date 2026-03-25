@@ -53,6 +53,8 @@ impl Node for NoteInputNode {
     fn prepare(&mut self) {}
 
     fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], _audio_ctx: &AudioContext) {
+        println!("NoteInputNode data_type size: {}", self.data_type.size);
+
         for (input, output) in inputs.iter().zip(outputs.iter()) {
             unsafe {
                 // Copy the entire input to the output
