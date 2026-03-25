@@ -207,10 +207,10 @@ impl Graph {
 
     /// Processes the graph in the sorted order and writes the result in the output pointer.
     /// The host must pass the audio context which is as the same as the one given in the `set_audio_ctx` function.
-    pub fn process(&self, inputs: &[*const u8], outputs: &[*mut u8]) {
+    pub fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8]) {
         // Get the pointer to the output buffer of the input node
         let output_buffers = self.get_output_ptr(&self.input_id);
-        let input_node = self.nodes.get(&self.input_id).unwrap();
+        let input_node = self.nodes.get_mut(&self.input_id).unwrap();
         // Process the input node
         input_node.process(inputs, &output_buffers, &self.audio_ctx);
 
@@ -221,14 +221,14 @@ impl Graph {
             let output_buffers = self.get_output_ptr(&node_id);
 
             // Pass the pointers and process
-            if let Some(node) = self.nodes.get(&node_id) {
+            if let Some(node) = self.nodes.get_mut(&node_id) {
                 node.process(&input_buffers, &output_buffers, &self.audio_ctx);
             }
         }
 
         // Get the pointer to the input buffer of the output node
         let input_buffers = self.get_input_ptr(&self.output_id);
-        let output_node = self.nodes.get(&self.output_id).unwrap();
+        let output_node = self.nodes.get_mut(&self.output_id).unwrap();
         // Process the output node
         // Output data will be written to the output pointer
         output_node.process(&input_buffers, outputs, &self.audio_ctx);

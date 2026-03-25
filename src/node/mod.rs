@@ -28,5 +28,5 @@ pub trait Node: Send {
     fn prepare(&mut self);
 
     /// Processes the given input pointer and writes the output to the output pointer.
-    fn process(&self, inputs: &[*const u8], outputs: &[*mut u8], audio_ctx: &AudioContext);
+    fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], audio_ctx: &AudioContext);
 }
