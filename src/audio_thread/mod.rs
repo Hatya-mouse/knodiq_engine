@@ -1,9 +1,10 @@
-mod audio_command;
 pub mod error;
-mod handle;
 
 pub use audio_command::AudioCommand;
 pub use handle::AudioThreadHandle;
+
+mod audio_command;
+mod handle;
 
 use crate::{
     audio_thread::error::AudioError,

@@ -10,6 +10,7 @@ pub struct AudioRegion {
     pub base_bpm: f64,
     pub start: Beats,
     pub duration: Beats,
+    pub max_duration: Beats,
 }
 
 impl AudioRegion {
@@ -30,6 +31,7 @@ impl AudioRegion {
             base_bpm,
             start,
             duration,
+            max_duration: Beats((frames as f64 / sample_rate as f64) * (base_bpm / 60.0)),
         }
     }
 }
