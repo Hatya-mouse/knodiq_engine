@@ -6,7 +6,7 @@ pub use note::{Note, NoteID};
 pub use note_region::NoteRegion;
 
 use crate::{
-    data_types::{AudioContext, Voice},
+    data_types::{AudioContext, Beats, Voice},
     graph::{Graph, error::GraphError},
     mixer::TempoMap,
     node::builtin::{AudioOutputNode, NoteInputNode},
@@ -95,6 +95,24 @@ impl Track for NoteTrack {
 
     fn get_graph_mut(&mut self) -> &mut Graph {
         &mut self.graph
+    }
+
+    // --- REGION MODIFICATION ---
+
+    fn move_region(&mut self, region_id: &RegionID, new_start: Beats) {
+        if let Some(region) = self.regions.get_mut(region_id) {
+            region.start = new_start;
+        }
+    }
+
+    fn set_region_duration(&mut self, region_id: &RegionID, new_duration: Beats) {
+        if let Some(region) = self.regions.get_mut(region_id) {
+            region.duration = new_duration;
+        }
+    }
+
+    fn remove_region(&mut self, region_id: &RegionID) {
+        self.regions.remove(region_id);
     }
 
     // --- AUDIO CONTEXT UPDARING ---

@@ -5,7 +5,7 @@ mod tempo_strech;
 pub use audio_region::AudioRegion;
 
 use crate::{
-    data_types::AudioContext,
+    data_types::{AudioContext, Beats},
     graph::{Graph, error::GraphError},
     mixer::TempoMap,
     node::builtin::{AudioInputNode, AudioOutputNode},
@@ -80,6 +80,24 @@ impl Track for AudioTrack {
     fn set_audio_ctx(&mut self, audio_ctx: &AudioContext) {
         self.audio_ctx = audio_ctx.clone();
         self.graph.set_audio_ctx(audio_ctx);
+    }
+
+    // --- REGION MODIFICATION ---
+
+    fn move_region(&mut self, region_id: &RegionID, new_start: Beats) {
+        if let Some(region) = self.regions.get_mut(region_id) {
+            region.start = new_start;
+        }
+    }
+
+    fn set_region_duration(&mut self, region_id: &RegionID, new_duration: Beats) {
+        if let Some(region) = self.regions.get_mut(region_id) {
+            region.duration = new_duration;
+        }
+    }
+
+    fn remove_region(&mut self, region_id: &RegionID) {
+        self.regions.remove(region_id);
     }
 
     // --- SEEKING ---
