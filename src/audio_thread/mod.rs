@@ -80,6 +80,7 @@ impl AudioThread {
         };
         let stream =
             AudioThread::output_callback(mixer, consumer, pending_arc, device, config, playhead);
+        stream.pause().unwrap();
 
         // Create a message loop
         for command in command_rx {
