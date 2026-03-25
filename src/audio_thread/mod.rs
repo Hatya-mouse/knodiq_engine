@@ -93,14 +93,12 @@ impl AudioThread {
                 AudioCommand::Pause => {
                     stream.pause();
                 }
-                _ => (),
-            }
-
-            match producer.try_push(command) {
-                Ok(_) => (),
-                Err(command) => {
-                    error_tx.send(AudioError::CommandFailed(command));
-                }
+                AudioCommand::Seek(_) => match producer.try_push(command) {
+                    Ok(_) => (),
+                    Err(command) => {
+                        error_tx.send(AudioError::CommandFailed(command));
+                    }
+                },
             }
         }
     }
