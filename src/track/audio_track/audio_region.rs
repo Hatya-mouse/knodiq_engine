@@ -11,3 +11,25 @@ pub struct AudioRegion {
     pub start: Beats,
     pub duration: Beats,
 }
+
+impl AudioRegion {
+    /// Create a new audio region with zeros.
+    pub fn zeros(
+        frames: usize,
+        sample_rate: u32,
+        channels: u16,
+        base_bpm: f64,
+        start: Beats,
+        duration: Beats,
+    ) -> Self {
+        Self {
+            data: vec![0.0; frames * channels as usize],
+            frames,
+            sample_rate,
+            channels,
+            base_bpm,
+            start,
+            duration,
+        }
+    }
+}
