@@ -92,21 +92,14 @@ impl AudioThread {
             playhead,
             is_playing_clone,
         );
-        // stream.pause().unwrap();
 
         // Create a message loop
         for command in command_rx {
             match command {
                 AudioCommand::Play => {
-                    // if let Err(err) = stream.play() {
-                    //     error_tx.send(AudioError::PlayStreamError(err)).unwrap();
-                    // }
                     is_playing.store(true, Ordering::Release);
                 }
                 AudioCommand::Pause => {
-                    // if let Err(err) = stream.pause() {
-                    //     error_tx.send(AudioError::PauseStreamError(err)).unwrap();
-                    // }
                     is_playing.store(false, Ordering::Release);
                 }
                 AudioCommand::Seek(_) => {
@@ -114,12 +107,8 @@ impl AudioThread {
                         error_tx.send(AudioError::CommandFailed(command)).unwrap();
                     }
                 }
-                AudioCommand::UpdateProject(mut new_project) => {
+                AudioCommand::UpdateProject(new_project) => {
                     println!("Received a new project");
-
-                    if let Err(err) = new_project.prepare() {
-                        error_tx.send(AudioError::GraphError(err)).unwrap();
-                    }
 
                     let mut pending_project = pending_project.lock().unwrap();
                     *pending_project = Some(new_project);
