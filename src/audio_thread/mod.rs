@@ -83,13 +83,17 @@ impl AudioThread {
 
         // Create a message loop
         for command in command_rx {
+            println!("Received command");
+
             match command {
                 AudioCommand::Play => {
+                    println!("PLAY");
                     if let Err(err) = stream.play() {
                         error_tx.send(AudioError::PlayStreamError(err)).unwrap();
                     }
                 }
                 AudioCommand::Pause => {
+                    println!("PAUSE");
                     if let Err(err) = stream.pause() {
                         error_tx.send(AudioError::PauseStreamError(err)).unwrap();
                     }
