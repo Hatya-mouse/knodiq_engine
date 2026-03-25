@@ -113,6 +113,8 @@ impl AudioThread {
                 }
             }
         }
+
+        println!("Audio thread ended");
     }
 
     fn output_callback(
