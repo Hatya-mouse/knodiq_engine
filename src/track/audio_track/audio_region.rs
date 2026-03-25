@@ -31,7 +31,7 @@ impl AudioRegion {
             base_bpm,
             start,
             duration,
-            max_duration: Beats((frames as f64 / sample_rate as f64) * (base_bpm / 60.0)),
+            max_duration: duration,
         }
     }
 }
