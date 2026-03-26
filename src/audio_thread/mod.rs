@@ -159,6 +159,7 @@ impl AudioThread {
                         && let AudioCommand::Seek(target) = command
                     {
                         let target_sample = mixer.project.tempo_map.beats_to_samples(target);
+                        // Do not forget to update the current_playhead for processing later
                         current_playhead = target_sample;
                         playhead.store(target_sample, Ordering::Relaxed);
                         mixer.seek(target_sample);
