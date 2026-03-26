@@ -157,15 +157,18 @@ impl Track for NoteTrack {
                     continue;
                 }
 
-                // Clamp the start and the end beats by the region start and the end
-                let clamped_note_start = note.start.max(region.start);
-                let clamped_note_end = note_end.min(region_end);
-
                 // Calculate the start and end sample of the note in the entire track
-                let absolute_start_sample =
-                    tempo_map.beats_to_samples(region.start + clamped_note_start);
-                let absolute_end_sample =
-                    tempo_map.beats_to_samples(region.start + clamped_note_end);
+                let absolute_note_start = region.start + note.start;
+                let absolute_note_end = region.start + note_end;
+
+                // Clamp the start and the end beats by the region start and the end
+                let clamped_note_start = absolute_note_start.max(region.start);
+                let clamped_note_end = absolute_note_end.min(region_end);
+
+                // Convert the start and end beats to sampels
+                let absolute_start_sample = tempo_map.beats_to_samples(clamped_note_start);
+                let absolute_end_sample = tempo_map.beats_to_samples(clamped_note_end);
+
                 // Add the note start and end event to the events
                 self.events.push(VoiceEvent::new(
                     absolute_start_sample,
