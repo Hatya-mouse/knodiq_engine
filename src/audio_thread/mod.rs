@@ -25,7 +25,7 @@ use std::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
         mpsc,
     },
-    thread,
+    thread::{self, current},
 };
 
 pub struct AudioThread;
@@ -144,7 +144,7 @@ impl AudioThread {
             .build_output_stream(
                 &config,
                 move |data: &mut [f32], _| {
-                    let current_playhead = playhead.load(Ordering::Relaxed);
+                    let mut current_playhead = playhead.load(Ordering::Relaxed);
 
                     // Get the project without blocking
                     if let Ok(mut pending) = pending_project.try_lock()
@@ -159,6 +159,7 @@ impl AudioThread {
                         && let AudioCommand::Seek(target) = command
                     {
                         let target_sample = mixer.project.tempo_map.beats_to_samples(target);
+                        current_playhead = target_sample;
                         playhead.store(target_sample, Ordering::Relaxed);
                         mixer.seek(target_sample);
                     }
