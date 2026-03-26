@@ -153,7 +153,7 @@ impl Track for NoteTrack {
                 let note_end = note.start + note.duration;
 
                 // Skip the note if it is outside the region
-                if note.start > region_end || note_end < region.start {
+                if note.start >= region_end || note_end < region.start {
                     continue;
                 }
 
