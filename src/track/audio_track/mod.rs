@@ -102,7 +102,7 @@ impl Track for AudioTrack {
 
     // --- SEEKING ---
 
-    fn seek(&mut self) {}
+    fn seek(&mut self, _playhead: usize) {}
 
     // --- TRACK PROCESSING ---
 

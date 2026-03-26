@@ -31,7 +31,7 @@ pub trait Track: Send + Any {
     fn set_audio_ctx(&mut self, audio_ctx: &AudioContext);
 
     /// Prepares for the seeking.
-    fn seek(&mut self);
+    fn seek(&mut self, playhead: usize);
 
     /// Prepares the track for processing.
     fn prepare(

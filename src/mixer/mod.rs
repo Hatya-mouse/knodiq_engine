@@ -24,16 +24,17 @@ impl Mixer {
     // --- PROJECT APPLYING ---
 
     /// Replaces the project with the new one. Tracks inside the project must have been prepared.
-    pub fn apply_project(&mut self, new_project: Project) {
+    pub fn apply_project(&mut self, new_project: Project, playhead: usize) {
         self.project = new_project;
+        self.seek(playhead);
     }
 
     // --- SEEKING ---
 
     /// Tells every tracks that the it will seek.
-    pub fn seek(&mut self) {
+    pub fn seek(&mut self, playhead: usize) {
         for track in self.project.tracks.values_mut() {
-            track.seek();
+            track.seek(playhead);
         }
     }
 

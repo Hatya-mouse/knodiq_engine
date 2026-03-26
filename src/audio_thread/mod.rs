@@ -144,12 +144,13 @@ impl AudioThread {
             .build_output_stream(
                 &config,
                 move |data: &mut [f32], _| {
+                    let current_playhead = playhead.load(Ordering::Relaxed);
+
                     // Get the project without blocking
                     if let Ok(mut pending) = pending_project.try_lock()
                         && let Some(new_project) = pending.take()
                     {
-                        mixer.apply_project(new_project);
-                        mixer.seek();
+                        mixer.apply_project(new_project, current_playhead);
                         println!("Updated to a new project");
                     }
 
@@ -159,13 +160,12 @@ impl AudioThread {
                     {
                         let target_sample = mixer.project.tempo_map.beats_to_samples(target);
                         playhead.store(target_sample, Ordering::Relaxed);
-                        mixer.seek();
+                        mixer.seek(target_sample);
                     }
 
                     let is_playing = is_playing.load(Ordering::Relaxed);
                     if is_playing {
                         // Process the mixer
-                        let current_playhead = playhead.load(Ordering::Relaxed);
                         mixer.process(current_playhead, data);
 
                         // Increment the playhead

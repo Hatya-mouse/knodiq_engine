@@ -124,11 +124,13 @@ impl Track for NoteTrack {
 
     // --- SEEKING ---
 
-    fn seek(&mut self) {
+    fn seek(&mut self, playhead: usize) {
         // Clear all voices before seeking
         self.active_voices.clear();
         self.free_voices = (0..self.audio_ctx.max_voices).collect();
         self.last_voices = vec![Voice::default(); self.audio_ctx.max_voices];
+        // Recalculate the event cursor
+        self.event_cursor = self.events.partition_point(|e| e.sample_index < playhead);
     }
 
     // --- TRACK PROCESSING ---
