@@ -159,7 +159,7 @@ impl Track for NoteTrack {
 
                 // Clamp the start and the end beats by the region start and the end
                 let clamped_note_start = note.start.max(region.start);
-                let clamped_note_end = note.start.max(region_end);
+                let clamped_note_end = note.start.min(region_end);
 
                 // Calculate the start and end sample of the note in the entire track
                 let absolute_start_sample =
