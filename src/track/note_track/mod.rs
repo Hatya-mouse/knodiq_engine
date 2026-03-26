@@ -180,6 +180,8 @@ impl Track for NoteTrack {
         self.free_voices = (0..self.audio_ctx.max_voices).collect();
         self.last_voices = vec![Voice::default(); self.audio_ctx.max_voices];
 
+        println!("Events: {:?}", &self.events[..self.events.len().min(5)]);
+
         // Prepare the graph
         self.graph.prepare()
     }
@@ -189,7 +191,7 @@ impl Track for NoteTrack {
         let buffer_end = playhead + self.audio_ctx.buffer_size;
         let max_voices = self.audio_ctx.max_voices;
 
-        println!("Event Cursor: {}", self.event_cursor);
+        // println!("Event Cursor: {}", self.event_cursor);
 
         // Seek the event cursor
         if self
