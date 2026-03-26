@@ -11,7 +11,7 @@ use crate::{
     data_types::AudioContext,
     mixer::{Mixer, Project},
 };
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::traits::{DeviceTrait, HostTrait};
 use ringbuf::{
     SharedRb,
     storage::Heap,
