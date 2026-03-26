@@ -75,6 +75,11 @@ impl Project {
         self.tracks.remove(id);
     }
 
+    /// Returns a reference to the track.
+    pub fn get_track(&mut self, id: &TrackID) -> Option<&dyn Track> {
+        self.tracks.get(id).map(|track| &**track)
+    }
+
     /// Returns a mutable reference to the track.
     pub fn get_track_mut(&mut self, id: &TrackID) -> Option<&mut Box<dyn Track>> {
         self.tracks.get_mut(id)
