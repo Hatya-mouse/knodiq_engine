@@ -189,7 +189,10 @@ impl Track for NoteTrack {
         let buffer_end = playhead + self.audio_ctx.buffer_size;
         let max_voices = self.audio_ctx.max_voices;
 
-        println!("Event Cursor: {}", self.event_cursor);
+        println!(
+            "Playhead: {}, Event Cursor: {}",
+            playhead, self.event_cursor
+        );
 
         // Seek the event cursor
         if self
@@ -231,12 +234,15 @@ impl Track for NoteTrack {
 
             // Consume the events in this sample
             while let Some(event) = self.events.get(self.event_cursor) {
-                // Break if the event's sample index is not current sample
-                if event.sample_index != sample {
+                // Break if the event is in future
+                if event.sample_index > sample {
                     break;
                 }
-
-                println!("Processing event {:?}", event);
+                // If the event is the past event, skip the event
+                if event.sample_index < sample {
+                    self.event_cursor += 1;
+                    continue;
+                }
 
                 // Copy the frequency and velocity to avoid reference issues
                 let frequency = event.frequency;
