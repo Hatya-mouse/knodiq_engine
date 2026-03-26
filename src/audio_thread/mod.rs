@@ -149,6 +149,7 @@ impl AudioThread {
                         && let Some(new_project) = pending.take()
                     {
                         mixer.apply_project(new_project);
+                        mixer.seek();
                         println!("Updated to a new project");
                     }
 
