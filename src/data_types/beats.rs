@@ -3,7 +3,7 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub struct Beats(pub f64);
 
 impl Add for Beats {
