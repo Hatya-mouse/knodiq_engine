@@ -189,11 +189,6 @@ impl Track for NoteTrack {
         let buffer_end = playhead + self.audio_ctx.buffer_size;
         let max_voices = self.audio_ctx.max_voices;
 
-        println!(
-            "Playhead: {}, Event Cursor: {}",
-            playhead, self.event_cursor
-        );
-
         // Seek the event cursor
         if self
             .events
