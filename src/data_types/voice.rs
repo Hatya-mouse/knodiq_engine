@@ -1,16 +1,19 @@
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct Voice {
-    pub frequency: f32,
+    /// A MIDI note number in f32.
+    pub pitch: f32,
+    /// The velocity of the voice.
     pub velocity: f32,
     pub age: f32,
+    /// Whether the voice is active or not.
     pub is_active: bool,
 }
 
 impl Default for Voice {
     fn default() -> Self {
         Self {
-            frequency: 0.0,
+            pitch: 0.0,
             velocity: 0.0,
             age: 0.0,
             is_active: false,
@@ -19,9 +22,9 @@ impl Default for Voice {
 }
 
 impl Voice {
-    pub fn new(frequency: f32, velocity: f32, age: f32, is_active: bool) -> Self {
+    pub fn new(pitch: f32, velocity: f32, age: f32, is_active: bool) -> Self {
         Self {
-            frequency,
+            pitch,
             velocity,
             age,
             is_active,

@@ -10,17 +10,17 @@ pub struct Note {
     /// Duration of the note in beats.
     pub duration: Beats,
     /// Frequency of the note.
-    pub frequency: f32,
+    pub pitch: f32,
     /// Velocity of the note.
     pub velocity: f32,
 }
 
 impl Note {
-    pub fn new(start: Beats, duration: Beats, frequency: f32, velocity: f32) -> Self {
+    pub fn new(start: Beats, duration: Beats, pitch: f32, velocity: f32) -> Self {
         Self {
             start,
             duration,
-            frequency,
+            pitch,
             velocity,
         }
     }

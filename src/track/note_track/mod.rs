@@ -184,13 +184,13 @@ impl Track for NoteTrack {
                 // Add the note start and end event to the events
                 self.events.push(VoiceEvent::new(
                     absolute_start_sample,
-                    note.frequency,
+                    note.pitch,
                     note.velocity,
                     true,
                 ));
                 self.events.push(VoiceEvent::new(
                     absolute_end_sample,
-                    note.frequency,
+                    note.pitch,
                     note.velocity,
                     false,
                 ));
