@@ -74,6 +74,9 @@ impl AudioThread {
         let pending_arc = Arc::clone(&pending_project);
         let mixer = Mixer::new(initial_project);
 
+        // Create a generation variable to track the latest prepared project
+        let generation = Arc::new(AtomicUsize::new(0));
+
         // Get a cpal device
         let host = cpal::default_host();
         let device = host
@@ -115,6 +118,9 @@ impl AudioThread {
                     }
                 }
                 AudioCommand::UpdateProject(mut new_project) => {
+                    // Increment the current generation by one to mark it as the latest
+                    let current_gen = generation.fetch_add(1, Ordering::SeqCst) + 1;
+                    let gen_arc = Arc::clone(&generation);
                     let pending_arc = Arc::clone(&pending_project);
                     let error_tx = error_tx.clone();
                     std::thread::spawn(move || {
@@ -124,8 +130,11 @@ impl AudioThread {
                             return;
                         }
 
-                        // Send the new project to the audio playback thread
-                        *pending_arc.lock().unwrap() = Some(new_project);
+                        // Check if the project is the latest one
+                        if gen_arc.load(Ordering::SeqCst) == current_gen {
+                            // Send the new project to the audio playback thread
+                            *pending_arc.lock().unwrap() = Some(new_project);
+                        }
                     });
                 }
             }
