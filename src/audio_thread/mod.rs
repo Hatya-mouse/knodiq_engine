@@ -25,7 +25,7 @@ use std::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
         mpsc,
     },
-    thread::{self, current},
+    thread,
 };
 
 pub struct AudioThread;
