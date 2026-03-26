@@ -170,7 +170,7 @@ impl Graph {
         for node_id in &self.sorted_nodes {
             if let Some(node) = self.nodes.get_mut(node_id) {
                 // Call prepare function for every nodes
-                node.prepare();
+                node.prepare().map_err(GraphError::NodeError)?;
 
                 Self::allocate_output_buffer(
                     node_id,

@@ -1,5 +1,6 @@
 use crate::{
     data_types::{AudioContext, TypeInfo, Voice},
+    graph::error::NodeError,
     node::Node,
 };
 use std::ptr::copy_nonoverlapping;
@@ -50,7 +51,9 @@ impl Node for NoteInputNode {
         );
     }
 
-    fn prepare(&mut self) {}
+    fn prepare(&mut self) -> Result<(), Box<dyn NodeError>> {
+        Ok(())
+    }
 
     fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], _audio_ctx: &AudioContext) {
         for (input, output) in inputs.iter().zip(outputs.iter()) {

@@ -1,5 +1,6 @@
 use crate::{
     data_types::{AudioContext, TypeInfo},
+    graph::error::NodeError,
     node::Node,
 };
 
@@ -46,7 +47,9 @@ impl Node for AudioOutputNode {
         self.data_type = TypeInfo::new(4 * audio_ctx.channels * audio_ctx.buffer_size, 4);
     }
 
-    fn prepare(&mut self) {}
+    fn prepare(&mut self) -> Result<(), Box<dyn NodeError>> {
+        Ok(())
+    }
 
     fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], _audio_ctx: &AudioContext) {
         for (input, output) in inputs.iter().zip(outputs.iter()) {
