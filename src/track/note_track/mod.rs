@@ -152,14 +152,16 @@ impl Track for NoteTrack {
             for note in region.notes.values() {
                 let note_end = note.start + note.duration;
 
-                // Skip the note if it is outside the region
-                if note.start > region_end || note_end < region.start {
-                    continue;
-                }
-
                 // Calculate the start and end sample of the note in the entire track
                 let absolute_note_start = region.start + note.start;
                 let absolute_note_end = region.start + note_end;
+
+                // Skip the note if it is outside the region
+                // Skip if absolute_note_start equals region_end to prevent NOTE OFF event
+                // from occuring at the same time as the NOTE ON
+                if absolute_note_start >= region_end || absolute_note_end < region.start {
+                    continue;
+                }
 
                 // Clamp the start and the end beats by the region start and the end
                 let clamped_note_start = absolute_note_start.max(region.start);
