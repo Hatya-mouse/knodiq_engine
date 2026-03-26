@@ -115,13 +115,18 @@ impl AudioThread {
                     }
                 }
                 AudioCommand::UpdateProject(mut new_project) => {
-                    // Prepare the project before applying the project
-                    if let Err(err) = new_project.prepare() {
-                        error_tx.send(AudioError::GraphError(err)).unwrap();
-                    }
+                    let pending_arc = Arc::clone(&pending_project);
+                    let error_tx = error_tx.clone();
+                    std::thread::spawn(move || {
+                        // Prepare the project before applying the project
+                        if let Err(err) = new_project.prepare() {
+                            error_tx.send(AudioError::GraphError(err)).unwrap();
+                            return;
+                        }
 
-                    let mut pending_project = pending_project.lock().unwrap();
-                    *pending_project = Some(new_project);
+                        // Send the new project to the audio playback thread
+                        *pending_arc.lock().unwrap() = Some(new_project);
+                    });
                 }
             }
         }
