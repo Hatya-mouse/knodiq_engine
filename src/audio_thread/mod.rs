@@ -9,6 +9,7 @@ mod handle;
 use crate::{
     audio_thread::error::AudioError,
     data_types::AudioContext,
+    graph::error::GraphError,
     mixer::{Mixer, Project},
 };
 use cpal::traits::{DeviceTrait, HostTrait};
@@ -30,11 +31,17 @@ use std::{
 pub struct AudioThread;
 
 impl AudioThread {
-    pub fn spawn(audio_ctx: AudioContext, initial_project: Project) -> AudioThreadHandle {
+    pub fn spawn(
+        audio_ctx: AudioContext,
+        mut initial_project: Project,
+    ) -> Result<AudioThreadHandle, GraphError> {
         let (command_tx, command_rx) = mpsc::channel();
         let (error_tx, error_rx) = mpsc::channel();
         let playhead = Arc::new(AtomicUsize::new(0));
         let playhead_clone = playhead.clone();
+
+        // Prepare the initial project
+        initial_project.prepare()?;
 
         thread::spawn(move || {
             AudioThread::audio_thread(
@@ -46,11 +53,11 @@ impl AudioThread {
             );
         });
 
-        AudioThreadHandle {
+        Ok(AudioThreadHandle {
             command_tx,
             error_rx,
             playhead,
-        }
+        })
     }
 
     fn audio_thread(
@@ -107,8 +114,15 @@ impl AudioThread {
                         error_tx.send(AudioError::CommandFailed(command)).unwrap();
                     }
                 }
-                AudioCommand::UpdateProject(new_project) => {
+                AudioCommand::UpdateProject(mut new_project) => {
                     println!("Received a new project");
+
+                    // Prepare the project before applying the project
+                    if let Err(err) = new_project.prepare() {
+                        error_tx.send(AudioError::GraphError(err)).unwrap();
+                    }
+
+                    println!("Prepared the new project");
 
                     let mut pending_project = pending_project.lock().unwrap();
                     *pending_project = Some(new_project);
