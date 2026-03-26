@@ -56,6 +56,16 @@ impl NoteTrack {
         }
     }
 
+    // --- REGION GETTING ---
+
+    pub fn get_region(&self, id: &RegionID) -> Option<&NoteRegion> {
+        self.regions.get(id)
+    }
+
+    pub fn get_region_mut(&mut self, id: &RegionID) -> Option<&mut NoteRegion> {
+        self.regions.get_mut(id)
+    }
+
     // --- REGION ADDITION ---
 
     fn generate_region_id(&mut self) -> RegionID {
