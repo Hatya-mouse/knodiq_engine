@@ -192,14 +192,14 @@ impl Track for NoteTrack {
         println!("Event Cursor: {}", self.event_cursor);
 
         // Seek the event cursor
-        // if self
-        //     .events
-        //     .get(self.event_cursor)
-        //     .is_some_and(|e| e.sample_index > playhead)
-        //     || (self.event_cursor > 0 && self.events[self.event_cursor - 1].sample_index > playhead)
-        // {
-        //     self.event_cursor = self.events.partition_point(|e| e.sample_index < playhead);
-        // }
+        if self
+            .events
+            .get(self.event_cursor)
+            .is_some_and(|e| e.sample_index > playhead)
+            || (self.event_cursor > 0 && self.events[self.event_cursor - 1].sample_index > playhead)
+        {
+            self.event_cursor = self.events.partition_point(|e| e.sample_index < playhead);
+        }
 
         for sample in playhead..buffer_end {
             // Calculate the local sample in the buffer chunk
