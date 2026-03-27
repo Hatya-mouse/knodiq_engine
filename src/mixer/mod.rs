@@ -53,5 +53,8 @@ impl Mixer {
         for track in self.project.tracks.values_mut() {
             track.process(playhead, output);
         }
+
+        // Clamp the output between -1.0 and 1.0 for safety
+        output.iter_mut().for_each(|s| *s = s.clamp(-1.0, 1.0))
     }
 }
