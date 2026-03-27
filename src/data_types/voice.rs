@@ -1,5 +1,5 @@
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Voice {
     /// A MIDI note number in f32.
     pub pitch: f32,

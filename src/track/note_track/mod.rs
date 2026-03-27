@@ -237,18 +237,26 @@ impl Track for NoteTrack {
             // If the current sample is the first sample in the buffer,
             // Copy from the last voices
             if local_sample == 0 && !self.last_voices.is_empty() {
-                self.voice_buffer[..max_voices].clone_from_slice(&self.last_voices);
+                unsafe {
+                    std::ptr::copy_nonoverlapping(
+                        self.last_voices.as_ptr(),
+                        self.voice_buffer.as_mut_ptr(),
+                        max_voices,
+                    );
+                }
             }
 
             // If the current sample is not the first sample in the buffer,
             // copy the previous voices to the current index
             if local_sample > 0 {
                 let previous = (local_sample - 1) * max_voices;
-                // Get a mutable slice from the voice buffer
-                let (prev_slice, curr_slice) = self.voice_buffer.split_at_mut(current);
-                // Copy the previous slice to the mutable slice of the current buffer
-                curr_slice[..max_voices]
-                    .clone_from_slice(&prev_slice[previous..previous + max_voices]);
+                unsafe {
+                    std::ptr::copy_nonoverlapping(
+                        self.voice_buffer[previous..].as_ptr(),
+                        self.voice_buffer[current..].as_mut_ptr(),
+                        max_voices,
+                    );
+                }
             }
 
             // Increment the elapsed_samples
