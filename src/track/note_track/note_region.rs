@@ -50,6 +50,11 @@ impl NoteRegion {
 
     // --- NOTE GETTING ---
 
+    /// Returns a reference to the note.
+    pub fn get_note(&self, id: &NoteID) -> Option<&Note> {
+        self.notes.get(id)
+    }
+
     /// Returns a mutable reference to the note.
     pub fn get_note_mut(&mut self, id: &NoteID) -> Option<&mut Note> {
         self.notes.get_mut(id)
@@ -83,5 +88,27 @@ impl NoteRegion {
         if let Some(note) = self.get_note_mut(id) {
             note.velocity = velocity;
         }
+    }
+
+    // --- NOTE DATA GETTING ---
+
+    /// Returns the start beat of the note.
+    pub fn get_start(&self, id: &NoteID) -> Option<Beats> {
+        self.get_note(id).map(|note| note.start)
+    }
+
+    /// Returns the duration of the note.
+    pub fn get_duration(&self, id: &NoteID) -> Option<Beats> {
+        self.get_note(id).map(|note| note.duration)
+    }
+
+    /// Returns the pitch of the note.
+    pub fn get_pitch(&self, id: &NoteID) -> Option<f32> {
+        self.get_note(id).map(|note| note.pitch)
+    }
+
+    /// Returns the velocity of the note.
+    pub fn get_velocity(&self, id: &NoteID) -> Option<f32> {
+        self.get_note(id).map(|note| note.velocity)
     }
 }
