@@ -1,4 +1,6 @@
-#[derive(Clone, Default)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct AudioContext {
     pub channels: usize,
     pub sample_rate: usize,

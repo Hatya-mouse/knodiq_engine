@@ -49,6 +49,14 @@ pub trait Track: Send + Any {
 
     /// Converts a mutable reference to the track to any.
     fn as_any_mut(&mut self) -> &mut dyn Any;
+
+    /// Serializes the track to MessagePack.
+    fn serialize(&self) -> (String, Vec<u8>);
+
+    /// Deserializes the track from MessagePack.
+    fn deserialize(data: &[u8]) -> Box<dyn Track>
+    where
+        Self: Sized;
 }
 
 impl Clone for Box<dyn Track> {

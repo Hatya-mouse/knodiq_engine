@@ -2,9 +2,10 @@ use crate::{
     data_types::Beats,
     track::note_track::{Note, NoteID},
 };
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct NoteRegion {
     pub start: Beats,
     pub duration: Beats,

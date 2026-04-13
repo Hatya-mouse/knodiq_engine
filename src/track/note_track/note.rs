@@ -1,9 +1,10 @@
 use crate::data_types::Beats;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Default, Eq, Hash, PartialEq, Debug)]
+#[derive(Clone, Copy, Default, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub struct NoteID(pub usize);
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Note {
     /// Relative start position in the region in beats.
     pub start: Beats,

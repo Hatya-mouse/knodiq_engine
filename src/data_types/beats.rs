@@ -1,9 +1,8 @@
-use std::{
-    cmp::Ordering,
-    ops::{Add, Div, Mul, Sub},
-};
+use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
+use std::ops::{Add, Div, Mul, Sub};
 
-#[derive(Default, Clone, Copy, Debug, PartialEq)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Beats(pub f64);
 
 impl Add for Beats {
