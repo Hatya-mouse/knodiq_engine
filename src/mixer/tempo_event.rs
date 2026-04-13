@@ -1,7 +1,8 @@
 use crate::data_types::Beats;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TempoEvent {
     pub beat: Beats,
     pub bpm: f64,
