@@ -103,6 +103,10 @@ impl Track for NoteTrack {
 
     // --- GRAPH GETTING ---
 
+    fn get_graph(&self) -> &Graph {
+        &self.graph
+    }
+
     fn get_graph_mut(&mut self) -> &mut Graph {
         &mut self.graph
     }

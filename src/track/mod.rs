@@ -15,7 +15,10 @@ pub trait Track: Send + Any {
     /// Clones the track.
     fn clone_box(&self) -> Box<dyn Track>;
 
-    /// Returns a mutable pointer to the Graph.
+    /// Returns a reference to the Graph.
+    fn get_graph(&self) -> &Graph;
+
+    /// Returns a mutable reference to the Graph.
     fn get_graph_mut(&mut self) -> &mut Graph;
 
     /// Moves the audio region to the new start beats.
