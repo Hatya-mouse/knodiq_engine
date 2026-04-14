@@ -57,6 +57,10 @@ impl AudioTrack {
         self.regions.get_mut(id)
     }
 
+    pub fn get_all_regions(&self) -> &HashMap<RegionID, AudioRegion> {
+        &self.regions
+    }
+
     // --- REGION ADDITION ---
 
     fn generate_region_id(&mut self) -> RegionID {
