@@ -75,6 +75,10 @@ impl Graph {
         self.output_id
     }
 
+    pub fn get_nodes(&self) -> Vec<&dyn Node> {
+        self.nodes.values().map(|node| node.as_ref()).collect()
+    }
+
     // --- NODE MANIPULATION ---
 
     /// Adds a new node to the graph, and returns the newly generated node ID.
