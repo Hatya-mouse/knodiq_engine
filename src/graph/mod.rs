@@ -91,6 +91,14 @@ impl Graph {
         id
     }
 
+    /// Adds a new node to the graph with the given ID.
+    pub fn add_node_with_id(&mut self, id: NodeID, mut node: Box<dyn Node>) {
+        // Update the node
+        node.update(&self.audio_ctx);
+        // Insert the node to the map
+        self.nodes.insert(id, node);
+    }
+
     /// Connects the node's output to another node's input.
     pub fn connect(
         &mut self,
