@@ -37,10 +37,17 @@ pub trait Node: Send + Any {
     /// Processes the given input pointer and writes the output to the output pointer.
     fn process(&mut self, inputs: &[*const u8], outputs: &[*mut u8], audio_ctx: &AudioContext);
 
+    /// Converts a reference to the node to any.
     fn as_any(&self) -> &dyn Any;
 
-    /// Converts a mutable reference to the track to any.
+    /// Converts a mutable reference to the node to any.
     fn as_any_mut(&mut self) -> &mut dyn Any;
+
+    /// Converts the self into binary format that can be loaded later.
+    fn as_bytes(&self) -> Vec<u8>;
+
+    /// Loads a node from the slice of bytes.
+    fn load_bytes(&mut self, bytes: &[u8]);
 }
 
 impl Clone for Box<dyn Node> {

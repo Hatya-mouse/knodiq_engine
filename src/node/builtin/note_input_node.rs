@@ -71,4 +71,10 @@ impl Node for NoteInputNode {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
+
+    fn as_bytes(&self) -> Vec<u8> {
+        Vec::new()
+    }
+
+    fn load_bytes(&mut self, _bytes: &[u8]) {}
 }
