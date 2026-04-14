@@ -75,8 +75,8 @@ impl Graph {
         self.output_id
     }
 
-    pub fn get_nodes(&self) -> Vec<&dyn Node> {
-        self.nodes.values().map(|node| node.as_ref()).collect()
+    pub fn get_node_map(&self) -> &HashMap<NodeID, Box<dyn Node>> {
+        &self.nodes
     }
 
     // --- NODE MANIPULATION ---
