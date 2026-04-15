@@ -139,6 +139,8 @@ impl AudioThread {
                 }
             }
         }
+
+        drop(stream);
     }
 
     fn output_callback(
