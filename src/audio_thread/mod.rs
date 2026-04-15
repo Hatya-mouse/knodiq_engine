@@ -12,7 +12,7 @@ use crate::{
     graph::error::GraphError,
     mixer::{Mixer, Project},
 };
-use cpal::traits::{DeviceTrait, HostTrait};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use ringbuf::{
     SharedRb,
     storage::Heap,
@@ -102,6 +102,10 @@ impl AudioThread {
             playhead,
             is_playing_clone,
         );
+
+        if let Err(err) = stream.play() {
+            error_tx.send(AudioError::PlayStreamError(err)).unwrap();
+        }
 
         // Create a message loop
         for command in command_rx {
