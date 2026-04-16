@@ -3,7 +3,7 @@ use crate::{
     mixer::TempoEvent,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TempoMap {
     pub events: Vec<TempoEvent>,
     audio_ctx: AudioContext,
