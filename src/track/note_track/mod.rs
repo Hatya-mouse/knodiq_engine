@@ -115,6 +115,12 @@ impl Track for NoteTrack {
         &mut self.graph
     }
 
+    // --- GRAPH UPDATING ---
+
+    fn set_graph(&mut self, graph: Graph) {
+        self.graph = graph;
+    }
+
     // --- REGION MODIFICATION ---
 
     fn move_region(&mut self, region_id: &RegionID, new_start: Beats) {

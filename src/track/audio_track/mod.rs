@@ -93,6 +93,12 @@ impl Track for AudioTrack {
         &mut self.graph
     }
 
+    // --- GRAPH UPDATING ---
+
+    fn set_graph(&mut self, graph: Graph) {
+        self.graph = graph;
+    }
+
     // --- AUDIO CONTEXT UPDARING ---
 
     fn set_audio_ctx(&mut self, audio_ctx: &AudioContext) {

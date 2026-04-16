@@ -21,6 +21,9 @@ pub trait Track: Send + Any {
     /// Returns a mutable reference to the Graph.
     fn get_graph_mut(&mut self) -> &mut Graph;
 
+    /// Sets the Graph to the new one.
+    fn set_graph(&mut self, graph: Graph);
+
     /// Moves the audio region to the new start beats.
     fn move_region(&mut self, region_id: &RegionID, new_start: Beats);
 
