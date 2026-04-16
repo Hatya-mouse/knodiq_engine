@@ -34,7 +34,7 @@ pub struct Project {
 impl Project {
     // --- NEW ---
 
-    /// Creates a new project with the given tempo map.
+    /// Creates a new project with the specified initial bpm.
     pub fn new(
         audio_ctx: AudioContext,
         bpm: f64,
@@ -44,6 +44,23 @@ impl Project {
         Self {
             tracks: HashMap::new(),
             tempo_map: TempoMap::new(audio_ctx.clone(), bpm),
+            audio_ctx,
+            range_start,
+            range_duration,
+            next_track_id: 0,
+        }
+    }
+
+    /// Creates a new project with the given tempo map.
+    pub fn with_tempo_map(
+        audio_ctx: AudioContext,
+        tempo_map: TempoMap,
+        range_start: Beats,
+        range_duration: Beats,
+    ) -> Self {
+        Self {
+            tracks: HashMap::new(),
+            tempo_map,
             audio_ctx,
             range_start,
             range_duration,
