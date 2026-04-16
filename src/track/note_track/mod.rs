@@ -84,6 +84,10 @@ impl NoteTrack {
         id
     }
 
+    pub fn set_regions(&mut self, regions: HashMap<RegionID, NoteRegion>) {
+        self.regions = regions;
+    }
+
     // --- VOICE GETTING ---
 
     /// Returns the vacant voice index, or returns the index of the oldest voice.
