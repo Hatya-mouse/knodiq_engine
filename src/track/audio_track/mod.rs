@@ -74,6 +74,10 @@ impl AudioTrack {
         self.regions.insert(id, region);
         id
     }
+
+    pub fn set_regions(&mut self, regions: HashMap<RegionID, AudioRegion>) {
+        self.regions = regions;
+    }
 }
 
 impl Track for AudioTrack {
