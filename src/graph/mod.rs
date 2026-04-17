@@ -65,6 +65,18 @@ impl Graph {
         id
     }
 
+    // --- EDGE GETTING ---
+
+    pub fn get_edges(&self) -> &Vec<(NodeID, usize, NodeID, usize)> {
+        &self.edges
+    }
+
+    // --- EDGE MANIPULATION ---
+
+    pub fn add_edge(&mut self, from: NodeID, out_idx: usize, to: NodeID, in_idx: usize) {
+        self.edges.push((from, out_idx, to, in_idx));
+    }
+
     // --- NODE GETTING ---
 
     pub fn get_input_id(&self) -> NodeID {
@@ -81,12 +93,6 @@ impl Graph {
 
     pub fn get_node_map_mut(&mut self) -> &mut HashMap<NodeID, Box<dyn Node>> {
         &mut self.nodes
-    }
-
-    // --- EDGE GETTING ---
-
-    pub fn get_edges(&self) -> &Vec<(NodeID, usize, NodeID, usize)> {
-        &self.edges
     }
 
     // --- NODE MANIPULATION ---
