@@ -91,6 +91,14 @@ impl Graph {
 
     // --- NODE MANIPULATION ---
 
+    pub fn set_input_id(&mut self, id: NodeID) {
+        self.input_id = id;
+    }
+
+    pub fn set_output_id(&mut self, id: NodeID) {
+        self.output_id = id;
+    }
+
     /// Adds a new node to the graph, and returns the newly generated node ID.
     pub fn add_node(&mut self, mut node: Box<dyn Node>) -> NodeID {
         let id = self.generate_node_id();
