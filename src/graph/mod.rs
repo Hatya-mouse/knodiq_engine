@@ -79,6 +79,10 @@ impl Graph {
         &self.nodes
     }
 
+    pub fn get_node_map_mut(&mut self) -> &mut HashMap<NodeID, Box<dyn Node>> {
+        &mut self.nodes
+    }
+
     // --- NODE MANIPULATION ---
 
     /// Adds a new node to the graph, and returns the newly generated node ID.
