@@ -58,6 +58,11 @@ impl Graph {
 
     // --- ID GENERATION ---
 
+    /// Sets the next node ID to the given value.
+    pub fn set_next_node_id(&mut self, next_node_id: usize) {
+        self.next_node_id = next_node_id;
+    }
+
     /// Generates a new NodeID which is unique inside the graph.
     fn generate_node_id(&mut self) -> NodeID {
         let id = NodeID(self.next_node_id);

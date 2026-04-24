@@ -29,6 +29,11 @@ impl NoteRegion {
 
     // --- NOTE ID GENERATION ---
 
+    /// Sets the next note ID to the given ID.
+    pub fn set_next_note_id(&mut self, next_note_id: usize) {
+        self.next_note_id = next_note_id;
+    }
+
     /// Generates a new note ID.
     fn generate_note_id(&mut self) -> NoteID {
         let id = NoteID(self.next_note_id);

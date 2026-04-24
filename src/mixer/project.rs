@@ -70,6 +70,11 @@ impl Project {
 
     // --- TRACK ID GENERATION ---
 
+    /// Sets the next track ID for generating track IDs.
+    pub fn set_next_track_id(&mut self, next_id: usize) {
+        self.next_track_id = next_id;
+    }
+
     /// Generates a new unique track ID.
     fn generate_track_id(&mut self) -> TrackID {
         let id = TrackID(self.next_track_id);

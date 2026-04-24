@@ -63,6 +63,10 @@ impl AudioTrack {
 
     // --- REGION ADDITION ---
 
+    pub fn set_next_region_id(&mut self, next_id: usize) {
+        self.next_region_id = next_id;
+    }
+
     fn generate_region_id(&mut self) -> RegionID {
         let id = RegionID(self.next_region_id);
         self.next_region_id += 1;
