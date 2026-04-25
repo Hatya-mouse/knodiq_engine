@@ -1,13 +1,12 @@
-pub mod error;
-
 pub use audio_command::AudioCommand;
 pub use handle::AudioThreadHandle;
 
 mod audio_command;
+mod export;
 mod handle;
 
 use crate::{
-    audio_thread::error::AudioError,
+    audio_thread::audio_command::{AudioError, AudioResult},
     data_types::AudioContext,
     graph::error::GraphError,
     mixer::{Mixer, Project},
@@ -36,7 +35,7 @@ impl AudioThread {
         mut initial_project: Project,
     ) -> Result<AudioThreadHandle, GraphError> {
         let (command_tx, command_rx) = mpsc::channel();
-        let (error_tx, error_rx) = mpsc::channel();
+        let (result_tx, result_rx) = mpsc::channel();
         let playhead = Arc::new(AtomicUsize::new(0));
         let playhead_clone = playhead.clone();
 
@@ -46,7 +45,7 @@ impl AudioThread {
         thread::spawn(move || {
             AudioThread::audio_thread(
                 command_rx,
-                error_tx,
+                result_tx,
                 playhead_clone,
                 audio_ctx,
                 initial_project,
@@ -55,14 +54,14 @@ impl AudioThread {
 
         Ok(AudioThreadHandle {
             command_tx,
-            error_rx,
+            result_rx,
             playhead,
         })
     }
 
     fn audio_thread(
         command_rx: mpsc::Receiver<AudioCommand>,
-        error_tx: mpsc::Sender<AudioError>,
+        result_tx: mpsc::Sender<Result<AudioResult, AudioError>>,
         playhead: Arc<AtomicUsize>,
         audio_ctx: AudioContext,
         initial_project: Project,
@@ -104,7 +103,9 @@ impl AudioThread {
         );
 
         if let Err(err) = stream.play() {
-            error_tx.send(AudioError::PlayStreamError(err)).unwrap();
+            result_tx
+                .send(Err(AudioError::PlayStreamError(err)))
+                .unwrap();
         }
 
         // Create a message loop
@@ -118,7 +119,9 @@ impl AudioThread {
                 }
                 AudioCommand::Seek(_) => {
                     if let Err(command) = producer.try_push(command) {
-                        error_tx.send(AudioError::CommandFailed(command)).unwrap();
+                        result_tx
+                            .send(Err(AudioError::CommandFailed(command)))
+                            .unwrap();
                     }
                 }
                 AudioCommand::UpdateProject(mut new_project) => {
@@ -126,11 +129,11 @@ impl AudioThread {
                     let current_gen = generation.fetch_add(1, Ordering::SeqCst) + 1;
                     let gen_arc = Arc::clone(&generation);
                     let pending_arc = Arc::clone(&pending_project);
-                    let error_tx = error_tx.clone();
+                    let result_tx = result_tx.clone();
                     std::thread::spawn(move || {
                         // Prepare the project before applying the project
                         if let Err(err) = new_project.prepare() {
-                            error_tx.send(AudioError::GraphError(err)).unwrap();
+                            result_tx.send(Err(AudioError::GraphError(err))).unwrap();
                             return;
                         }
 
@@ -140,6 +143,10 @@ impl AudioThread {
                             *pending_arc.lock().unwrap() = Some(new_project);
                         }
                     });
+                }
+                AudioCommand::ExportAudio(project) => {
+                    let result_tx = result_tx.clone();
+                    export::spawn_export_thread(result_tx, project);
                 }
             }
         }
