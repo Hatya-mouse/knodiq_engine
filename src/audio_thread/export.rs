@@ -1,5 +1,5 @@
 use crate::{
-    audio_thread::audio_command::{AudioError, AudioResult},
+    audio_thread::{AudioError, AudioResult},
     mixer::{Mixer, Project},
 };
 use std::{sync::mpsc, thread};

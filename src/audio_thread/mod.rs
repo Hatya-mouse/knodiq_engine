@@ -1,4 +1,4 @@
-pub use audio_command::AudioCommand;
+pub use audio_command::{AudioCommand, AudioError, AudioResult};
 pub use handle::AudioThreadHandle;
 
 mod audio_command;
@@ -6,7 +6,6 @@ mod export;
 mod handle;
 
 use crate::{
-    audio_thread::audio_command::{AudioError, AudioResult},
     data_types::AudioContext,
     graph::error::GraphError,
     mixer::{Mixer, Project},
