@@ -1,4 +1,4 @@
-use crate::{data_types::TypeInfo, graph::node_id::NodeID};
+use crate::graph::node_id::NodeID;
 use std::fmt::{Debug, Display};
 
 #[derive(Debug)]

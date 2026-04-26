@@ -130,8 +130,17 @@ impl Graph {
         self.nodes.insert(id, node);
     }
 
-    /// Connects the node's output to another node's input.
-    pub fn add_edge(&mut self, edge: (NodeID, usize, NodeID, usize)) -> Result<(), GraphError> {
+    /// Connects the node's output to another nodes' input without any validation.
+    /// Useful for loading the graph from a file, where we assume the file is valid.
+    pub fn add_edge(&mut self, edge: (NodeID, usize, NodeID, usize)) {
+        self.edges.push(edge);
+    }
+
+    /// Connects the node's output to another node's input, and returns an error if the type of the output and input are not the same, or if the node is not found.
+    pub fn add_edge_checked(
+        &mut self,
+        edge: (NodeID, usize, NodeID, usize),
+    ) -> Result<(), GraphError> {
         // Check if the type of the output and input are the same
         let output_type = self
             .nodes
