@@ -132,6 +132,9 @@ impl Graph {
 
     /// Removes the node with the given NodeID from the graph.
     pub fn remove_node(&mut self, id: &NodeID) {
+        // Remove the edges connected to the node
+        self.edges.retain(|edge| edge.0 != *id && edge.2 != *id);
+        // Remove the node
         self.nodes.remove(id);
     }
 
