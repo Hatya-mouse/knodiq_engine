@@ -1,4 +1,4 @@
-use crate::graph::node_id::NodeID;
+use crate::{data_types::TypeInfo, graph::node_id::NodeID};
 use std::fmt::{Debug, Display};
 
 #[derive(Debug)]
@@ -9,7 +9,7 @@ pub enum GraphError {
     NodeCycle(NodeID),
     OutputTypeUnavailable(NodeID, usize),
     InputTypeUnavailable(NodeID, usize),
-    NodeTypeMismatch((NodeID, usize, NodeID, usize)),
+    NodeTypeMismatch((NodeID, usize, NodeID, usize), TypeInfo, TypeInfo),
     EdgeNotFound((NodeID, usize, NodeID, usize)),
 }
 
