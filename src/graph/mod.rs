@@ -100,6 +100,14 @@ impl Graph {
         &mut self.nodes
     }
 
+    pub fn get_node(&self, id: &NodeID) -> Option<&dyn Node> {
+        self.nodes.get(id).map(|track| &**track)
+    }
+
+    pub fn get_node_mut(&mut self, id: &NodeID) -> Option<&mut Box<dyn Node>> {
+        self.nodes.get_mut(id)
+    }
+
     // --- NODE MANIPULATION ---
 
     pub fn set_input_id(&mut self, id: NodeID) {
