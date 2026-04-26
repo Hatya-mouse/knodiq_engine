@@ -78,13 +78,12 @@ impl Graph {
 
     // --- EDGE MANIPULATION ---
 
-    pub fn add_edge(&mut self, from: NodeID, out_idx: usize, to: NodeID, in_idx: usize) {
-        self.edges.push((from, out_idx, to, in_idx));
+    pub fn add_edge(&mut self, edge: (NodeID, usize, NodeID, usize)) {
+        self.edges.push(edge);
     }
 
-    pub fn remove_edge(&mut self, from: NodeID, out_idx: usize, to: NodeID, in_idx: usize) {
-        self.edges
-            .retain(|&(f, o, t, i)| !(f == from && o == out_idx && t == to && i == in_idx));
+    pub fn remove_edge(&mut self, edge: (NodeID, usize, NodeID, usize)) {
+        self.edges.retain(|e| e != &edge);
     }
 
     // --- NODE GETTING ---
