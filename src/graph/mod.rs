@@ -82,6 +82,11 @@ impl Graph {
         self.edges.push((from, out_idx, to, in_idx));
     }
 
+    pub fn remove_edge(&mut self, from: NodeID, out_idx: usize, to: NodeID, in_idx: usize) {
+        self.edges
+            .retain(|&(f, o, t, i)| !(f == from && o == out_idx && t == to && i == in_idx));
+    }
+
     // --- NODE GETTING ---
 
     pub fn get_input_id(&self) -> NodeID {
