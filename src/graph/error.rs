@@ -9,6 +9,8 @@ pub enum GraphError {
     NodeCycle(NodeID),
     OutputTypeUnavailable(NodeID, usize),
     InputTypeUnavailable(NodeID, usize),
+    NodeTypeMismatch((NodeID, usize, NodeID, usize)),
+    EdgeNotFound((NodeID, usize, NodeID, usize)),
 }
 
 pub trait NodeError: Send + Debug + Display {}

@@ -1,4 +1,4 @@
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialEq, Eq, Debug)]
 pub struct TypeInfo {
     pub size: usize,
     pub align: usize,

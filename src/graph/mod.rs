@@ -76,16 +76,6 @@ impl Graph {
         &self.edges
     }
 
-    // --- EDGE MANIPULATION ---
-
-    pub fn add_edge(&mut self, edge: (NodeID, usize, NodeID, usize)) {
-        self.edges.push(edge);
-    }
-
-    pub fn remove_edge(&mut self, edge: (NodeID, usize, NodeID, usize)) {
-        self.edges.retain(|e| e != &edge);
-    }
-
     // --- NODE GETTING ---
 
     pub fn get_input_id(&self) -> NodeID {
@@ -141,25 +131,38 @@ impl Graph {
     }
 
     /// Connects the node's output to another node's input.
-    pub fn connect(
-        &mut self,
-        from: &NodeID,
-        output_name: &str,
-        to: &NodeID,
-        input_name: &str,
-    ) -> Result<(), GraphError> {
-        let output_idx = self.nodes[from]
-            .get_output_names()
-            .iter()
-            .position(|n| n == output_name)
-            .ok_or_else(|| GraphError::OutputNotFound(*from, output_name.to_string()))?;
-        let input_idx = self.nodes[to]
-            .get_input_names()
-            .iter()
-            .position(|n| n == input_name)
-            .ok_or_else(|| GraphError::InputNotFound(*from, input_name.to_string()))?;
-        self.edges.push((*from, output_idx, *to, input_idx));
+    pub fn add_edge(&mut self, edge: (NodeID, usize, NodeID, usize)) -> Result<(), GraphError> {
+        // Check if the type of the output and input are the same
+        let output_type = self
+            .nodes
+            .get(&edge.0)
+            .and_then(|node| node.get_output_type(edge.1))
+            .ok_or(GraphError::OutputTypeUnavailable(edge.0, edge.1))?;
+        let input_type = self
+            .nodes
+            .get(&edge.2)
+            .and_then(|node| node.get_input_type(edge.3))
+            .ok_or(GraphError::InputTypeUnavailable(edge.2, edge.3))?;
+
+        if output_type != input_type {
+            return Err(GraphError::NodeTypeMismatch((
+                edge.0, edge.1, edge.2, edge.3,
+            )));
+        }
+
+        self.edges.push(edge);
         Ok(())
+    }
+
+    /// Removes the edge from the graph.
+    /// Returns an error if the node is not found.
+    pub fn remove_edge(&mut self, edge: (NodeID, usize, NodeID, usize)) -> Result<(), GraphError> {
+        if let Some(pos) = self.edges.iter().position(|e| *e == edge) {
+            self.edges.remove(pos);
+            Ok(())
+        } else {
+            Err(GraphError::EdgeNotFound(edge))
+        }
     }
 
     // --- AUDIO CONTEXT UPDATING ---
