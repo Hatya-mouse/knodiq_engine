@@ -130,6 +130,13 @@ impl Graph {
         self.nodes.insert(id, node);
     }
 
+    /// Removes the node with the given NodeID from the graph.
+    pub fn remove_node(&mut self, id: &NodeID) {
+        self.nodes.remove(id);
+    }
+
+    // --- EDGE MANIPULATION ---
+
     /// Connects the node's output to another nodes' input without any validation.
     /// Useful for loading the graph from a file, where we assume the file is valid.
     pub fn add_edge_unchecked(&mut self, edge: (NodeID, usize, NodeID, usize)) {
