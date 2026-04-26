@@ -145,11 +145,9 @@ impl Graph {
             .ok_or(GraphError::InputTypeUnavailable(edge.2, edge.3))?;
 
         if output_type != input_type {
-            return Err(GraphError::NodeTypeMismatch(
-                (edge.0, edge.1, edge.2, edge.3),
-                output_type.clone(),
-                input_type.clone(),
-            ));
+            return Err(GraphError::NodeTypeMismatch((
+                edge.0, edge.1, edge.2, edge.3,
+            )));
         }
 
         self.edges.push(edge);

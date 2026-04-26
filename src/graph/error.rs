@@ -9,7 +9,7 @@ pub enum GraphError {
     NodeCycle(NodeID),
     OutputTypeUnavailable(NodeID, usize),
     InputTypeUnavailable(NodeID, usize),
-    NodeTypeMismatch((NodeID, usize, NodeID, usize), TypeInfo, TypeInfo),
+    NodeTypeMismatch((NodeID, usize, NodeID, usize)),
     EdgeNotFound((NodeID, usize, NodeID, usize)),
 }
 
