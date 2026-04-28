@@ -285,8 +285,7 @@ impl Graph {
             })[edge.3] = ptr;
         }
 
-        // Initialize node_inputs for nodes with no incoming edges so process() never
-        // returns early on a missing entry (which would silence all subsequent nodes).
+        // For nodes that have no input, set the input buffer to the zero buffer
         let zero_ptr = self.zero_buffer.as_ptr();
         let node_ids_needing_inputs: Vec<NodeID> = self
             .sorted_nodes
