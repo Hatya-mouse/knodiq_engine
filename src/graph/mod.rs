@@ -202,6 +202,8 @@ impl Graph {
         node_outputs: &mut HashMap<NodeID, Vec<*mut u8>>,
         audio_ctx: &AudioContext,
     ) -> Result<(), GraphError> {
+        // Ensure an output buffer exists even for nodes with no outputs
+        node_outputs.entry(*node_id).or_default();
         // Create a buffer for all outputs
         for output_index in 0..node.get_output_len() {
             let output_type = node
@@ -272,6 +274,22 @@ impl Graph {
             self.node_inputs.entry(edge.2).or_insert_with(|| {
                 vec![self.zero_buffer.as_ptr(); self.nodes[&edge.2].get_input_len()]
             })[edge.3] = ptr;
+        }
+
+        // Initialize node_inputs for nodes with no incoming edges so process() never
+        // returns early on a missing entry (which would silence all subsequent nodes).
+        let zero_ptr = self.zero_buffer.as_ptr();
+        let node_ids_needing_inputs: Vec<NodeID> = self
+            .sorted_nodes
+            .iter()
+            .chain(std::iter::once(&self.output_id))
+            .copied()
+            .collect();
+        for node_id in node_ids_needing_inputs {
+            let input_len = self.nodes.get(&node_id).map_or(0, |n| n.get_input_len());
+            self.node_inputs
+                .entry(node_id)
+                .or_insert_with(|| vec![zero_ptr; input_len]);
         }
 
         Ok(())

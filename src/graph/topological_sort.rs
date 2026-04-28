@@ -12,6 +12,12 @@ impl Graph {
     /// Sorts the processing graph in a topological order. Returns error if a cycle is found.
     /// Omits the input and output node.
     pub fn sort_graph(&mut self) -> Result<(), GraphError> {
+        // Rebuild adjacency from edges so the sort reflects the current graph structure
+        self.adjacency.clear();
+        for edge in &self.edges {
+            self.adjacency.entry(edge.0).or_default().push(edge.2);
+        }
+
         // Create visited and sorted array
         let mut states: HashMap<NodeID, SortState> = self
             .nodes
