@@ -213,10 +213,12 @@ impl Graph {
             output_buffers.insert((*node_id, output_index), buffer);
 
             // Register the pointer to the buffer in the node_outputs map
-            let ptr = output_buffers
+            let Some(ptr) = output_buffers
                 .get_mut(&(*node_id, output_index))
-                .unwrap()
-                .as_mut_ptr();
+                .map(|b| b.as_mut_ptr())
+            else {
+                return Err(GraphError::OutputBufferNotFound(*node_id, output_index));
+            };
             node_outputs.entry(*node_id).or_default().push(ptr);
         }
 
@@ -268,7 +270,14 @@ impl Graph {
 
         // Build node_inputs from edges
         for edge in &self.edges {
-            let ptr = self.output_buffers.get(&(edge.0, edge.1)).unwrap().as_ptr();
+            let Some(ptr) = self
+                .output_buffers
+                .get(&(edge.0, edge.1))
+                .map(|b| b.as_ptr())
+            else {
+                return Err(GraphError::OutputBufferNotFound(edge.0, edge.1));
+            };
+
             self.node_inputs.entry(edge.2).or_insert_with(|| {
                 vec![self.zero_buffer.as_ptr(); self.nodes[&edge.2].get_input_len()]
             })[edge.3] = ptr;
@@ -284,7 +293,9 @@ impl Graph {
         let Some(output_buffers) = self.get_output_ptr(&self.input_id) else {
             return;
         };
-        let input_node = self.nodes.get_mut(&self.input_id).unwrap();
+        let Some(input_node) = self.nodes.get_mut(&self.input_id) else {
+            return;
+        };
         // Process the input node
         input_node.process(inputs, &output_buffers, &self.audio_ctx);
 
@@ -308,7 +319,9 @@ impl Graph {
         let Some(input_buffers) = self.get_input_ptr(&self.output_id) else {
             return;
         };
-        let output_node = self.nodes.get_mut(&self.output_id).unwrap();
+        let Some(output_node) = self.nodes.get_mut(&self.output_id) else {
+            return;
+        };
         // Process the output node
         // Output data will be written to the output pointer
         output_node.process(&input_buffers, outputs, &self.audio_ctx);

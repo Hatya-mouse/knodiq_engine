@@ -4,8 +4,7 @@ use std::fmt::{Debug, Display};
 #[derive(Debug)]
 pub enum GraphError {
     NodeError(Box<dyn NodeError>),
-    InputNotFound(NodeID, String),
-    OutputNotFound(NodeID, String),
+    OutputBufferNotFound(NodeID, usize),
     NodeCycle(NodeID),
     OutputTypeUnavailable(NodeID, usize),
     InputTypeUnavailable(NodeID, usize),
