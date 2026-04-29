@@ -9,3 +9,5 @@ pub use beats::Beats;
 pub use midi_event::MidiEvent;
 pub use type_info::TypeInfo;
 pub use voice::Voice;
+
+pub use midir::{MidiInputPort, MidiInputPorts};

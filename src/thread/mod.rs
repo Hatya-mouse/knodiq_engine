@@ -34,7 +34,7 @@ impl AudioThread {
         let playhead = Arc::new(AtomicUsize::new(0));
         let playhead_clone = playhead.clone();
         // A ringbuf to send MIDI events to the audio thread from the midi thread.
-        let (midi_producer, _midi_consumer) = HeapRb::<MidiEvent>::new(64).split();
+        let (midi_producer, midi_consumer) = HeapRb::<MidiEvent>::new(64).split();
 
         // Prepare the initial project
         initial_project.prepare()?;
@@ -44,6 +44,7 @@ impl AudioThread {
             audio_thread::audio_thread(
                 audio_command_rx,
                 result_tx,
+                midi_consumer,
                 playhead_clone,
                 audio_ctx,
                 initial_project,

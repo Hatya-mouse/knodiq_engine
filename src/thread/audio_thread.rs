@@ -1,5 +1,5 @@
 use crate::{
-    data_types::AudioContext,
+    data_types::{AudioContext, MidiEvent},
     mixer::{Mixer, Project},
     thread::{AudioCommand, AudioError, AudioResult, export},
 };
@@ -24,6 +24,7 @@ pub(super) struct OutputCallbackState {
 pub(super) fn audio_thread(
     command_rx: mpsc::Receiver<AudioCommand>,
     result_tx: mpsc::Sender<Result<AudioResult, AudioError>>,
+    midi_consumer: ringbuf::HeapCons<MidiEvent>,
     playhead: Arc<AtomicUsize>,
     audio_ctx: AudioContext,
     initial_project: Project,
