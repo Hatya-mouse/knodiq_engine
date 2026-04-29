@@ -104,6 +104,10 @@ impl NoteTrack {
         self.active_voices.push_back((new_voice_index, new_freq));
         new_voice_index
     }
+
+    // --- REALTIME MIDI GETTING ---
+
+    pub fn pass_midi(&mut self) {}
 }
 
 impl Track for NoteTrack {

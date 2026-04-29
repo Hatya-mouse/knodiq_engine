@@ -1,12 +1,18 @@
-use crate::{data_types::Beats, graph::error::GraphError, mixer::Project};
+use crate::{
+    data_types::Beats,
+    graph::error::GraphError,
+    mixer::{Project, TrackID},
+};
 
 #[derive(Clone)]
 pub enum AudioCommand {
     Play,
     Pause,
     Seek(Beats),
-    UpdateProject(Project),
-    ExportAudio(Project),
+    UpdateProject(Box<Project>),
+    ExportAudio(Box<Project>),
+    ArmTrack(TrackID),
+    DisarmTrack,
 }
 
 #[derive(Clone)]

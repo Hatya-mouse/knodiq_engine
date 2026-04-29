@@ -1,22 +1,18 @@
-pub use audio_command::{AudioCommand, AudioError, AudioResult};
-pub use handle::AudioThreadHandle;
-
 mod audio_command;
+mod callback;
 mod export;
 mod handle;
+
+pub use audio_command::{AudioCommand, AudioError, AudioResult};
+pub use handle::AudioThreadHandle;
 
 use crate::{
     data_types::AudioContext,
     graph::error::GraphError,
     mixer::{Mixer, Project},
 };
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use ringbuf::{
-    SharedRb,
-    storage::Heap,
-    traits::{Consumer, Producer, Split},
-    wrap::caching::Caching,
-};
+use cpal::traits::{HostTrait, StreamTrait};
+use ringbuf::traits::{Producer, Split};
 use std::{
     sync::{
         Arc, Mutex,
@@ -91,7 +87,7 @@ impl AudioThread {
             sample_rate: audio_ctx.sample_rate as u32,
             buffer_size: cpal::BufferSize::Fixed(audio_ctx.buffer_size as u32),
         };
-        let stream = AudioThread::output_callback(
+        let stream = callback::output_callback(
             mixer,
             consumer,
             pending_arc,
@@ -139,69 +135,31 @@ impl AudioThread {
                         // Check if the project is the latest one
                         if gen_arc.load(Ordering::SeqCst) == current_gen {
                             // Send the new project to the audio playback thread
-                            *pending_arc.lock().unwrap() = Some(new_project);
+                            *pending_arc.lock().unwrap() = Some(*new_project);
                         }
                     });
                 }
                 AudioCommand::ExportAudio(project) => {
                     let result_tx = result_tx.clone();
-                    export::spawn_export_thread(result_tx, project);
+                    export::spawn_export_thread(result_tx, *project);
+                }
+                AudioCommand::ArmTrack(_) => {
+                    if let Err(command) = producer.try_push(command) {
+                        result_tx
+                            .send(Err(AudioError::CommandFailed(command)))
+                            .unwrap();
+                    }
+                }
+                AudioCommand::DisarmTrack => {
+                    if let Err(command) = producer.try_push(command) {
+                        result_tx
+                            .send(Err(AudioError::CommandFailed(command)))
+                            .unwrap();
+                    }
                 }
             }
         }
 
         drop(stream);
-    }
-
-    fn output_callback(
-        mut mixer: Mixer,
-        mut consumer: Caching<Arc<SharedRb<Heap<AudioCommand>>>, false, true>,
-        pending_project: Arc<Mutex<Option<Project>>>,
-        device: cpal::Device,
-        config: cpal::StreamConfig,
-        playhead: Arc<AtomicUsize>,
-        is_playing: Arc<AtomicBool>,
-    ) -> cpal::Stream {
-        device
-            .build_output_stream(
-                &config,
-                move |data: &mut [f32], _| {
-                    let mut current_playhead = playhead.load(Ordering::Relaxed);
-
-                    // Get the project without blocking
-                    if let Ok(mut pending) = pending_project.try_lock()
-                        && let Some(new_project) = pending.take()
-                    {
-                        mixer.apply_project(new_project, current_playhead);
-                    }
-
-                    // Process the seek
-                    if let Some(command) = consumer.try_pop()
-                        && let AudioCommand::Seek(target) = command
-                    {
-                        let target_sample = mixer.project.tempo_map.beats_to_samples(target);
-                        // Do not forget to update the current_playhead for processing later
-                        current_playhead = target_sample;
-                        playhead.store(target_sample, Ordering::Relaxed);
-                        mixer.seek(target_sample);
-                    }
-
-                    let is_playing = is_playing.load(Ordering::Relaxed);
-                    if is_playing {
-                        // Process the mixer
-                        mixer.process(current_playhead, data);
-
-                        // Increment the playhead
-                        playhead.fetch_add(mixer.project.audio_ctx.buffer_size, Ordering::Relaxed);
-                    } else {
-                        data.fill(0.0);
-                    }
-                },
-                |err| {
-                    eprintln!("An error occured on stream: {}", err);
-                },
-                None,
-            )
-            .expect("Failed to create a new stream")
     }
 }
