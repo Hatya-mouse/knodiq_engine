@@ -41,7 +41,7 @@ impl Mixer {
     // --- MIXING PROCESS ---
 
     /// Processes the tracks in the mixer a the specified playhead.
-    pub fn process(&mut self, playhead: usize, output: &mut [f32]) {
+    pub fn process(&mut self, is_playing: bool, playhead: usize, output: &mut [f32]) {
         // Fill the output buffer with zeros before processing
         unsafe {
             let len = self.project.audio_ctx.buffer_size * self.project.audio_ctx.channels;
@@ -51,7 +51,7 @@ impl Mixer {
 
         // Call process function for every tracks
         for track in self.project.tracks.values_mut() {
-            track.process(playhead, output);
+            track.process(is_playing, playhead, output);
         }
 
         // Clamp the output between -1.0 and 1.0 for safety

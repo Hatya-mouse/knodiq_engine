@@ -175,30 +175,32 @@ impl Track for AudioTrack {
         self.graph.prepare()
     }
 
-    fn process(&mut self, playhead: usize, output: &mut [f32]) {
-        let buffer_size = self.audio_ctx.buffer_size * self.audio_ctx.channels;
-        let buffer_end = playhead + buffer_size;
+    fn process(&mut self, is_playing: bool, playhead: usize, output: &mut [f32]) {
+        if is_playing {
+            let buffer_size = self.audio_ctx.buffer_size * self.audio_ctx.channels;
+            let buffer_end = playhead + buffer_size;
 
-        // Create a vector for input buffer
-        let mut input_vec: Vec<f32>;
+            // Create a vector for input buffer
+            let mut input_vec: Vec<f32>;
 
-        let input_ptr = if buffer_end <= self.processed.len() {
-            // Get a pointer to the input buffer
-            self.processed[playhead..buffer_end].as_ptr() as *const u8
-        } else {
-            // If the audio data for the buffer is partially unavailable fill the rest with zero
-            let available = self.processed.len().saturating_sub(playhead);
-            input_vec = vec![0f32; buffer_size];
-            if available > 0 {
-                input_vec[..available]
-                    .copy_from_slice(&self.processed[playhead..playhead + available]);
-            }
-            input_vec.as_ptr() as *const u8
-        };
+            let input_ptr = if buffer_end <= self.processed.len() {
+                // Get a pointer to the input buffer
+                self.processed[playhead..buffer_end].as_ptr() as *const u8
+            } else {
+                // If the audio data for the buffer is partially unavailable fill the rest with zero
+                let available = self.processed.len().saturating_sub(playhead);
+                input_vec = vec![0f32; buffer_size];
+                if available > 0 {
+                    input_vec[..available]
+                        .copy_from_slice(&self.processed[playhead..playhead + available]);
+                }
+                input_vec.as_ptr() as *const u8
+            };
 
-        // Process the graph
-        self.graph
-            .process(&[input_ptr], &[output.as_mut_ptr() as *mut u8]);
+            // Process the graph
+            self.graph
+                .process(&[input_ptr], &[output.as_mut_ptr() as *mut u8]);
+        }
     }
 
     // --- ANY CASTING ---

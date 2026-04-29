@@ -191,13 +191,11 @@ fn output_callback(
 
                 let is_playing = state.is_playing.load(Ordering::Relaxed);
 
+                mixer.process(is_playing, current_playhead, data);
                 if is_playing {
-                    mixer.process(current_playhead, data);
                     state
                         .playhead
                         .fetch_add(mixer.project.audio_ctx.buffer_size, Ordering::Relaxed);
-                } else {
-                    data.fill(0.0);
                 }
             },
             |err| {

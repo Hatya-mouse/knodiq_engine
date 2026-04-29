@@ -270,7 +270,7 @@ impl Track for NoteTrack {
         self.graph.prepare()
     }
 
-    fn process(&mut self, playhead: usize, output: &mut [f32]) {
+    fn process(&mut self, is_playing: bool, playhead: usize, output: &mut [f32]) {
         // Convert the playhead beats to samples
         let buffer_end = playhead + self.audio_ctx.buffer_size;
         let max_voices = self.audio_ctx.max_voices;
@@ -316,54 +316,60 @@ impl Track for NoteTrack {
                 }
             }
 
-            // Increment age for sequenced and live voices
-            for (index, _) in self.active_voices.iter() {
-                self.voice_buffer[current + index].age += 1.0 / self.audio_ctx.sample_rate as f32;
-            }
+            // Increment age for live midi voices
             for &index in self.live_voices.values() {
                 self.voice_buffer[current + index].age += 1.0 / self.audio_ctx.sample_rate as f32;
             }
 
-            // Consume the events in this sample
-            while let Some(event) = self.events.get(self.event_cursor) {
-                // Break if the event is in future
-                if event.sample_index > sample {
-                    break;
-                }
-                // If the event is the past event, skip the event
-                if event.sample_index < sample {
-                    self.event_cursor += 1;
-                    continue;
+            // Process the sequenced voices when playing
+            if is_playing {
+                // Increment age for sequenced voices
+                for (index, _) in self.active_voices.iter() {
+                    self.voice_buffer[current + index].age +=
+                        1.0 / self.audio_ctx.sample_rate as f32;
                 }
 
-                // Copy the frequency and velocity to avoid reference issues
-                let frequency = event.frequency;
-                let velocity = event.velocity;
-
-                if event.is_note_on {
-                    // Start playing the note from the sample
-                    let voice_index = self.find_or_steal_voice(frequency);
-                    // Set the new voice to the voice buffer
-                    self.voice_buffer[current + voice_index] =
-                        Voice::new(frequency, velocity, 0.0, true);
-                } else {
-                    // Remove the active voice whose frequency matches the event frequency
-                    if let Some(remove_index) = self
-                        .active_voices
-                        .iter()
-                        .position(|(_, freq)| *freq == event.frequency)
-                    {
-                        // Remove the index from the active_voices and get the voice index
-                        let (voice_index, _) = self.active_voices.remove(remove_index).unwrap();
-                        // Mark the voice index as free
-                        self.free_voices.push(voice_index);
-                        self.voice_buffer[current + voice_index].is_active = false;
-                        self.voice_buffer[current + voice_index].age = 0.0;
+                // Consume the events in this sample
+                while let Some(event) = self.events.get(self.event_cursor) {
+                    // Break if the event is in future
+                    if event.sample_index > sample {
+                        break;
                     }
-                }
+                    // If the event is the past event, skip the event
+                    if event.sample_index < sample {
+                        self.event_cursor += 1;
+                        continue;
+                    }
 
-                // Increment the event cursor
-                self.event_cursor += 1;
+                    // Copy the frequency and velocity to avoid reference issues
+                    let frequency = event.frequency;
+                    let velocity = event.velocity;
+
+                    if event.is_note_on {
+                        // Start playing the note from the sample
+                        let voice_index = self.find_or_steal_voice(frequency);
+                        // Set the new voice to the voice buffer
+                        self.voice_buffer[current + voice_index] =
+                            Voice::new(frequency, velocity, 0.0, true);
+                    } else {
+                        // Remove the active voice whose frequency matches the event frequency
+                        if let Some(remove_index) = self
+                            .active_voices
+                            .iter()
+                            .position(|(_, freq)| *freq == event.frequency)
+                        {
+                            // Remove the index from the active_voices and get the voice index
+                            let (voice_index, _) = self.active_voices.remove(remove_index).unwrap();
+                            // Mark the voice index as free
+                            self.free_voices.push(voice_index);
+                            self.voice_buffer[current + voice_index].is_active = false;
+                            self.voice_buffer[current + voice_index].age = 0.0;
+                        }
+                    }
+
+                    // Increment the event cursor
+                    self.event_cursor += 1;
+                }
             }
         }
 

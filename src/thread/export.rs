@@ -1,6 +1,6 @@
 use crate::{
-    thread::{AudioError, AudioResult},
     mixer::{Mixer, Project},
+    thread::{AudioError, AudioResult},
 };
 use std::{sync::mpsc, thread};
 
@@ -28,7 +28,7 @@ pub(super) fn spawn_export_thread(
         let mut playhead = start_sample;
 
         while playhead < end_sample {
-            mixer.process(playhead, &mut buf);
+            mixer.process(true, playhead, &mut buf);
             let frames = (end_sample - playhead).min(buffer_size);
             output.extend_from_slice(&buf[..frames * channels]);
             playhead += frames;

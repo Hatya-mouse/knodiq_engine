@@ -48,7 +48,7 @@ pub trait Track: Send + Any {
     ) -> Result<(), GraphError>;
 
     /// Processes the track with the given input and output pointer.
-    fn process(&mut self, playhead: usize, output: &mut [f32]);
+    fn process(&mut self, is_playing: bool, playhead: usize, output: &mut [f32]);
 
     /// Converts a reference to the track to any.
     fn as_any(&self) -> &dyn Any;
