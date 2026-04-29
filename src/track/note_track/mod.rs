@@ -6,7 +6,7 @@ pub use note::{Note, NoteID};
 pub use note_region::NoteRegion;
 
 use crate::{
-    data_types::{AudioContext, Beats, Voice},
+    data_types::{AudioContext, Beats, MidiEvent, Voice},
     graph::{Graph, error::GraphError},
     mixer::TempoMap,
     node::builtin::{AudioOutputNode, NoteInputNode},
@@ -30,6 +30,8 @@ pub struct NoteTrack {
     free_voices: Vec<usize>,
     last_voices: Vec<Voice>,
     voice_buffer: Vec<Voice>,
+    // Live MIDI voices: MIDI note number -> voice index
+    live_voices: HashMap<u8, usize>,
 
     // --- AUDIO CONTEXT ---
     audio_ctx: AudioContext,
@@ -105,9 +107,37 @@ impl NoteTrack {
         new_voice_index
     }
 
-    // --- REALTIME MIDI GETTING ---
+    // --- REALTIME MIDI ---
 
-    pub fn pass_midi(&mut self) {}
+    /// Receives live MIDI events and updates the voice state.
+    /// Must be called before process() so that changes take effect from sample 0 of the buffer.
+    pub fn pass_midi(&mut self, events: &[MidiEvent]) {
+        for event in events {
+            match event {
+                MidiEvent::NoteOn { pitch, velocity } => {
+                    // Allocate from the shared pool, stealing the oldest sequenced voice if full
+                    let voice_idx = self
+                        .free_voices
+                        .pop()
+                        .or_else(|| self.active_voices.pop_front().map(|(vi, _)| vi))
+                        .unwrap_or(0);
+                    self.live_voices.insert(*pitch, voice_idx);
+                    if let Some(v) = self.last_voices.get_mut(voice_idx) {
+                        *v = Voice::new(*pitch as f32, *velocity as f32 / 127.0, 0.0, true);
+                    }
+                }
+                MidiEvent::NoteOff { pitch } => {
+                    if let Some(voice_idx) = self.live_voices.remove(pitch) {
+                        self.free_voices.push(voice_idx);
+                        if let Some(v) = self.last_voices.get_mut(voice_idx) {
+                            v.is_active = false;
+                            v.age = 0.0;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl Track for NoteTrack {
@@ -163,6 +193,7 @@ impl Track for NoteTrack {
     fn seek(&mut self, playhead: usize) {
         // Clear all voices before seeking
         self.active_voices.clear();
+        self.live_voices.clear();
         self.free_voices = (0..self.audio_ctx.max_voices).collect();
         self.last_voices = vec![Voice::default(); self.audio_ctx.max_voices];
         // Recalculate the event cursor
@@ -285,8 +316,11 @@ impl Track for NoteTrack {
                 }
             }
 
-            // Increment the elapsed_samples
+            // Increment age for sequenced and live voices
             for (index, _) in self.active_voices.iter() {
+                self.voice_buffer[current + index].age += 1.0 / self.audio_ctx.sample_rate as f32;
+            }
+            for &index in self.live_voices.values() {
                 self.voice_buffer[current + index].age += 1.0 / self.audio_ctx.sample_rate as f32;
             }
 

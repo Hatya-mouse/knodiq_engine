@@ -1,7 +1,8 @@
 use crate::{
     data_types::{AudioContext, MidiEvent},
-    mixer::{Mixer, Project},
+    mixer::{Mixer, Project, TrackID},
     thread::{AudioCommand, AudioError, AudioResult, export},
+    track::note_track::NoteTrack,
 };
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use ringbuf::{
@@ -59,7 +60,15 @@ pub(super) fn audio_thread(
         playhead,
         is_playing: is_playing_clone,
     };
-    let stream = output_callback(mixer, consumer, pending_arc, device, config, callback_state);
+    let stream = output_callback(
+        mixer,
+        consumer,
+        midi_consumer,
+        pending_arc,
+        device,
+        config,
+        callback_state,
+    );
 
     if let Err(err) = stream.play() {
         result_tx
@@ -130,11 +139,14 @@ pub(super) fn audio_thread(
 fn output_callback(
     mut mixer: Mixer,
     mut consumer: Caching<Arc<SharedRb<Heap<AudioCommand>>>, false, true>,
+    mut midi_consumer: ringbuf::HeapCons<MidiEvent>,
     pending_project: Arc<Mutex<Option<Project>>>,
     device: cpal::Device,
     config: cpal::StreamConfig,
     state: OutputCallbackState,
 ) -> cpal::Stream {
+    let mut armed_track: Option<TrackID> = None;
+
     device
         .build_output_stream(
             &config,
@@ -148,23 +160,39 @@ fn output_callback(
                     mixer.apply_project(new_project, current_playhead);
                 }
 
-                // Process the seek
-                if let Some(command) = consumer.try_pop()
-                    && let AudioCommand::Seek(target) = command
+                // Process all pending commands from the audio command ringbuf
+                while let Some(command) = consumer.try_pop() {
+                    match command {
+                        AudioCommand::Seek(target) => {
+                            let target_sample = mixer.project.tempo_map.beats_to_samples(target);
+                            current_playhead = target_sample;
+                            state.playhead.store(target_sample, Ordering::Relaxed);
+                            mixer.seek(target_sample);
+                        }
+                        AudioCommand::ArmTrack(track_id) => {
+                            armed_track = Some(track_id);
+                        }
+                        AudioCommand::DisarmTrack => {
+                            armed_track = None;
+                        }
+                        _ => {}
+                    }
+                }
+
+                // Drain MIDI events and pass them to the armed NoteTrack
+                let midi_events: Vec<MidiEvent> = midi_consumer.pop_iter().collect();
+                if !midi_events.is_empty()
+                    && let Some(track_id) = armed_track
+                    && let Some(track) = mixer.project.tracks.get_mut(&track_id)
+                    && let Some(note_track) = track.as_any_mut().downcast_mut::<NoteTrack>()
                 {
-                    let target_sample = mixer.project.tempo_map.beats_to_samples(target);
-                    // Do not forget to update the current_playhead for processing later
-                    current_playhead = target_sample;
-                    state.playhead.store(target_sample, Ordering::Relaxed);
-                    mixer.seek(target_sample);
+                    note_track.pass_midi(&midi_events);
                 }
 
                 let is_playing = state.is_playing.load(Ordering::Relaxed);
 
                 if is_playing {
-                    // --- MIXER PROCESSING ---
                     mixer.process(current_playhead, data);
-                    // Increment the playhead
                     state
                         .playhead
                         .fetch_add(mixer.project.audio_ctx.buffer_size, Ordering::Relaxed);
