@@ -4,7 +4,7 @@ mod export;
 mod handle;
 mod midi_thread;
 
-pub use audio_command::{AudioCommand, AudioError, AudioResult};
+pub use audio_command::{AudioCommand, AudioError, AudioResult, MidiCommand};
 pub use handle::AudioThreadHandle;
 
 use crate::{
