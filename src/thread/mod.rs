@@ -7,7 +7,11 @@ mod midi_thread;
 pub use audio_command::{AudioCommand, AudioError, AudioResult};
 pub use handle::AudioThreadHandle;
 
-use crate::{data_types::AudioContext, graph::error::GraphError, mixer::Project};
+use crate::{
+    data_types::{AudioContext, MidiEvent},
+    graph::error::GraphError,
+    mixer::Project,
+};
 use ringbuf::{HeapRb, traits::Split};
 use std::{
     sync::{Arc, atomic::AtomicUsize, mpsc},
@@ -30,7 +34,7 @@ impl AudioThread {
         let playhead = Arc::new(AtomicUsize::new(0));
         let playhead_clone = playhead.clone();
         // A ringbuf to send MIDI events to the audio thread from the midi thread.
-        let (midi_producer, midi_consumer) = HeapRb::<MidiEvent>::new(64).split();
+        let (midi_producer, _midi_consumer) = HeapRb::<MidiEvent>::new(64).split();
 
         // Prepare the initial project
         initial_project.prepare()?;
@@ -40,7 +44,6 @@ impl AudioThread {
             audio_thread::audio_thread(
                 audio_command_rx,
                 result_tx,
-                midi_consumer,
                 playhead_clone,
                 audio_ctx,
                 initial_project,
