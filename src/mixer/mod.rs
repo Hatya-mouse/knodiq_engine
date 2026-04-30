@@ -40,7 +40,7 @@ impl Mixer {
 
     // --- MIXING PROCESS ---
 
-    /// Processes the tracks in the mixer a the specified playhead.
+    /// Processes the tracks in the mixer at the specified playhead.
     pub fn process(&mut self, is_playing: bool, playhead: usize, output: &mut [f32]) {
         // Fill the output buffer with zeros before processing
         unsafe {

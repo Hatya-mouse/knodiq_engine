@@ -35,6 +35,8 @@ impl AudioThread {
         let playhead_clone = playhead.clone();
         // A ringbuf to send MIDI events to the audio thread from the midi thread.
         let (midi_producer, midi_consumer) = HeapRb::<MidiEvent>::new(64).split();
+        // A ringbuf to send the calculated VU levels to the host.
+        let (vu_producer, vu_consumer) = HeapRb::<f32>::new(64).split();
 
         // Prepare the initial project
         initial_project.prepare()?;
@@ -45,6 +47,7 @@ impl AudioThread {
                 audio_command_rx,
                 result_tx,
                 midi_consumer,
+                vu_producer,
                 playhead_clone,
                 audio_ctx,
                 initial_project,
@@ -58,6 +61,7 @@ impl AudioThread {
             audio_command_tx,
             midi_command_tx,
             result_rx,
+            vu_consumer,
             playhead,
         })
     }

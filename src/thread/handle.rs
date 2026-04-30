@@ -6,5 +6,6 @@ pub struct AudioThreadHandle {
     pub audio_command_tx: mpsc::Sender<AudioCommand>,
     pub midi_command_tx: mpsc::Sender<MidiCommand>,
     pub result_rx: mpsc::Receiver<Result<AudioResult, AudioError>>,
+    pub vu_consumer: ringbuf::HeapCons<f32>,
     pub playhead: Arc<AtomicUsize>,
 }

@@ -22,10 +22,19 @@ pub(super) struct OutputCallbackState {
     pub(super) is_playing: Arc<AtomicBool>,
 }
 
+struct OutputCallbackContext {
+    mixer: Mixer,
+    consumer: Caching<Arc<SharedRb<Heap<AudioCommand>>>, false, true>,
+    midi_consumer: ringbuf::HeapCons<MidiEvent>,
+    vu_producer: ringbuf::HeapProd<f32>,
+    pending_project: Arc<Mutex<Option<Project>>>,
+}
+
 pub(super) fn audio_thread(
     command_rx: mpsc::Receiver<AudioCommand>,
     result_tx: mpsc::Sender<Result<AudioResult, AudioError>>,
     midi_consumer: ringbuf::HeapCons<MidiEvent>,
+    vu_producer: ringbuf::HeapProd<f32>,
     playhead: Arc<AtomicUsize>,
     audio_ctx: AudioContext,
     initial_project: Project,
@@ -61,10 +70,13 @@ pub(super) fn audio_thread(
         is_playing: is_playing_clone,
     };
     let stream = output_callback(
-        mixer,
-        consumer,
-        midi_consumer,
-        pending_arc,
+        OutputCallbackContext {
+            mixer,
+            consumer,
+            midi_consumer,
+            vu_producer,
+            pending_project: pending_arc,
+        },
         device,
         config,
         callback_state,
@@ -137,10 +149,7 @@ pub(super) fn audio_thread(
 }
 
 fn output_callback(
-    mut mixer: Mixer,
-    mut consumer: Caching<Arc<SharedRb<Heap<AudioCommand>>>, false, true>,
-    mut midi_consumer: ringbuf::HeapCons<MidiEvent>,
-    pending_project: Arc<Mutex<Option<Project>>>,
+    mut context: OutputCallbackContext,
     device: cpal::Device,
     config: cpal::StreamConfig,
     state: OutputCallbackState,
@@ -154,20 +163,21 @@ fn output_callback(
                 let mut current_playhead = state.playhead.load(Ordering::Relaxed);
 
                 // Get the project without blocking
-                if let Ok(mut pending) = pending_project.try_lock()
+                if let Ok(mut pending) = context.pending_project.try_lock()
                     && let Some(new_project) = pending.take()
                 {
-                    mixer.apply_project(new_project, current_playhead);
+                    context.mixer.apply_project(new_project, current_playhead);
                 }
 
                 // Process all pending commands from the audio command ringbuf
-                while let Some(command) = consumer.try_pop() {
+                while let Some(command) = context.consumer.try_pop() {
                     match command {
                         AudioCommand::Seek(target) => {
-                            let target_sample = mixer.project.tempo_map.beats_to_samples(target);
+                            let target_sample =
+                                context.mixer.project.tempo_map.beats_to_samples(target);
                             current_playhead = target_sample;
                             state.playhead.store(target_sample, Ordering::Relaxed);
-                            mixer.seek(target_sample);
+                            context.mixer.seek(target_sample);
                         }
                         AudioCommand::ArmTrack(track_id) => {
                             armed_track = Some(track_id);
@@ -180,10 +190,10 @@ fn output_callback(
                 }
 
                 // Drain MIDI events and pass them to the armed NoteTrack
-                let midi_events: Vec<MidiEvent> = midi_consumer.pop_iter().collect();
+                let midi_events: Vec<MidiEvent> = context.midi_consumer.pop_iter().collect();
                 if !midi_events.is_empty()
                     && let Some(track_id) = armed_track
-                    && let Some(track) = mixer.project.tracks.get_mut(&track_id)
+                    && let Some(track) = context.mixer.project.tracks.get_mut(&track_id)
                     && let Some(note_track) = track.as_any_mut().downcast_mut::<NoteTrack>()
                 {
                     note_track.pass_midi(&midi_events);
@@ -191,11 +201,28 @@ fn output_callback(
 
                 let is_playing = state.is_playing.load(Ordering::Relaxed);
 
-                mixer.process(is_playing, current_playhead, data);
+                // Process the audio and fill the output buffer
+                context.mixer.process(is_playing, current_playhead, data);
+
+                // Send the generated waveform data to the main thread for visualization
+                let channels = context.mixer.project.audio_ctx.channels;
+                for ch in 0..channels {
+                    let rms = (data
+                        .iter()
+                        .step_by(channels)
+                        .skip(ch)
+                        .map(|x| x * x)
+                        .sum::<f32>()
+                        / (data.len() / channels) as f32)
+                        .sqrt();
+                    context.vu_producer.try_push(rms).ok();
+                }
+
                 if is_playing {
-                    state
-                        .playhead
-                        .fetch_add(mixer.project.audio_ctx.buffer_size, Ordering::Relaxed);
+                    state.playhead.fetch_add(
+                        context.mixer.project.audio_ctx.buffer_size,
+                        Ordering::Relaxed,
+                    );
                 }
             },
             |err| {
