@@ -9,7 +9,6 @@ pub use handle::AudioThreadHandle;
 
 use crate::{
     data_types::{AudioContext, MidiEvent},
-    graph::error::GraphError,
     mixer::Project,
 };
 use ringbuf::{HeapRb, traits::Split};
@@ -21,10 +20,7 @@ use std::{
 pub struct AudioThread;
 
 impl AudioThread {
-    pub fn spawn(
-        audio_ctx: AudioContext,
-        mut initial_project: Project,
-    ) -> Result<AudioThreadHandle, GraphError> {
+    pub fn spawn(audio_ctx: AudioContext, mut initial_project: Project) -> AudioThreadHandle {
         // MPSC channels to send commands to the processing threads from the host.
         let (audio_command_tx, audio_command_rx) = mpsc::channel();
         let (midi_command_tx, midi_command_rx) = mpsc::channel();
@@ -59,12 +55,12 @@ impl AudioThread {
         // --- MIDI THREAD ---
         thread::spawn(move || midi_thread::midi_thread(midi_command_rx, midi_producer));
 
-        Ok(AudioThreadHandle {
+        AudioThreadHandle {
             audio_command_tx,
             midi_command_tx,
             result_rx,
             vu_consumer,
             playhead,
-        })
+        }
     }
 }
