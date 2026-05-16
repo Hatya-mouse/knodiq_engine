@@ -38,11 +38,13 @@ impl AudioThread {
         // A ringbuf to send the calculated VU levels to the host.
         let (vu_producer, vu_consumer) = HeapRb::<f32>::new(64).split();
 
-        // Prepare the initial project
-        initial_project.prepare()?;
-
         // --- MAIN AUDIO THREAD ---
         thread::spawn(move || {
+            // Prepare the initial project
+            if let Err(err) = initial_project.prepare() {
+                result_tx.send(Err(AudioError::GraphError(err))).unwrap();
+            }
+
             audio_thread::audio_thread(
                 audio_command_rx,
                 result_tx,
