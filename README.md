@@ -1,3 +1,3 @@
-# Kreniq Engine
+# Krenic Engine
 
-An audio engine developed for Kreniq DAW.
+An audio engine developed for Krenic DAW.
