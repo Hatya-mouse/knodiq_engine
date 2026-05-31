@@ -1,11 +1,11 @@
 [package]
-name = "knodiq_engine"
+name = "kreniq_engine"
 version = "0.3.19"
 edition = "2024"
 license = "Apache-2.0"
 
 [lib]
-name = "knodiq_engine"
+name = "kreniq_engine"
 path = "src/lib.rs"
 
 [dependencies]
